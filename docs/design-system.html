@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#eaf1fa"/>
+  <title>Design System Aero 2.0 — BarGestão Living Styleguide</title>
+  <!-- Estilos mestres importados do projeto principal (fora de src) -->
+  <link rel="stylesheet" href="../src/css/main.css"/>
+  <style>
+    /* Estilos de suporte dedicados ao Showcase do Living Styleguide */
+    .styleguide-shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    .styleguide-header {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(var(--panel-blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+    .styleguide-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .styleguide-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .styleguide-nav a {
+      font-size: 12px;
+      font-weight: 750;
+      color: var(--ink);
+      text-decoration: none;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+    }
+    .styleguide-nav a:hover {
+      background: #e5efff;
+      color: var(--accent);
+      border-color: #bad3f8;
+    }
+    .component-section {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(var(--panel-blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    .component-header {
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .component-header h2 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .component-header p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+    .swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .swatch-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow-sm);
+    }
+    .swatch-color {
+      height: 56px;
+      width: 100%;
+    }
+    .swatch-info {
+      padding: 10px 12px;
+    }
+    .swatch-info strong {
+      display: block;
+      font-size: 12px;
+      color: var(--ink);
+    }
+    .swatch-info span {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .demo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .demo-box {
+      border: 1px dashed rgba(111, 140, 179, 0.35);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: rgba(245, 250, 255, 0.45);
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SVG Sprite Padronizado BarGestão -->
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-bar" viewbox="0 0 24 24"><path d="M5 3h14l-2 6-5 4-5-4-2-6ZM12 13v7m-5 1h10M8 7h8"></path></symbol>
+    <symbol id="i-grid" viewbox="0 0 24 24"><rect height="7" rx="2" width="7" x="3" y="3"></rect><rect height="7" rx="2" width="7" x="14" y="3"></rect><rect height="7" rx="2" width="7" x="3" y="14"></rect><rect height="7" rx="2" width="7" x="14" y="14"></rect></symbol>
+    <symbol id="i-box" viewbox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4m-9 4v10"></path></symbol>
+    <symbol id="i-wallet" viewbox="0 0 24 24"><rect height="15" rx="3" width="18" x="3" y="5"></rect><path d="M3 9h18m-5 5h2M6 5V3h12"></path></symbol>
+    <symbol id="i-users" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"></path></symbol>
+    <symbol id="i-plus" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+    <symbol id="i-lock" viewbox="0 0 24 24"><rect height="11" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol>
+    <symbol id="i-log" viewbox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"></path></symbol>
+    <symbol id="i-check" viewbox="0 0 24 24"><path d="m4 12 5 5L20 6"></path></symbol>
+    <symbol id="i-x" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol>
+    <symbol id="i-home" viewbox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z"></path></symbol>
+    <symbol id="i-more" viewbox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol>
+    <symbol id="i-search" viewbox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></symbol>
+    <symbol id="i-arrow" viewbox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+    <symbol id="i-down" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+    <symbol id="i-minus" viewbox="0 0 24 24"><path d="M5 12h14"></path></symbol>
+    <symbol id="i-download" viewbox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"></path></symbol>
+    <symbol id="i-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
+    <symbol id="i-spark" viewbox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Zm7 14 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z"></path></symbol>
+    <symbol id="i-trash" viewbox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></symbol>
+  </svg>
+
+  <div class="styleguide-shell">
+
+    <!-- Header do Living Styleguide -->
+    <header class="styleguide-header">
+      <div class="styleguide-header-top">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="brand-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-bar"></use></svg></div>
+          <div>
+            <span class="eyebrow">SYSTEKNA · DESIGN SYSTEM</span>
+            <h1 class="page-title" style="margin:2px 0 0;">BarGestão Aero 2.0</h1>
+            <p class="page-sub" style="margin:0;">Catálogo Vivo de Componentes (Living Styleguide) & Especificação Visual L6</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <a class="btn ghost" href="../src/index.html"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg> Abrir Sistema Principal</a>
+          <button class="btn" id="open-demo-modal" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-spark"></use></svg> Ver Modal Aero</button>
+        </div>
+      </div>
+      <nav class="styleguide-nav">
+        <a href="#sec-tokens">1. Tokens & Cores</a>
+        <a href="#sec-typography">2. Tipografia</a>
+        <a href="#sec-buttons">3. Botões & Ações</a>
+        <a href="#sec-pills">4. Badges & Status</a>
+        <a href="#sec-forms">5. Campos & Filtros</a>
+        <a href="#sec-stats">6. Cards de Estatística</a>
+        <a href="#sec-toolbars">7. Toolbars & Alinhamento</a>
+        <a href="#sec-dropdown">8. Dropdown Aero</a>
+        <a href="#sec-lists">9. Entradas & Listas</a>
+        <a href="#sec-alerts">10. Painéis & Avisos</a>
+      </nav>
+    </header>
+
+    <!-- 1. Tokens Cromáticos & Glassmorphism -->
+    <section class="component-section" id="sec-tokens">
+      <div class="component-header">
+        <h2>1. Tokens Cromáticos & Glassmorphism 2.0</h2>
+        <p>Paleta calibrada em tons frios com desfoque de superfície e contraste em conformidade com WCAG 2.1 AA.</p>
+      </div>
+      <div class="swatches-grid">
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--accent);"></div><div class="swatch-info"><strong>--accent</strong><span>#266de0</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--accent-hover);"></div><div class="swatch-info"><strong>--accent-hover</strong><span>#1757be</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--good); color:white;"></div><div class="swatch-info"><strong>--good</strong><span>#0f8664</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--warn); color:white;"></div><div class="swatch-info"><strong>--warn</strong><span>#c27c0e</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--bad); color:white;"></div><div class="swatch-info"><strong>--bad</strong><span>#c74550</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--ink); color:white;"></div><div class="swatch-info"><strong>--ink</strong><span>#14253c</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--muted); color:white;"></div><div class="swatch-info"><strong>--muted</strong><span>#677b96</span></div></div>
+        <div class="swatch-card"><div class="swatch-color" style="background:var(--bg); border:1px solid var(--line);"></div><div class="swatch-info"><strong>--bg</strong><span>#eaf1fa</span></div></div>
+      </div>
+    </section>
+
+    <!-- 2. Tipografia & Hierarquia -->
+    <section class="component-section" id="sec-typography">
+      <div class="component-header">
+        <h2>2. Tipografia & Escala Hierárquica</h2>
+        <p>Família Inter com tracking suíço e proporções matemáticas para leitura veloz.</p>
+      </div>
+      <div class="demo-box" style="display:flex;flex-direction:column;gap:14px;">
+        <div><span class="eyebrow">EYEBROW LABEL (10.5PX · BOLD 800)</span></div>
+        <h1 class="page-title" style="margin:0;">Page Title (28px - 30px · Bold 800)</h1>
+        <p class="page-sub" style="margin:0;">Page Subtitle (13.5px · Muted Regular · Line-height 1.5)</p>
+        <h2 style="font-size:16px;font-weight:750;letter-spacing:-0.3px;margin:0;">Card Heading 2 (16px · Bold 750)</h2>
+        <span class="stat-label">Stat Label (11.5px · Uppercase · Muted)</span>
+        <strong style="font-size:26px;font-weight:850;letter-spacing:-0.8px;color:var(--ink);">R$ 1.250,00 (Stat Strong 26px)</strong>
+      </div>
+    </section>
+
+    <!-- 3. Botões & Ações -->
+    <section class="component-section" id="sec-buttons">
+      <div class="component-header">
+        <h2>3. Botões & Ações (.btn)</h2>
+        <p>Controles com altura equalizada em 42px, aceleração de GPU e feedback de clique em scale(0.985).</p>
+      </div>
+      <div class="demo-box">
+        <div class="demo-row">
+          <button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Primário (.btn)</button>
+          <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Secundário (.btn.ghost)</button>
+          <button class="btn outline" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg> Outline (.btn.outline)</button>
+          <button class="btn danger" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-trash"></use></svg> Perigo (.btn.danger)</button>
+          <button class="btn minor" type="button">Compacto (.btn.minor)</button>
+          <button class="btn" type="button" disabled>Desabilitado</button>
+        </div>
+        <div style="margin-top:14px;max-width:320px;">
+          <button class="btn block" type="button">Botão em Bloco 100% (.btn.block)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Badges & Status Pills -->
+    <section class="component-section" id="sec-pills">
+      <div class="component-header">
+        <h2>4. Badges de Status (.pill)</h2>
+        <p>Marcadores contextuais para contadores de itens, estados de mesa e alertas.</p>
+      </div>
+      <div class="demo-box">
+        <div class="demo-row">
+          <span class="pill">0 mesas (.pill informativo)</span>
+          <span class="pill good"><svg fill="none" stroke="currentColor" style="width:12px;height:12px;vertical-align:-1px;display:inline-block;"><use href="#i-check"></use></svg> Sessão ativa (.pill.good)</span>
+          <span class="pill warn">Estoque baixo (.pill.warn)</span>
+          <span class="pill">R$ 145,00 pagos</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Campos de Formulário & Filtros -->
+    <section class="component-section" id="sec-forms">
+      <div class="component-header">
+        <h2>5. Controles de Formulário, Busca & Filtros</h2>
+        <p>Inputs e selects com altura padronizada em 42px e anel de foco Aero.</p>
+      </div>
+      <div class="demo-box">
+        <div class="table-search" style="margin-bottom:14px;">
+          <svg aria-hidden="true" fill="none" stroke="currentColor"><use href="#i-search"></use></svg>
+          <input aria-label="Pesquisar" autocomplete="off" placeholder="Pesquisar mesa, cliente ou produto..." type="search"/>
+        </div>
+        <div class="filter-row">
+          <label>PESQUISA DIRETA<input placeholder="Filtrar por nome..." type="search"/></label>
+          <label>CATEGORIA
+            <select>
+              <option value="">Todas as categorias</option>
+              <option value="1">Bebidas e Cervejas</option>
+              <option value="2">Petiscos e Porções</option>
+            </select>
+          </label>
+        </div>
+        <label class="checkline" style="margin-top:12px;">
+          <input type="checkbox" checked/>
+          <span>Opção selecionada (.checkline com acento gráfico do sistema)</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- 6. Cards de Estatística (Layout Rigoroso) -->
+    <section class="component-section" id="sec-stats">
+      <div class="component-header">
+        <h2>6. Cards de Estatística (.stat)</h2>
+        <p>Estrutura padronizada em pilha vertical: [Título] -> [Valor] -> [Descrição], com elevação em hover.</p>
+      </div>
+      <div class="home-stats" style="margin-bottom:0;">
+        <div class="stat">
+          <span class="stat-label">Mesas ocupadas</span>
+          <strong>14</strong>
+          <span class="stat-foot">Comandas em andamento</span>
+          <svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-grid"></use></svg>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Total em aberto</span>
+          <strong>R$ 1.840,50</strong>
+          <span class="stat-foot">Aguardando recebimento</span>
+          <svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-wallet"></use></svg>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Faturamento do dia</span>
+          <strong>R$ 4.290,00</strong>
+          <span class="stat-foot">Receitas liquidadas</span>
+          <svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-spark"></use></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Toolbars & Alinhamento Dimensional -->
+    <section class="component-section" id="sec-toolbars">
+      <div class="component-header">
+        <h2>7. Toolbars & Alinhamento Dimensional</h2>
+        <p>Separação estrita entre título/badge à esquerda (.toolbar-title-group) e ações à direita (.toolbar-actions).</p>
+      </div>
+      <div class="demo-box">
+        <div class="toolbar" style="margin-bottom:0;">
+          <div class="toolbar-title-group">
+            <h2 style="margin:0;">Produtos cadastrados</h2>
+            <span class="pill" id="demo-produtos-count">24 produtos</span>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Novo produto</button>
+            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Movimentar</button>
+            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Categorias</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Controle Financeiro Nivelada -->
+      <div class="demo-box" style="margin-top:16px;">
+        <div class="section-intro with-filter" style="margin-bottom:0;">
+          <div>
+            <h1 class="page-title" style="font-size:22px;">Controles Financeiros Nivelados</h1>
+            <p class="page-sub">Demonstração de baseline idêntica via .intro-controls (align-items: flex-end).</p>
+          </div>
+          <div class="intro-controls">
+            <label class="period-select">PERÍODO
+              <select>
+                <option>Hoje</option>
+                <option>Últimos 7 dias</option>
+                <option>Este mês</option>
+              </select>
+            </label>
+            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar relatório</button>
+            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Registrar retirada</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Dropdown Unificado Aero -->
+    <section class="component-section" id="sec-dropdown">
+      <div class="component-header">
+        <h2>8. Dropdown Menu Unificado Aero Glassmorphism 2.0</h2>
+        <p>Menu flutuante suspenso com backdrop blur (16px), animação suave e rotação de chevron.</p>
+      </div>
+      <div class="demo-box" style="min-height:160px;">
+        <div class="dropdown-wrap" id="demo-dropdown-wrap">
+          <button class="btn ghost dropdown-trigger" id="demo-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+            <svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar relatório <svg class="chevron-mini" fill="none" stroke="currentColor"><use href="#i-down"></use></svg>
+          </button>
+          <div class="dropdown-menu hidden" id="demo-dropdown-menu" role="menu">
+            <button class="dropdown-item" type="button" role="menuitem"><svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar Excel (.xlsx)</button>
+            <button class="dropdown-item" type="button" role="menuitem"><svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Entradas de Lista & Mesas -->
+    <section class="component-section" id="sec-lists">
+      <div class="component-header">
+        <h2>9. Entradas de Lista & Mesas (.entry, .mesa-entry)</h2>
+        <p>Cards interativos para representação de comandas e histórico com elevação Aero.</p>
+      </div>
+      <div class="list" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+        <article class="entry mesa-entry">
+          <div class="entry-head">
+            <div class="entry-left">
+              <strong>Mesa 04</strong>
+              <span>Carlos Eduardo</span>
+            </div>
+            <span class="pill good">Aberta</span>
+          </div>
+          <div class="mesa-sub">
+            <span>3 itens lançados</span>
+            <strong style="color:var(--accent);font-size:15px;">R$ 84,00</strong>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button">Lançar pedido</button>
+            <button class="btn ghost" type="button">Fechar mesa</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 10. Painéis & Alertas -->
+    <section class="component-section" id="sec-alerts">
+      <div class="component-header">
+        <h2>10. Painéis v9 & Feedback Contextual</h2>
+        <p>Mensagens de status com contraste e legibilidade balanceados.</p>
+      </div>
+      <div class="demo-box" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="v9-panel" style="margin:0;">
+          <div class="v9-head">
+            <h2 style="margin:0;">Turno da Noite · Caixa Aberto</h2>
+            <span class="v9-pill">Operação Ativa</span>
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px;">Aberto por Gerente em 13/10/2026 às 18:00 com fundo de troco de R$ 200,00.</div>
+        </div>
+        <div class="notice" style="margin:0;">Mensagem de confirmação (.notice com fundo verde translúcido).</div>
+        <div class="error" style="margin:0;">Mensagem de erro crítico ou validação pendente (.error).</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Modal Aero de Demonstração Interativo -->
+  <dialog class="aero-modal" id="demo-modal" aria-label="Modal de Demonstração">
+    <div class="modal-shell">
+      <div class="modal-bar">
+        <div class="modal-kicker">BarGestão · Demonstração Aero 2.0</div>
+        <button class="modal-close" type="button" id="close-demo-modal" aria-label="Fechar">×</button>
+      </div>
+      <div class="modal-content">
+        <h2>Componente Dialog Aero</h2>
+        <p class="modal-note">Este modal utiliza o elemento nativo &lt;dialog&gt; do HTML5 com backdrop escurecido, desfoque de 28px e animação com aceleração via GPU.</p>
+        <div class="form-actions">
+          <button class="btn block" type="button" id="confirm-demo-modal">Confirmar Operação</button>
+          <button class="btn ghost block" type="button" id="cancel-demo-modal">Fechar Janela</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Script Interativo do Living Styleguide -->
+  <script type="module">
+    // 1. Interatividade do Dropdown
+    const trigger = document.getElementById('demo-dropdown-trigger');
+    const menu = document.getElementById('demo-dropdown-menu');
+
+    trigger?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+      trigger.setAttribute('aria-expanded', String(!isExpanded));
+      menu.classList.toggle('hidden', isExpanded);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!trigger?.contains(e.target) && !menu?.contains(e.target)) {
+        trigger?.setAttribute('aria-expanded', 'false');
+        menu?.classList.add('hidden');
+      }
+    });
+
+    // 2. Interatividade do Modal
+    const modal = document.getElementById('demo-modal');
+    const openBtn = document.getElementById('open-demo-modal');
+    const closeBtn = document.getElementById('close-demo-modal');
+    const cancelBtn = document.getElementById('cancel-demo-modal');
+    const confirmBtn = document.getElementById('confirm-demo-modal');
+
+    const closeModal = () => modal?.close();
+    openBtn?.addEventListener('click', () => modal?.showModal());
+    closeBtn?.addEventListener('click', closeModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    confirmBtn?.addEventListener('click', closeModal);
+  </script>
+</body>
+</html>
