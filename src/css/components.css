@@ -247,21 +247,118 @@
 .art-ring.middle { width: 140px; background: rgba(255, 255, 255, 0.05); }
 .art-ring.inner { width: 90px; background: rgba(255, 255, 255, 0.09); }
 
+.home-card .toolbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.home-card .toolbar-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.home-card .toolbar-title-group .eyebrow {
+  margin-bottom: 2px;
+}
+
+.home-card .toolbar-title-group h2 {
+  font-size: 16px;
+  font-weight: 750;
+  margin: 0;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
 .home-table-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-height: 80px;
+  gap: 8px;
+  min-height: auto;
 }
 
 .home-mini-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--line);
+  transition: all 0.14s ease;
+}
+
+.home-mini-row:hover {
+  background: #ffffff;
+  border-color: rgba(38, 109, 224, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(25, 50, 85, 0.05);
+}
+
+.home-mini-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  min-width: 0;
+}
+
+.home-mini-left strong {
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-mini-left small {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-mini-price {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.home-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(244, 248, 254, 0.7);
+  border: 1px dashed rgba(111, 140, 179, 0.3);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.home-empty svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #8fa5c2;
+}
+
+.home-empty.good {
+  background: rgba(230, 248, 239, 0.65);
+  border-color: rgba(15, 134, 100, 0.3);
+  color: #0f8664;
+}
+
+.home-empty.good svg {
+  color: #0f8664;
 }
 
 /* --------------------------------------------------------------------------

@@ -587,11 +587,81 @@ export class App {
     const sauda = document.getElementById('home-sauda');
     if (sauda) sauda.textContent = `Olá, ${session.usuario}. Acompanhe o atendimento.`;
 
-    const openCount = Object.keys(this._data.mesas || {}).length;
+    const entries = Object.entries(this._data.mesas || {});
+    const openCount = entries.length;
     const openValue = Object.values(this._data.mesas || {}).flat().reduce((s, i) => s + Number(i.total || 0), 0);
 
-    document.getElementById('home-mesas').textContent = String(openCount);
-    document.getElementById('home-aberto').textContent = this._renderer.money(openValue);
+    const openEl = document.getElementById('home-mesas');
+    if (openEl) openEl.textContent = String(openCount);
+    const abertoEl = document.getElementById('home-aberto');
+    if (abertoEl) abertoEl.textContent = this._renderer.money(openValue);
+
+    // 1. Renderizar lista de mesas na Home
+    const mesasListEl = document.getElementById('home-mesas-lista');
+    if (mesasListEl) {
+      mesasListEl.replaceChildren();
+      if (!entries.length) {
+        const empty = this._renderer.make('div', 'home-empty');
+        empty.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><use href="#i-grid"></use></svg><span>Nenhuma comanda aberta no momento.</span>';
+        mesasListEl.append(empty);
+      } else {
+        for (const [name, items] of entries.slice(0, 4)) {
+          const sum = this._order.calculateOrderTotal(items);
+          const cliente = this._data.mesaClientes?.[name] || 'Cliente não informado';
+          const row = this._renderer.make('div', 'home-mini-row');
+          row.style.cursor = 'pointer';
+          row.onclick = () => {
+            this._changeTab('vendas');
+            this._chooseTable(name);
+          };
+
+          const left = this._renderer.make('div', 'home-mini-left');
+          left.append(
+            this._renderer.make('strong', '', name),
+            this._renderer.make('small', '', cliente)
+          );
+          const right = this._renderer.make('strong', 'home-mini-price', this._renderer.money(sum));
+          row.append(left, right);
+          mesasListEl.append(row);
+        }
+      }
+    }
+
+    // 2. Renderizar lista de estoque baixo na Home (Gerente)
+    const stockListEl = document.getElementById('home-baixo-lista');
+    if (stockListEl && this._auth.isManager()) {
+      stockListEl.replaceChildren();
+      const allProducts = this._data.produtos || [];
+      const lowStock = allProducts.filter(p => p.ativo !== false && Number(p.qtd || 0) <= Number(p.min || 0));
+
+      if (!lowStock.length) {
+        const empty = this._renderer.make('div', 'home-empty good');
+        empty.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><use href="#i-check"></use></svg><span>Estoque regular. Nenhum produto em alerta.</span>';
+        stockListEl.append(empty);
+      } else {
+        for (const p of lowStock.slice(0, 4)) {
+          const row = this._renderer.make('div', 'home-mini-row');
+          row.style.cursor = 'pointer';
+          row.onclick = () => {
+            this._changeTab('estoque');
+            const search = document.getElementById('estoque-busca');
+            if (search) {
+              search.value = p.nome;
+              this._renderStock();
+            }
+          };
+
+          const left = this._renderer.make('div', 'home-mini-left');
+          left.append(
+            this._renderer.make('strong', '', p.nome),
+            this._renderer.make('small', '', `Mínimo: ${p.min} un.`)
+          );
+          const right = this._renderer.make('span', 'pill warn', `${p.qtd} un.`);
+          row.append(left, right);
+          stockListEl.append(row);
+        }
+      }
+    }
   }
 
   _renderTables() {

@@ -768,10 +768,17 @@
   #tab-caixa .section-intro.with-filter {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  #tab-caixa .section-intro.with-filter > div {
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   #tab-caixa .intro-controls {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -809,6 +816,35 @@
 
   .toolbar-actions .btn {
     width: 100%;
+  }
+
+  /* Home Panels Toolbar Mobile Alignment */
+  .home-card .toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .home-card .toolbar-title-group {
+    width: auto;
+    flex: 1 1 auto;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .home-card .toolbar-actions {
+    width: auto;
+    flex-direction: row;
+    flex-shrink: 0;
+  }
+
+  .home-card .toolbar-actions .btn {
+    width: auto;
+    padding: 7px 11px;
+    font-size: 11.5px;
+    min-height: 34px;
   }
 
   /* Barra de Navegação Inferior (Mobile Touch Navigation) */
