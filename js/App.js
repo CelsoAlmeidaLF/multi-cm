@@ -18,6 +18,11 @@ import { DomEventHandler } from './ui/adapters/DomEventHandler.js';
  * Arquitetura Hexagonal com Injeção de Dependências
  */
 export class App {
+  static VERSION = '2.4.0';
+  static BUILD = '2026.10';
+  static EDITION_LABEL = 'BarGestão Standard';
+  static AERO_SPEC = 'Aero Glassmorphism 2.0';
+
   // Adaptadores de Infraestrutura
   _crypto;
   _storage;
@@ -564,6 +569,26 @@ export class App {
     if (moreRole) moreRole.textContent = session.perfil === 'gerente' ? 'Gerente Geral' : 'Operador';
     const moreAvatar = document.getElementById('more-avatar');
     if (moreAvatar) moreAvatar.textContent = session.usuario.charAt(0).toUpperCase();
+
+    // Sincronização Dinâmica da Versão do APP (Aba de Configurações)
+    const appVersionPill = document.getElementById('app-version-pill');
+    if (appVersionPill) appVersionPill.textContent = `v${App.VERSION}`;
+
+    const versionStatusPill = document.getElementById('version-status-pill');
+    if (versionStatusPill) versionStatusPill.textContent = `v${App.VERSION}`;
+
+    const versionSpecCode = document.getElementById('version-spec-code');
+    if (versionSpecCode) versionSpecCode.textContent = `v${App.VERSION} (Aero 2.0)`;
+
+    const appBuildInfo = document.getElementById('app-build-info');
+    if (appBuildInfo) {
+      appBuildInfo.textContent = `Versão ${App.VERSION} · Build ${App.BUILD} · ${App.AERO_SPEC}`;
+    }
+
+    const appFooterVersion = document.getElementById('app-footer-version');
+    if (appFooterVersion) {
+      appFooterVersion.textContent = `${App.EDITION_LABEL} v${App.VERSION} · Design System ${App.AERO_SPEC} · Dados locais criptografados`;
+    }
 
     document.querySelectorAll('.manager-only').forEach(el => el.classList.toggle('hidden', !this._auth.isManager()));
     this._changeTab(this._currenttab);
