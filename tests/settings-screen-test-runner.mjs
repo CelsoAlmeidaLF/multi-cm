@@ -65,7 +65,13 @@ const requiredElements = [
   'security-storage',
   'security-persist',
   'modal-auditoria',
-  'security-audit'
+  'security-audit',
+  'card-versao-app',
+  'version-status-pill',
+  'app-version-pill',
+  'app-build-info',
+  'version-spec-code',
+  'app-footer-version'
 ];
 
 for (const elId of requiredElements) {
@@ -116,7 +122,13 @@ const cssRules = [
   '.more-icon',
   'hr.soft',
   '.aero-modal h3',
-  '.audit-record'
+  '.audit-record',
+  '.version-card',
+  '.version-card-row',
+  '.version-icon',
+  '.version-details-list',
+  '.version-detail-item',
+  '.more-profile-badges'
 ];
 
 for (const rule of cssRules) {
