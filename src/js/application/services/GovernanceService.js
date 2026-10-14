@@ -1,7 +1,13 @@
+import { UID_DIGITAL, isGovernanceId } from '../../domain/entities/GovernanceUid.js';
+
 /**
  * Serviço de Aplicação: Governança Systekna
  * Cadastro com homologação (doc 12), licença/kill-switch (doc 14) e
  * telemetria de erros + feedback sanitizados (doc 13).
+ *
+ * Fluxo: o usuário se cadastra no app → é gerada a impressão digital (UID) do cadastro → a solicitação
+ * vai ao Firebase com esse UID → a governança aprova ou não e libera/bloqueia funcionalidades no tenant
+ * de mesmo UID. Sem aprovação vinda do Firebase, o app não abre (inclusive instalações antigas).
  *
  * Importante: num app local-first, o enforcement é feito no cliente. Ele impede o uso
  * normal do produto, mas não resiste a quem altera o próprio navegador; a autoridade
@@ -53,10 +59,26 @@ export class GovernanceService {
     return this._record?.lastState?.state || GOVERNANCE_STATES.NOT_REGISTERED;
   }
 
-  /** Mesas liberadas? Instalações sem cadastro (legadas) mantêm o comportamento anterior. */
+  /** Impressão digital do cadastro (UID no Firebase), ou null sem cadastro. */
+  getUid() {
+    return this._record?.id || null;
+  }
+
+  /** Formato de leitura: grupos de 4 em maiúsculas (ex.: 3F2A-9C01-...). */
+  static formatUid(id) {
+    if (!id) return '';
+    const hex = String(id).replace(/-/g, '').toUpperCase();
+    return hex.match(/.{1,4}/g).join('-');
+  }
+
+  /** Permissão de usar o app: só com aprovação da governança confirmada dentro do prazo. */
+  hasAccess() {
+    return this.getState() === GOVERNANCE_STATES.APPROVED && !this._verificationExpired();
+  }
+
+  /** Funcionalidade de mesas: liberada só quando a governança define permiteMesas = true. */
   allowsTables() {
-    if (!this._record) return true;
-    return this._record.lastState?.permiteMesas !== false;
+    return this.hasAccess() && this._record?.lastState?.permiteMesas === true;
   }
 
   /** Exportação XLSX liberada? Só a governança desliga (painel → Módulos Homologados). */
@@ -78,14 +100,15 @@ export class GovernanceService {
   }
 
   isBlocked() {
-    const state = this.getState();
-    return state === GOVERNANCE_STATES.BLOCKED || state === GOVERNANCE_STATES.REJECTED || this._verificationExpired();
+    return !this.hasAccess();
   }
 
   getBlockReason() {
+    if (!this._record) return 'este aparelho ainda não foi cadastrado na governança';
     if (this._verificationExpired()) {
       return `licença sem verificação há mais de ${MAX_OFFLINE_DAYS} dias. Conecte-se à internet para revalidar`;
     }
+    if (this.getState() === GOVERNANCE_STATES.PENDING) return 'cadastro aguardando aprovação da governança';
     return this._record?.lastState?.motivo || '';
   }
 
@@ -98,7 +121,7 @@ export class GovernanceService {
 
   /** Restaura o registro do backup exigindo nova verificação no servidor antes de liberar lançamentos. */
   async restoreFromBackup(data) {
-    if (!data || typeof data.id !== 'string' || !/^[0-9a-f-]{36}$/.test(data.id)) return false;
+    if (!data || !isGovernanceId(data.id)) return false;
     const state = Object.values(GOVERNANCE_STATES).includes(data.lastState?.state) ? data.lastState.state : GOVERNANCE_STATES.PENDING;
     await this._save({
       id: data.id,
@@ -153,9 +176,24 @@ export class GovernanceService {
     return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
   }
 
+  /**
+   * Impressão digital do cadastro: SHA-256 de um segredo aleatório de 256 bits + dados do cadastro,
+   * truncado em 128 bits. Vira o UID do usuário no Firebase (id da solicitação e do tenant).
+   * O segredo não é guardado: o UID não pode ser recalculado nem adivinhado a partir do cadastro.
+   */
+  static async createUid(reg) {
+    const segredo = crypto.getRandomValues(new Uint8Array(32));
+    const dados = new TextEncoder().encode(JSON.stringify([reg.usuario, reg.cnpj, reg.tipoComercio, Date.now()]));
+    const material = new Uint8Array(segredo.length + dados.length);
+    material.set(segredo);
+    material.set(dados, segredo.length);
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', material));
+    return Array.from(hash.slice(0, 16), b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   async submitRegistration(input) {
     const reg = GovernanceService.normalizeRegistration(input);
-    const id = crypto.randomUUID();
+    const id = await GovernanceService.createUid(reg);
     const solicitadoEm = new Date();
 
     await this._port.submitRegistration(id, {
@@ -235,7 +273,7 @@ export class GovernanceService {
    * @returns {{ state, permiteMesas, motivo, offline: boolean, indeterminate?: boolean }}
    */
   async refresh() {
-    if (!this._record) return { state: GOVERNANCE_STATES.NOT_REGISTERED, permiteMesas: true, motivo: '', offline: false };
+    if (!this._record) return { state: GOVERNANCE_STATES.NOT_REGISTERED, permiteMesas: false, motivo: '', offline: false };
     let registration;
     let tenant;
     try {
@@ -260,6 +298,12 @@ export class GovernanceService {
   // ---------------------------------------------------------------------------
   // Telemetria e feedback (doc 13) — Privacy by Design
   // ---------------------------------------------------------------------------
+
+  /** Liga erros e feedbacks ao UID do cadastro, para a governança saber de quem são. */
+  _uidField() {
+    const id = this._record?.id;
+    return typeof id === 'string' && UID_DIGITAL.test(id) ? { uid: id } : {};
+  }
 
   static scrub(text, max = 2000) {
     if (typeof text !== 'string') return '';
@@ -320,6 +364,7 @@ export class GovernanceService {
 
       await this._port.reportError(crypto.randomUUID(), {
         app: this._appId,
+        ...this._uidField(),
         usuario: GovernanceService._identifier(this._record?.usuario, 'anonimo'),
         versaoApp: GovernanceService._identifier(this._appVersion, '0.0.0'),
         mensagem,
@@ -344,6 +389,7 @@ export class GovernanceService {
 
     await this._port.sendFeedback(crypto.randomUUID(), {
       app: this._appId,
+      ...this._uidField(),
       usuario: GovernanceService._identifier(this._record?.usuario, 'anonimo'),
       estabelecimento: String(this._record?.nomeEstabelecimento || '').slice(0, 120),
       tipo: TIPOS_FEEDBACK.includes(tipo) ? tipo : 'sugestao',

@@ -1,10 +1,12 @@
 import { IGovernancePort } from '../../domain/interfaces/IGovernancePort.js';
+import { isGovernanceId } from '../../domain/entities/GovernanceUid.js';
 
 /**
  * Adaptador REST do Firestore para a Governança Systekna.
- * Usa fetch nativo (sem SDK, sem build). O app não autentica no Firebase: as regras do
- * Firestore (governanca-systekna/firestore.rules) só permitem criar documentos com esquema
- * validado e ler um documento pelo id (UUID gerado neste aparelho).
+ * Usa fetch nativo (sem build). O app não autentica no Firebase: as regras do Firestore
+ * (PACOTES/stk-pkg-doacao/firestore.rules) só permitem criar documentos com esquema validado e ler
+ * um documento pelo id (a impressão digital/UID gerada neste aparelho). Cada chamada leva o token
+ * do App Check, exigido pelo projeto.
  * A apiKey do Firebase Web é um identificador público de projeto, não um segredo.
  */
 export class FirebaseGovernanceAdapter extends IGovernancePort {
@@ -17,13 +19,15 @@ export class FirebaseGovernanceAdapter extends IGovernancePort {
     apiKey = 'AIzaSyCQx8kJyXEReASiQMI4a5bT5NNWgtBmJpM',
     timeoutMs = 8000,
     fetchImpl = (...args) => globalThis.fetch(...args),
-    host = 'https://firestore.googleapis.com'
+    host = 'https://firestore.googleapis.com',
+    appCheck = null
   } = {}) {
     super();
     this._base = `${host}/v1/projects/${projectId}/databases/(default)/documents`;
     this._apiKey = apiKey;
     this._timeoutMs = timeoutMs;
     this._fetch = fetchImpl;
+    this._appCheck = appCheck;
   }
 
   async submitRegistration(id, registration) {
@@ -49,6 +53,8 @@ export class FirebaseGovernanceAdapter extends IGovernancePort {
   // ---------------------------------------------------------------------------
 
   async _request(url, init = {}) {
+    const token = await this._appCheck?.getToken();
+    if (token) init = { ...init, headers: { ...(init.headers || {}), 'X-Firebase-AppCheck': token } };
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), this._timeoutMs);
     try {
@@ -66,7 +72,7 @@ export class FirebaseGovernanceAdapter extends IGovernancePort {
   }
 
   static _assertId(id) {
-    if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador inválido.');
+    if (!isGovernanceId(id)) throw new Error('Identificador inválido.');
   }
 
   async _create(collection, id, data) {

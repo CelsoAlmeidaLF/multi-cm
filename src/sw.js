@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-standard-v4';
+const CACHE = 'bargestao-standard-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -27,11 +27,13 @@ const ASSETS = [
   './js/domain/entities/Shift.js',
   './js/domain/entities/StockMovement.js',
   './js/domain/entities/AuditEntry.js',
+  './js/domain/entities/GovernanceUid.js',
   './js/infrastructure/adapters/WebCryptoAdapter.js',
   './js/infrastructure/adapters/StorageAdapter.js',
   './js/infrastructure/adapters/ConcurrencyAdapter.js',
   './js/infrastructure/adapters/BinaryExportAdapter.js',
   './js/infrastructure/adapters/FirebaseGovernanceAdapter.js',
+  './js/infrastructure/adapters/FirebaseAppCheckAdapter.js',
   './js/application/services/AuthService.js',
   './js/application/services/StockService.js',
   './js/application/services/OrderService.js',

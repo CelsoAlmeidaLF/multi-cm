@@ -3,6 +3,7 @@ import { StorageAdapter } from './infrastructure/adapters/StorageAdapter.js';
 import { ConcurrencyAdapter } from './infrastructure/adapters/ConcurrencyAdapter.js';
 import { BinaryExportAdapter } from './infrastructure/adapters/BinaryExportAdapter.js';
 import { FirebaseGovernanceAdapter } from './infrastructure/adapters/FirebaseGovernanceAdapter.js';
+import { FirebaseAppCheckAdapter } from './infrastructure/adapters/FirebaseAppCheckAdapter.js';
 
 import { AuthService } from './application/services/AuthService.js';
 import { StockService } from './application/services/StockService.js';
@@ -88,7 +89,7 @@ export class App {
     this._cash = new CashService();
     this._shift = new ShiftService();
     this._recovery = new RecoveryService(this._crypto);
-    this._governance = new GovernanceService(new FirebaseGovernanceAdapter(), this._storage, { appVersion: App.VERSION });
+    this._governance = new GovernanceService(new FirebaseGovernanceAdapter({ appCheck: new FirebaseAppCheckAdapter() }), this._storage, { appVersion: App.VERSION });
 
     this._renderer = new DomRenderer();
     this._events = new DomEventHandler(this);
@@ -133,24 +134,28 @@ export class App {
 
       this._bindUiEvents();
 
-      if (!meta) {
-        if (candidates.length) {
-          if (welcometitle) welcometitle.textContent = 'Recuperar dados existentes';
-          if (setupnotice) setupnotice.textContent = 'Foram encontrados arquivos JSON sem cadastro local. Utilize Restaurar backup criptografado.';
-          if (loginsubmit) loginsubmit.disabled = true;
+      const showLoginOrSetup = () => {
+        if (!meta) {
+          if (candidates.length) {
+            if (welcometitle) welcometitle.textContent = 'Recuperar dados existentes';
+            if (setupnotice) setupnotice.textContent = 'Foram encontrados arquivos JSON sem cadastro local. Utilize Restaurar backup criptografado.';
+            if (loginsubmit) loginsubmit.disabled = true;
+          } else {
+            this._showFirstAdminSetup();
+          }
         } else {
-          // Setup Inicial: o primeiro administrador só é criado após homologação (RN-FIREBASE.3)
-          const gated = await this._governanceCtl.gateFirstSetup(() => this._showFirstAdminSetup());
-          if (!gated) this._showFirstAdminSetup();
+          setupnotice?.classList.add('hidden');
+          authrecover?.classList.toggle('hidden', !meta.recovery);
+          const loginuser = document.getElementById('login-user');
+          if (loginuser) loginuser.value = meta.lastUser || '';
+          const user = meta.usuarios?.find(x => x.usuario === meta.lastUser);
+          this._setAuthMode(user?.pin && user?.deviceSeal ? 'pin' : 'senha');
         }
-      } else {
-        setupnotice?.classList.add('hidden');
-        authrecover?.classList.toggle('hidden', !meta.recovery);
-        const loginuser = document.getElementById('login-user');
-        if (loginuser) loginuser.value = meta.lastUser || '';
-        const user = meta.usuarios?.find(x => x.usuario === meta.lastUser);
-        this._setAuthMode(user?.pin && user?.deviceSeal ? 'pin' : 'senha');
-      }
+      };
+
+      // RN-FIREBASE.3: sem aprovação da governança (Firebase) o app não abre — vale também para
+      // instalações antigas, que precisam se cadastrar para receber o UID
+      if (await this._governanceCtl.gate(showLoginOrSetup)) showLoginOrSetup();
 
       this._events.bindGlobalListeners();
       this._initAutoLock();
@@ -267,6 +272,9 @@ export class App {
     }
 
     try {
+      if (!this._governanceCtl.hasAccess()) {
+        throw new Error('sem permissão da Governança Systekna.');
+      }
       const meta = this._auth.getMeta();
       if (!meta) {
         // Primeiro Administrador

@@ -220,8 +220,17 @@ export class SecurityController {
     }
   }
 
-  async _exportEncryptedBackup() {
-    if (!this._app._auth.isManager()) return;
+  /**
+   * Na tela de sem permissão não há sessão: o arquivo continua cifrado (cofre + chaves embrulhadas),
+   * então quem não tem a senha não lê nada; o estabelecimento só não fica refém dos próprios dados.
+   */
+  exportEncryptedBackup({ semSessao = false } = {}) {
+    if (semSessao && this._app._governanceCtl.hasAccess()) return;
+    return this._exportEncryptedBackup({ semSessao });
+  }
+
+  async _exportEncryptedBackup({ semSessao = false } = {}) {
+    if (!semSessao && !this._app._auth.isManager()) return;
     const auth = this._app._auth.getMeta();
     const candidates = await this._app._storage.readCandidates();
     const packet = candidates[0];

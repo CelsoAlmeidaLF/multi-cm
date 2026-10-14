@@ -55,16 +55,53 @@ await testCase('GOV-02', 'Cadastro envia solicitação pendente e grava estado l
   const svc = new GovernanceService(port, memoryStorage(), { appVersion: '2.5.0' });
   await svc.load();
   assert.equal(svc.getState(), GOVERNANCE_STATES.NOT_REGISTERED);
-  assert.equal(svc.allowsTables(), true, 'instalação legada sem cadastro mantém mesas');
+  assert.equal(svc.hasAccess(), false, 'sem cadastro não há permissão de usar o app');
+  assert.equal(svc.isBlocked(), true);
+  assert.equal(svc.allowsTables(), false, 'sem cadastro não libera mesas');
 
   const rec = await svc.submitRegistration({ usuario: 'bar_do_ze', tipoComercio: 'bar' });
-  assert.match(rec.id, /^[0-9a-f-]{36}$/);
+  assert.match(rec.id, /^[0-9a-f]{32}$/, 'UID é a impressão digital de 128 bits');
+  assert.equal(port.calls.registrations[0].id, rec.id, 'solicitação vai ao Firebase com o UID');
+  assert.equal(svc.getUid(), rec.id);
+  assert.match(GovernanceService.formatUid(rec.id), /^([0-9A-F]{4}-){7}[0-9A-F]{4}$/);
+  const outro = await new GovernanceService(fakePort(), memoryStorage()).submitRegistration({ usuario: 'bar_do_ze', tipoComercio: 'bar' });
+  assert.notEqual(outro.id, rec.id, 'mesmo cadastro gera outra impressão digital');
   const sent = port.calls.registrations[0].data;
   assert.equal(sent.status, 'pendente');
   assert.equal(sent.aprovadoPor, null);
   assert.ok(sent.solicitadoEm instanceof Date);
   assert.equal(svc.getState(), GOVERNANCE_STATES.PENDING);
   assert.equal(svc.allowsTables(), false, 'pendente não libera mesas');
+  assert.equal(svc.hasAccess(), false, 'pendente não usa o app');
+});
+
+await testCase('GOV-06', 'Permissões vêm da governança: acesso ao app e mesas por UID', async () => {
+  let reg = { status: 'aprovado', permiteMesas: false };
+  let tenant = { licenca: { status: 'ativo' }, permissoesModulos: { permiteMesas: false } };
+  const port = fakePort({ fetchRegistration: async () => reg, fetchTenant: async () => tenant });
+  const svc = new GovernanceService(port, memoryStorage());
+  await svc.submitRegistration({ usuario: 'bar_do_ze', tipoComercio: 'bar' });
+  await svc.refresh();
+  assert.equal(svc.hasAccess(), true);
+  assert.equal(svc.allowsTables(), false, 'governança desligou mesas');
+  tenant = { licenca: { status: 'ativo' }, permissoesModulos: { permiteMesas: true } };
+  await svc.refresh();
+  assert.equal(svc.allowsTables(), true, 'governança ligou mesas');
+  reg = { status: 'reprovado', motivoDecisao: 'Cadastro incompleto' };
+  await svc.refresh();
+  assert.equal(svc.hasAccess(), false);
+  assert.equal(svc.allowsTables(), false, 'sem acesso não há funcionalidade');
+  assert.equal(svc.getBlockReason(), 'Cadastro incompleto');
+});
+
+await testCase('GOV-07', 'Erros e feedbacks chegam à governança com o UID do cadastro', async () => {
+  const port = fakePort();
+  const svc = new GovernanceService(port, memoryStorage(), { appVersion: '2.5.0' });
+  await svc.submitRegistration({ usuario: 'bar_do_ze' });
+  await svc.reportError(new Error('falha x'), 'storage');
+  await svc.sendFeedback({ tipo: 'sugestao', avaliacao: 5, mensagem: 'ótimo' });
+  assert.equal(port.calls.errors[0].data.uid, svc.getUid());
+  assert.equal(port.calls.feedbacks[0].data.uid, svc.getUid());
 });
 
 await testCase('GOV-03', 'RN-FIREBASE.2 / doc 14: avaliação de aprovação, mesas e kill-switch', async () => {
@@ -259,6 +296,16 @@ await testCase('GOV-ADP', 'Adaptador REST: codificação tipada, documentId, 404
   assert.equal(await adp.fetchTenant(id), null);
   await assert.rejects(adp.sendFeedback(id, { nota: 1 }), /recusou/);
   await assert.rejects(adp.fetchRegistration('../outra-colecao'), /inválido/);
+  assert.equal(requests[0].init.headers['X-Firebase-AppCheck'], undefined, 'sem provedor, sem cabeçalho');
+
+  // UID de impressão digital + token do App Check (o projeto exige; sem ele o Firestore responde 403)
+  const comToken = new FirebaseGovernanceAdapter({ fetchImpl, appCheck: { getToken: async () => 'tok-123' } });
+  const uid = 'a'.repeat(32);
+  await comToken.fetchRegistration(uid);
+  const last = requests.at(-1);
+  assert.ok(last.url.includes(`/solicitacoes_governanca/${uid}?`));
+  assert.equal(last.init.headers['X-Firebase-AppCheck'], 'tok-123');
+  await assert.rejects(comToken.fetchRegistration('A'.repeat(32)), /inválido/, 'só hex minúsculo');
 });
 
 const failed = results.filter(r => r === 'FAIL').length;

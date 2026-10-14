@@ -24,17 +24,17 @@ src/js/
 
 ## Integração com a Governança Systekna
 
-Implementa os documentos 12, 13 e 14 de `.documents/planejamento`:
+Fluxo: **usuário se cadastra no app → é gerada a impressão digital (UID) → a solicitação vai ao Firebase com esse UID → a Governança aprova ou não** e libera/bloqueia funcionalidades no tenant de mesmo UID. As permissões vêm sempre do Firebase.
 
-- **Cadastro com homologação:** numa instalação nova, o primeiro administrador só é criado depois que a Governança aprova a solicitação (CNPJ opcional, validado quando informado). Requer internet uma vez.
-- **Licença e kill-switch:** a cada login o app consulta a solicitação e a licença. Bloqueado, reprovado ou com licença expirada, os lançamentos ficam suspensos; consulta e backup continuam disponíveis. Falha de rede, erro parcial ou documento ausente **mantêm o último estado** (nunca liberam). Sem confirmar a licença por mais de 14 dias, os lançamentos também ficam suspensos até reconectar.
-- **Módulo de mesas:** se a governança definir `permiteMesas: false`, a aba de mesas some e os lançamentos em comanda são recusados.
-- **Demais módulos do painel:** `permiteExportacaoXlsx: false` esconde e recusa a exportação em Excel (PDF continua); `limiteProdutos` impede cadastrar produto novo acima do teto do plano.
-- **Sem esperar novo login:** com a sessão aberta, o app reconsulta a governança ao voltar para a tela, ao reconectar e a cada 15 minutos; bloqueio ou liberação feitos no painel valem na hora.
-- **Telemetria e feedback:** erros não tratados e falhas de gravação são enviados sanitizados (chaves, documentos, e-mails e valores removidos), com limite por sessão. O gestor envia feedback em *Mais → Suporte*.
-- **Instalações existentes** (cofre criado antes desta versão) seguem funcionando sem cadastro; mesas continuam liberadas.
+- **Impressão digital (UID):** SHA-256 de um segredo aleatório de 256 bits + dados do cadastro, truncado em 128 bits (32 hex). É o id da solicitação (`solicitacoes_governanca/{uid}`) e da licença (`tenants_governanca/{uid}`), e aparece para o usuário e no painel como `3F2A-9C01-…`. O segredo não é guardado.
+- **Usar o app (sim/não):** sem aprovação vinda do Firebase o app não abre — nem o login. Pendente mostra "Cadastro em análise"; reprovado, bloqueado ou licença expirada mostra **"Sem permissão"** com o motivo, o UID, "Verificar novamente" e "Exportar backup criptografado" (o arquivo continua cifrado). Instalações antigas também precisam se cadastrar.
+- **Funcionalidades:** `permiteMesas` liga/desliga as mesas; `permiteExportacaoXlsx` a exportação em Excel; `limiteProdutos` o teto de produtos.
+- **Sem esperar novo login:** com o app aberto, a Governança é reconsultada ao voltar para a tela, ao reconectar e a cada 15 minutos. Perdeu a permissão → a sessão é encerrada e aparece "Sem permissão"; liberou → a tela de espera segue sozinha.
+- **Offline:** falha de rede ou resposta indeterminada mantêm o último estado (nunca liberam); sem confirmar a licença por mais de 14 dias, vale "Sem permissão" até reconectar.
+- **Telemetria e feedback:** erros e feedbacks vão sanitizados para `telemetria_erros` e `feedbacks_usuarios`, com o UID do cadastro.
+- **App Check:** o projeto `systekna-feedback` exige App Check; o token (reCAPTCHA Enterprise, SDK oficial da gstatic) vai no cabeçalho `X-Firebase-AppCheck` de cada chamada REST.
 
-O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas regras em `governanca-systekna/firestore.rules`. O enforcement no aparelho impede o uso normal, mas quem controla o próprio navegador consegue contorná-lo — a autoridade final é o Firestore e o contrato.
+O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas regras em `PACOTES/stk-pkg-doacao/firestore.rules`. O enforcement no aparelho impede o uso normal, mas quem controla o próprio navegador consegue contorná-lo — a autoridade final é o Firestore e o contrato.
 
 ## Segurança local
 
