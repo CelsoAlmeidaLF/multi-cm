@@ -86,41 +86,78 @@ export class AuthService {
     return { raw, key, session: this._session };
   }
 
+  /**
+   * PIN v2: o PIN é fator criptográfico. A chave do cofre é embrulhada por uma KEK derivada do PIN
+   * (PBKDF2) e esse embrulho é selado com a chave não extraível do dispositivo. Sem o PIN correto o
+   * AES-GCM não abre — não existe hash de PIN para comparar nem atalho pelo selo do dispositivo.
+   * Após MAX_PIN_FAILURES erros o selo é apagado e só a senha mestra desbloqueia.
+   */
+  static MAX_PIN_FAILURES = 5;
+  static PIN_ITERATIONS = 650000;
+
+  _pinAad(usuario, layer) {
+    return `BG:pin:v2:${layer}:${usuario}`;
+  }
+
+  async _derivePinKek(pin, saltHex, iterations) {
+    const salt = Uint8Array.from(saltHex.match(/.{2}/g), h => parseInt(h, 16));
+    const raw = await this._crypto.deriveKey('BG_PIN:' + pin, salt, iterations);
+    try {
+      return await this._crypto.importAesKey(raw);
+    } finally {
+      raw.fill(0);
+    }
+  }
+
+  async _clearPin(usuario) {
+    const draft = structuredClone(this._meta);
+    const target = draft.usuarios.find(u => u.usuario === usuario);
+    target.pin = null;
+    target.deviceSeal = null;
+    await this.saveMeta(draft);
+  }
+
   async pinAuth(username, pin) {
     const user = this._meta?.usuarios?.find(u => u.usuario.toLowerCase() === username.toLowerCase() && u.ativo !== false);
     if (!user?.pin || !user.deviceSeal) {
       throw new Error('Este usuário precisa entrar com senha e configurar PIN neste aparelho.');
     }
 
-    const now = Date.now();
-    if ((user.pin.blockedUntil || 0) > now) {
-      const seg = Math.ceil((user.pin.blockedUntil - now) / 1000);
-      throw new Error(`PIN bloqueado temporariamente. Aguarde ${seg} segundos.`);
-    }
-
-    const salt = Uint8Array.from(user.pin.salt.match(/.{2}/g), h => parseInt(h, 16));
-    const derived = await this._crypto.deriveKey('BG_PIN:' + pin, salt, user.pin.iterations);
-    const actualHex = Array.from(derived, x => x.toString(16).padStart(2, '0')).join('');
-
-    if (!this._crypto.equalHex(actualHex, user.pin.hash)) {
-      const draft = structuredClone(this._meta);
-      const target = draft.usuarios.find(u => u.usuario === user.usuario);
-      target.pin.failures = (target.pin.failures || 0) + 1;
-      if (target.pin.failures >= 5) {
-        target.pin.blockedUntil = Date.now() + Math.min(3600000, 60000 * Math.pow(2, Math.min(target.pin.failures - 5, 6)));
-      }
-      await this.saveMeta(draft);
-      throw new Error('PIN incorreto.');
+    // PIN do formato antigo (selo sem fator PIN): desativa em vez de aceitar
+    if (user.pin.v !== 2) {
+      await this._clearPin(user.usuario);
+      throw new Error('Por segurança, o PIN antigo foi desativado. Entre com a senha e configure o PIN novamente.');
     }
 
     const keydevice = await this._storage.dbRead('device', 'device-wrap');
     if (!keydevice) throw new Error('Chave local perdida. Entre com sua senha mestra.');
 
-    const unhex = s => Uint8Array.from(s.match(/.{2}/g), h => parseInt(h, 16));
-    const opened = await this._crypto.open(user.deviceSeal, keydevice);
-    const raw = unhex(opened.key);
-    const key = await this._crypto.importAesKey(raw);
+    let inner;
+    try {
+      inner = await this._crypto.open(user.deviceSeal, keydevice, this._pinAad(user.usuario, 'device'));
+    } catch {
+      await this._clearPin(user.usuario);
+      throw new Error('PIN inválido neste aparelho. Entre com sua senha mestra.');
+    }
 
+    let raw;
+    try {
+      const kek = await this._derivePinKek(pin, user.pin.salt, user.pin.iterations);
+      const opened = await this._crypto.open(inner, kek, this._pinAad(user.usuario, 'pin'));
+      raw = Uint8Array.from(opened.key.match(/.{2}/g), h => parseInt(h, 16));
+    } catch {
+      const failures = (user.pin.failures || 0) + 1;
+      if (failures >= AuthService.MAX_PIN_FAILURES) {
+        await this._clearPin(user.usuario);
+        throw new Error('PIN incorreto. Limite de tentativas atingido: entre com sua senha mestra.');
+      }
+      const draft = structuredClone(this._meta);
+      draft.usuarios.find(u => u.usuario === user.usuario).pin.failures = failures;
+      await this.saveMeta(draft);
+      throw new Error(`PIN incorreto. Restam ${AuthService.MAX_PIN_FAILURES - failures} tentativa(s).`);
+    }
+
+    const key = await this._crypto.importAesKey(raw);
     this._vaultraw = raw;
     this._vaultkey = key;
     this._session = { usuario: user.usuario, perfil: user.perfil };
@@ -128,7 +165,6 @@ export class AuthService {
     const draft = structuredClone(this._meta);
     const target = draft.usuarios.find(u => u.usuario === user.usuario);
     target.pin.failures = 0;
-    target.pin.blockedUntil = 0;
     draft.lastUser = user.usuario;
     await this.saveMeta(draft);
 
@@ -148,22 +184,16 @@ export class AuthService {
       throw new Error('Senha atual incorreta.');
     }
 
-    const salt = this._crypto.randomBytes(16);
-    const iterations = 450000;
-    const derived = await this._crypto.deriveKey('BG_PIN:' + newpin, salt, iterations);
-    const hash = Array.from(derived, x => x.toString(16).padStart(2, '0')).join('');
-
+    const salt = hex(this._crypto.randomBytes(16));
+    const iterations = AuthService.PIN_ITERATIONS;
+    const kek = await this._derivePinKek(newpin, salt, iterations);
+    const inner = await this._crypto.seal({ key: hex(this._vaultraw) }, kek, this._pinAad(this._session.usuario, 'pin'));
     const device = await this._getDeviceKey();
+
     const draft = structuredClone(this._meta);
     const target = draft.usuarios.find(u => u.usuario === this._session.usuario);
-    target.pin = {
-      salt: hex(salt),
-      iterations,
-      hash,
-      failures: 0,
-      blockedUntil: 0
-    };
-    target.deviceSeal = await this._crypto.seal({ key: hex(this._vaultraw) }, device);
+    target.pin = { v: 2, salt, iterations, failures: 0 };
+    target.deviceSeal = await this._crypto.seal(inner, device, this._pinAad(this._session.usuario, 'device'));
     draft.lastUser = this._session.usuario;
     await this.saveMeta(draft);
   }

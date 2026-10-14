@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { readAppSource } from './app-source.mjs';
 
 const ROOT = process.cwd();
 const rootDir = fs.existsSync(path.join(ROOT, 'multi-cm/src')) ? 'multi-cm' : '.';
@@ -17,7 +18,7 @@ console.log('⚙️ [QA/UI] - VALIDAÇÃO DETERMINÍSTICA DA TELA DE CONFIGURAÇ
 console.log('======================================================================');
 
 const html = fs.readFileSync(HTML_FILE, 'utf-8');
-const appJs = fs.readFileSync(APP_FILE, 'utf-8');
+const appJs = readAppSource(path.join(ROOT, rootDir));
 const css = fs.readFileSync(CSS_COMPONENTS, 'utf-8');
 
 // 1. Verificação dos Elementos no HTML

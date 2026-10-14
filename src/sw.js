@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-standard-v2';
+const CACHE = 'bargestao-standard-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const ASSETS = [
   './js/domain/interfaces/IAuditEntry.js',
   './js/domain/interfaces/ICryptoPort.js',
   './js/domain/interfaces/IStoragePort.js',
+  './js/domain/interfaces/IGovernancePort.js',
   './js/domain/entities/Product.js',
   './js/domain/entities/OrderItem.js',
   './js/domain/entities/Table.js',
@@ -26,18 +27,28 @@ const ASSETS = [
   './js/domain/entities/Shift.js',
   './js/domain/entities/StockMovement.js',
   './js/domain/entities/AuditEntry.js',
+  './js/domain/entities/GovernanceUid.js',
   './js/infrastructure/adapters/WebCryptoAdapter.js',
   './js/infrastructure/adapters/StorageAdapter.js',
   './js/infrastructure/adapters/ConcurrencyAdapter.js',
   './js/infrastructure/adapters/BinaryExportAdapter.js',
+  './js/infrastructure/adapters/FirebaseGovernanceAdapter.js',
+  './js/infrastructure/adapters/FirebaseAppCheckAdapter.js',
   './js/application/services/AuthService.js',
   './js/application/services/StockService.js',
   './js/application/services/OrderService.js',
   './js/application/services/CashService.js',
   './js/application/services/ShiftService.js',
   './js/application/services/RecoveryService.js',
+  './js/application/services/GovernanceService.js',
+  './js/application/services/BackupService.js',
   './js/ui/adapters/DomRenderer.js',
-  './js/ui/adapters/DomEventHandler.js'
+  './js/ui/adapters/DomEventHandler.js',
+  './js/ui/controllers/SalesController.js',
+  './js/ui/controllers/StockController.js',
+  './js/ui/controllers/CashController.js',
+  './js/ui/controllers/SecurityController.js',
+  './js/ui/controllers/GovernanceController.js'
 ];
 
 self.addEventListener('install', e => {
@@ -58,6 +69,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Consultas à governança (Firestore) nunca passam pelo cache: o estado de licença precisa ser atual
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then(r => {

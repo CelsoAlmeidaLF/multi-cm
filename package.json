@@ -1,0 +1,12 @@
+{
+  "name": "bargestao-standard",
+  "version": "2.5.0",
+  "private": true,
+  "description": "BarGestão Standard — PWA local-first de gestão para bares, lanchonetes e adegas",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-all.mjs",
+    "start": "python3 -m http.server 8080 --directory src"
+  },
+  "license": "GPL-3.0-only"
+}
