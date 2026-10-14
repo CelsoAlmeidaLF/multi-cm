@@ -28,7 +28,7 @@ import { GovernanceController } from './ui/controllers/GovernanceController.js';
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '2.6.1';
+  static VERSION = '2.6.2';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -499,6 +499,13 @@ export class App {
     document.getElementById('header-user').textContent = session.usuario;
     document.getElementById('header-role').textContent = session.perfil;
     document.getElementById('user-avatar').textContent = session.usuario.charAt(0).toUpperCase();
+    // Barra de título: [menu do kit] [nome do estabelecimento cadastrado na governança] [avatar]
+    const estabelecimento = document.getElementById('header-estabelecimento');
+    if (estabelecimento) {
+      const nome = this._governance.getRecord()?.nomeEstabelecimento?.trim() || 'BarGestão';
+      estabelecimento.textContent = nome;
+      estabelecimento.title = nome;
+    }
 
     const moreUser = document.getElementById('more-username');
     if (moreUser) moreUser.textContent = session.usuario;

@@ -86,3 +86,29 @@ html.vault-locked body {
 }
 .vault-dialog { border-radius: var(--radius-lg); }
 .vault-dialog::backdrop, .fs-sheet::backdrop { background: rgba(20, 37, 60, 0.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+/* Menu do kit (3 pontos) dentro da barra de título: [⋮] [Nome do estabelecimento] [avatar] */
+.topbar .vp-bar { display: flex; flex: none; align-items: center; margin-right: 12px; }
+.topbar .vp-bar:empty { display: none; }
+#vaultProfileBtn {
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-solid);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+#vaultProfileBtn:hover { border-color: var(--accent); background: var(--accentSoft); }
+.topbar .top-title { flex: 1; min-width: 0; }
+.topbar .top-title > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar .profile { flex: none; margin-left: 12px; }
+
+@media (max-width: 767px) {
+  #vaultProfileBtn { width: 34px; height: 34px; border-radius: 10px; }
+  .topbar .vp-bar { margin-right: 10px; }
+  /* No celular a barra fica só com [⋮] [nome] [avatar]; bloquear continua em Mais → Bloquear o aplicativo */
+  .topbar #top-logout { display: none; }
+}
