@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-standard-v6';
+const CACHE = 'bargestao-standard-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './css/theme.css',
   './css/layout.css',
   './css/components.css',
+  './css/kit-aero.css',
   './fonts/fonts.css',
   './fonts/ibm-plex-mono-latin-400.woff2',
   './fonts/ibm-plex-mono-latin-500.woff2',

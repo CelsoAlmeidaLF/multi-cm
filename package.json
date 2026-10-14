@@ -1,6 +1,6 @@
 {
   "name": "bargestao-standard",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "private": true,
   "description": "BarGestão Standard — PWA local-first de gestão para bares, lanchonetes e adegas",
   "type": "module",

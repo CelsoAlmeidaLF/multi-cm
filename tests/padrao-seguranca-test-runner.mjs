@@ -120,6 +120,17 @@ await testCase('SEG-11', 'Service worker guarda todos os módulos JS (o app abre
   }
 });
 
+await testCase('SEG-12', 'Cofre no visual Aero: todo token de cor do kit é definido pelo app (sem cair no tema escuro)', async () => {
+  const kit = src('stk-pkg-secure-ui.css');
+  const usados = [...new Set([...kit.matchAll(/var\(--([a-z0-9-]+)/g)].map(m => m[1]))];
+  const app = ['css/theme.css', 'css/kit-aero.css'].map(src).join('\n');
+  for (const token of usados) assert.match(app, new RegExp(`--${token}\\s*:`), `--${token} sem valor no app`);
+  const linkKit = html.indexOf('href="stk-pkg-secure-ui.css"');
+  const linkPonte = html.indexOf('href="css/kit-aero.css"');
+  assert.ok(linkKit > 0 && linkPonte > linkKit, 'kit-aero.css carrega depois do CSS do kit');
+  assert.ok(src('sw.js').includes("'./css/kit-aero.css'"));
+});
+
 const failed = results.filter(r => r === 'FAIL').length;
 console.log('='.repeat(70));
 console.log(`📊 TOTAL: ${results.length} | ✅ PASS: ${results.length - failed} | ❌ FAIL: ${failed}`);

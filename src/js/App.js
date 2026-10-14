@@ -28,7 +28,7 @@ import { GovernanceController } from './ui/controllers/GovernanceController.js';
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '2.6.0';
+  static VERSION = '2.6.1';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
