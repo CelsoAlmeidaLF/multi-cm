@@ -15,10 +15,17 @@ import { RecoveryService } from '../src/js/application/services/RecoveryService.
 import { AuthService } from '../src/js/application/services/AuthService.js';
 
 import { WebCryptoAdapter } from '../src/js/infrastructure/adapters/WebCryptoAdapter.js';
+import { BG12_LEGACY_WORDS } from '../src/js/domain/values/Bg12LegacyWords.js';
+
+// Kit de segurança Systekna (cópia em src/), carregado como no navegador: registra-se em globalThis
+await import('../src/stk-pkg-bip39-pt.js');
+await import('../src/stk-pkg-secure-vault.js');
+const kitSeed = globalThis.FinancVault.seed;
+const BIP39_PT = globalThis.FINANC_BIP39_PT;
 
 // Setup de Crypto Port para o ambiente de testes
 const cryptoAdapter = new WebCryptoAdapter();
-const recoveryService = new RecoveryService(cryptoAdapter);
+const recoveryService = new RecoveryService(cryptoAdapter, kitSeed);
 const orderService = new OrderService();
 const stockService = new StockService();
 const cashService = new CashService();
@@ -293,7 +300,7 @@ await testCase('RN-REC.2', 'RN13: Rejeição de frase BG12 adulterada ou inváli
   // Frase com palavra inexistente
   await assert.rejects(async () => {
     await recoveryService.parsePhrase('palavrainvalida about above abroad abscess absence absent absolute absorbed accept accepted access');
-  }, /não pertencem ao dicionário/);
+  }, /não existe na lista/);
 
   // Frase válida gerada
   const { phrase } = await recoveryService.generatePhrase();
@@ -308,13 +315,57 @@ await testCase('RN-REC.2', 'RN13: Rejeição de frase BG12 adulterada ou inváli
     try {
       await recoveryService.parsePhrase(swapped.join(' '));
     } catch (e) {
-      if (/integridade/.test(e.message)) {
+      if (/integridade|não conferem/.test(e.message)) {
         integrityFailed = true;
         break;
       }
     }
   }
   assert.equal(integrityFailed, true, 'Troca de ordem de palavras deve falhar no checksum de integridade');
+});
+
+// Frase BG12 antiga (inglês) montada como o gerador legado fazia, a partir da entropia
+async function legacyPhrase(entropy) {
+  const digest = await cryptoAdapter.sha256(entropy);
+  const bits = Array.from(entropy, b => b.toString(2).padStart(8, '0')).join('') +
+    parseInt(digest.slice(0, 2), 16).toString(2).padStart(8, '0').slice(0, 4);
+  return Array.from({ length: 12 }, (_, i) => BG12_LEGACY_WORDS[parseInt(bits.slice(i * 11, i * 11 + 11), 2)]).join(' ');
+}
+
+await testCase('RN-REC.3', 'Padrão Systekna: frase nova em BIP39-pt (lista do kit), aceita só com as 4 primeiras letras', '🔴', async () => {
+  const { phrase, token } = await recoveryService.generatePhrase();
+  for (const w of phrase.split(' ')) assert.ok(BIP39_PT.includes(w), `"${w}" não é da lista BIP39-pt`);
+  const abreviada = phrase.split(' ').map(w => w.slice(0, 4).toUpperCase()).join(', ');
+  assert.equal((await recoveryService.parsePhrase(abreviada)).token, token);
+});
+
+await testCase('RN-REC.4', 'Compatibilidade: frase antiga em inglês abre o mesmo registro (inclusive com "undefined")', '🔴', async () => {
+  const entropy = cryptoAdapter.randomBytes(16);
+  const antiga = await legacyPhrase(entropy);
+  const nova = await recoveryService.parsePhrase(antiga);
+  assert.equal(nova.token, await cryptoAdapter.sha256('BarGestao:Recovery-BG12:v1:' + Array.from(entropy, x => x.toString(16).padStart(2, '0')).join('')));
+  assert.equal((await recoveryService.parsePhrase(nova.phrase)).token, nova.token, 'a frase convertida para BIP39-pt dá o mesmo token');
+
+  // Índice 2047 (último): a lista antiga tinha 2047 palavras e o gerador escrevia "undefined"
+  const ultima = new Uint8Array(16).fill(0xff);
+  const comUndefined = await legacyPhrase(ultima);
+  assert.ok(comUndefined.split(' ').includes('undefined'));
+  assert.equal((await recoveryService.parsePhrase(comUndefined)).token.length, 64);
+
+  // Frase antiga com ordem trocada: falha de integridade, não aceita
+  const words = antiga.split(' ');
+  let falhou = false;
+  for (let i = 0; i < 11 && !falhou; i++) {
+    const t = [...words]; [t[i], t[i + 1]] = [t[i + 1], t[i]];
+    if (t.join(' ') === antiga) continue;
+    try { await recoveryService.parsePhrase(t.join(' ')); } catch { falhou = true; }
+  }
+  assert.ok(falhou);
+});
+
+await testCase('RN-REC.5', 'Sem o kit de segurança carregado, a recuperação recusa em vez de gerar frase fora do padrão', '🟠', async () => {
+  const semKit = new RecoveryService(cryptoAdapter, null);
+  await assert.rejects(() => semKit.generatePhrase(), /Kit de segurança/);
 });
 
 // =========================================================================

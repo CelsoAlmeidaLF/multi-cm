@@ -107,7 +107,7 @@ await testCase('GOV-07', 'Erros e feedbacks chegam à governança com o UID do c
 await testCase('GOV-03', 'RN-FIREBASE.2 / doc 14: avaliação de aprovação, mesas e kill-switch', async () => {
   const aprovado = { status: 'aprovado', permiteMesas: true };
   const ativo = { licenca: { status: 'ativo' } };
-  assert.deepEqual(GovernanceService.evaluate(aprovado, ativo), { state: 'aprovado', permiteMesas: true, permiteExportacaoXlsx: true, limiteProdutos: null, motivo: '' });
+  assert.deepEqual(GovernanceService.evaluate(aprovado, ativo), { state: 'aprovado', motivo: '', permiteMesas: true, permiteExportacaoXlsx: true, permiteBiometria: true, permiteEscPosTermica: false, limiteProdutos: null, limiteUsuarios: null });
   assert.equal(GovernanceService.evaluate(aprovado, null), null, 'aprovado sem licença é indeterminado');
   assert.equal(GovernanceService.evaluate(null, ativo), null, 'solicitação ausente é indeterminada');
   const expirada = GovernanceService.evaluate(aprovado, { licenca: { status: 'ativo', expiraEm: '2020-01-01T00:00:00Z' } });

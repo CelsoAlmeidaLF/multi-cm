@@ -1,4 +1,5 @@
 import { BackupService } from '../../application/services/BackupService.js';
+import { typedValue, clearTyped } from '../adapters/TypedSecrets.js';
 
 /**
  * Controller de UI: Segurança, PIN, senha, auditoria, backup e recuperação.
@@ -130,13 +131,23 @@ export class SecurityController {
     this._app._renderer.toast('Preferências de segurança salvas.');
   }
 
+  /** Senhas e PINs só digitados (padrão Systekna): valor posto por fora mostra o erro e cancela. */
+  _readTyped(ids, errorEl) {
+    try {
+      return ids.map(id => typedValue(id));
+    } catch (ex) {
+      if (errorEl) errorEl.textContent = ex.message;
+      return null;
+    }
+  }
+
   async _configurePin(event) {
     event.preventDefault();
-    const currentPass = document.getElementById('pin-current-password')?.value;
-    const pinNew = document.getElementById('pin-new')?.value;
-    const pinConfirm = document.getElementById('pin-confirm')?.value;
     const errorEl = document.getElementById('pin-error');
     if (errorEl) errorEl.textContent = '';
+    const typed = this._readTyped(['pin-current-password', 'pin-new', 'pin-confirm'], errorEl);
+    if (!typed) return;
+    const [currentPass, pinNew, pinConfirm] = typed;
 
     if (pinNew !== pinConfirm) {
       if (errorEl) errorEl.textContent = 'Confirmação do PIN não confere.';
@@ -170,11 +181,11 @@ export class SecurityController {
 
   async _changeOwnPassword(event) {
     event.preventDefault();
-    const oldPass = document.getElementById('change-old')?.value;
-    const newPass = document.getElementById('change-new')?.value;
-    const confirmPass = document.getElementById('change-confirm')?.value;
     const errorEl = document.getElementById('change-error');
     if (errorEl) errorEl.textContent = '';
+    const typed = this._readTyped(['change-old', 'change-new', 'change-confirm'], errorEl);
+    if (!typed) return;
+    const [oldPass, newPass, confirmPass] = typed;
 
     if (!this._app._auth.validatePassword(newPass) || newPass !== confirmPass) {
       if (errorEl) errorEl.textContent = 'Nova senha deve ter 8+ caracteres e confirmação idêntica.';
@@ -286,10 +297,11 @@ export class SecurityController {
     event.preventDefault();
     const token = document.getElementById('recover-token')?.value.trim();
     const user = document.getElementById('recover-user')?.value.trim();
-    const pass = document.getElementById('recover-password')?.value;
-    const confirm = document.getElementById('recover-confirm')?.value;
     const errorEl = document.getElementById('recover-error');
     if (errorEl) errorEl.textContent = '';
+    const typed = this._readTyped(['recover-password', 'recover-confirm'], errorEl);
+    if (!typed) return;
+    const [pass, confirm] = typed;
 
     if (!token || !user || !pass) {
       if (errorEl) errorEl.textContent = 'Preencha todos os campos obrigatórios.';
@@ -326,7 +338,7 @@ export class SecurityController {
       const loginUser = document.getElementById('login-user');
       if (loginUser) loginUser.value = user;
       const loginSecret = document.getElementById('login-secret');
-      if (loginSecret) loginSecret.value = '';
+      clearTyped(loginSecret);
     } catch (ex) {
       if (errorEl) errorEl.textContent = ex.message;
     }
