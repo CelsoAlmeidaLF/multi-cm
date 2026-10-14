@@ -30,10 +30,13 @@ export class DomRenderer {
     return Number.isNaN(d.getTime()) ? 'Data não disponível' : d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   }
 
-  make(tag, cls = '', text = undefined) {
+  make(tag, cls = '', text = undefined, attrs = {}) {
     const el = document.createElement(tag);
     if (cls) el.className = cls;
     if (text !== undefined) el.textContent = String(text);
+    for (const [name, value] of Object.entries(attrs || {})) {
+      el.setAttribute(name, String(value));
+    }
     return el;
   }
 
@@ -82,7 +85,7 @@ export class DomRenderer {
     if (dialog?.open) dialog.close();
   }
 
-  renderNavigation(currenttab, ismanager, ontabchange) {
+  renderNavigation(currenttab, ismanager, ontabchange, hiddentabs = []) {
     for (const target of ['desktop-nav', 'mobile-nav']) {
       const root = document.getElementById(target);
       if (!root) continue;
@@ -93,6 +96,7 @@ export class DomRenderer {
 
       for (const tab of tabs) {
         if (tab === 'usuarios' && !ismanager) continue;
+        if (hiddentabs.includes(tab)) continue;
         const b = this.make('button', target === 'desktop-nav' ? 'nav-item' : '');
         b.type = 'button';
         b.classList.toggle('active', tab === currenttab || (tab === 'mais' && target === 'mobile-nav' && currenttab === 'usuarios'));

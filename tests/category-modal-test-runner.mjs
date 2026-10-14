@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { readAppSource } from './app-source.mjs';
 
 console.log('======================================================================');
 console.log('🏷️ [QA/UI] - VALIDAÇÃO DETERMINÍSTICA DE CATEGORIAS EM MODAL E FLUXO');
@@ -9,7 +10,7 @@ console.log('===================================================================
 
 const rootDir = fs.existsSync('multi-cm/src') ? 'multi-cm' : '.';
 const htmlContent = fs.readFileSync(path.resolve(rootDir, 'src/index.html'), 'utf-8');
-const appJsContent = fs.readFileSync(path.resolve(rootDir, 'src/js/App.js'), 'utf-8');
+const appJsContent = readAppSource(rootDir);
 const layoutCssContent = fs.readFileSync(path.resolve(rootDir, 'src/css/layout.css'), 'utf-8');
 
 // 1. Verificação de Ocultação do Card Fixo na Tela Principal de Estoque
