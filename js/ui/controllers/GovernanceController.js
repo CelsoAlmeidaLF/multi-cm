@@ -1,20 +1,22 @@
-import { GOVERNANCE_STATES } from '../../application/services/GovernanceService.js';
+import { GOVERNANCE_STATES, GovernanceService } from '../../application/services/GovernanceService.js';
 
 /**
  * Controller de UI: Governança Systekna.
- * - Cadastro com homologação antes do primeiro administrador (doc 12, RN-FIREBASE.3)
- * - Aplicação dos módulos (mesas, exportação XLSX, limite de produtos) e do kill-switch remoto (doc 14),
- *   reconsultados ao voltar ao app, ao reconectar e periodicamente — sem esperar novo login
- * - Feedback do gestor e telemetria de erros sanitizada (doc 13)
+ * Fluxo: cadastro no app → impressão digital (UID) → solicitação no Firebase → a governança aprova ou não.
+ * - Sem aprovação vinda do Firebase o app não abre: mostra "Sem permissão" (ou "em análise") com o UID,
+ *   "Verificar novamente" e a exportação do backup criptografado (doc 12, RN-FIREBASE.3)
+ * - Funcionalidades (mesas, exportação XLSX, limite de produtos) liberadas/bloqueadas pelo tenant (doc 14),
+ *   reconsultadas ao voltar ao app, ao reconectar e periodicamente — sem esperar novo login
+ * - Feedback do gestor e telemetria de erros sanitizada, ligados ao UID (doc 13)
  */
 export class GovernanceController {
   _app;
   _service;
-  _onApproved = null;
+  _onGranted = null;
   _lastSync = 0;
   _syncing = false;
 
-  // Reconsulta da licença com a sessão aberta: intervalo e espaçamento mínimo entre consultas
+  // Reconsulta da licença: intervalo e espaçamento mínimo entre consultas
   static WATCH_INTERVAL_MS = 15 * 60 * 1000;
   static MIN_GAP_MS = 60 * 1000;
 
@@ -25,7 +27,8 @@ export class GovernanceController {
 
   bind() {
     document.getElementById('gov-register-form')?.addEventListener('submit', e => this._submit_registration(e));
-    document.getElementById('gov-check-status')?.addEventListener('click', () => this._checkPendingStatus());
+    document.getElementById('gov-check-status')?.addEventListener('click', () => this._checkStatus());
+    document.getElementById('gov-export-backup')?.addEventListener('click', () => this._app._securityCtl.exportEncryptedBackup({ semSessao: true }));
     document.getElementById('more-feedback')?.addEventListener('click', () => this._openFeedback());
     document.getElementById('form-feedback')?.addEventListener('submit', e => this._submit_feedback(e));
   }
@@ -38,6 +41,10 @@ export class GovernanceController {
 
   report(error, modulo) {
     return this._service.reportError(error, modulo);
+  }
+
+  hasAccess() {
+    return this._service.hasAccess();
   }
 
   allowsTables() {
@@ -71,55 +78,79 @@ export class GovernanceController {
 
   blockMessage() {
     const reason = this._service.getBlockReason();
-    return `Lançamentos suspensos pela Governança Systekna${reason ? `: ${reason}` : '.'} Os dados locais continuam disponíveis para consulta e backup.`;
+    return `Sem permissão da Governança Systekna${reason ? `: ${reason}` : '.'}`;
   }
 
   // ---------------------------------------------------------------------------
-  // Primeiro acesso: homologação antes de criar o administrador
+  // Porta de entrada: o app só abre com aprovação confirmada no Firebase
   // ---------------------------------------------------------------------------
 
   /**
-   * Decide se o primeiro acesso pode seguir para a criação do administrador.
-   * @param {Function} onApproved chamado quando a governança aprova (mostra o setup do admin)
-   * @returns {Promise<boolean>} true se a tela de governança assumiu (ainda não aprovado)
+   * @param {Function} onGranted chamado quando a governança libera depois (via "Verificar novamente")
+   * @returns {Promise<boolean>} true se o acesso já está liberado e o login/setup pode seguir
    */
-  async gateFirstSetup(onApproved) {
-    this._onApproved = onApproved;
-    const record = this._service.getRecord();
-    if (!record) {
+  async gate(onGranted) {
+    this._onGranted = onGranted;
+    if (!this._service.getRecord()) {
       this._showPanel('register');
-      return true;
-    }
-    const result = await this._service.refresh();
-    if (result.state === GOVERNANCE_STATES.APPROVED) {
-      this._showPanel(null);
       return false;
     }
-    this._renderPending(result);
-    return true;
+    this._lastSync = Date.now();
+    const result = await this._service.refresh();
+    if (this.hasAccess()) {
+      this._showPanel(null);
+      return true;
+    }
+    this._renderStatus(result);
+    return false;
   }
 
   _showPanel(which) {
     document.getElementById('gov-register')?.classList.toggle('hidden', which !== 'register');
-    document.getElementById('gov-pending')?.classList.toggle('hidden', which !== 'pending');
+    document.getElementById('gov-pending')?.classList.toggle('hidden', which !== 'status');
     document.getElementById('auth-login-stack')?.classList.toggle('hidden', which !== null);
     document.getElementById('setup-notice')?.classList.toggle('hidden', which !== null);
+    document.getElementById('autofill-note')?.classList.toggle('hidden', which !== null);
+    document.getElementById('auth-intro-text')?.classList.toggle('hidden', which !== null);
     const title = document.getElementById('auth-welcome-title');
     if (title && which === 'register') title.textContent = 'Solicitar liberação de acesso';
-    if (title && which === 'pending') title.textContent = 'Cadastro em análise';
   }
 
-  _renderPending(result) {
-    this._showPanel('pending');
+  _isGateOpen() {
+    return !document.getElementById('gov-register')?.classList.contains('hidden')
+      || !document.getElementById('gov-pending')?.classList.contains('hidden');
+  }
+
+  async _renderStatus(result) {
+    this._showPanel('status');
+    const pending = this._service.getState() === GOVERNANCE_STATES.PENDING;
+    const title = document.getElementById('auth-welcome-title');
+    if (title) title.textContent = pending ? 'Cadastro em análise' : 'Sem permissão';
+
     const text = document.getElementById('gov-pending-text');
-    if (!text) return;
-    if (result.state === GOVERNANCE_STATES.REJECTED || result.state === GOVERNANCE_STATES.BLOCKED) {
-      text.textContent = `A Governança da Systekna não liberou o acesso${result.motivo ? `: ${result.motivo}` : '.'}`;
-    } else if (result.offline) {
-      text.textContent = 'Sem conexão com a Governança da Systekna. Conecte-se à internet e verifique novamente.';
-    } else {
-      text.textContent = 'Sua solicitação de acesso foi enviada para a Governança da Systekna e está em análise.';
+    if (text) {
+      if (pending && result.offline) {
+        text.textContent = 'Sem conexão com a Governança da Systekna. Conecte-se à internet e verifique novamente.';
+      } else if (pending) {
+        text.textContent = 'Sua solicitação foi enviada para a Governança da Systekna e está em análise. Informe a impressão digital abaixo se precisar falar com o suporte.';
+      } else {
+        text.textContent = `Você não tem permissão para usar o BarGestão. ${this._capitalize(this._service.getBlockReason())}.`;
+      }
     }
+    const uid = document.getElementById('gov-uid');
+    if (uid) uid.textContent = GovernanceService.formatUid(this._service.getUid()) || '—';
+
+    // Sem permissão: o estabelecimento ainda pode levar os próprios dados (cifrados) embora
+    const exportBtn = document.getElementById('gov-export-backup');
+    if (exportBtn) {
+      const hasData = !pending && (await this._app._storage.readCandidates()).length > 0 && Boolean(this._app._auth.getMeta());
+      exportBtn.classList.toggle('hidden', !hasData);
+    }
+  }
+
+  _capitalize(text) {
+    const t = String(text || '').trim().replace(/\.$/, '');
+    return t ? t[0].toUpperCase() + t.slice(1) : 'Acesso não liberado';
   }
 
   async _submit_registration(event) {
@@ -136,8 +167,8 @@ export class GovernanceController {
         tipoComercio: document.getElementById('gov-tipo')?.value
       });
       const loginUser = document.getElementById('login-user');
-      if (loginUser) loginUser.value = record.usuario;
-      this._renderPending({ state: GOVERNANCE_STATES.PENDING, offline: false });
+      if (loginUser && !loginUser.value) loginUser.value = record.usuario;
+      await this._renderStatus({ state: GOVERNANCE_STATES.PENDING, offline: false });
     } catch (e) {
       if (errorEl) errorEl.textContent = 'Não foi possível enviar a solicitação: ' + e.message;
     } finally {
@@ -145,34 +176,45 @@ export class GovernanceController {
     }
   }
 
-  async _checkPendingStatus() {
+  async _checkStatus() {
     const button = document.getElementById('gov-check-status');
     if (button) button.disabled = true;
     try {
+      this._lastSync = Date.now();
       const result = await this._service.refresh();
-      if (result.state === GOVERNANCE_STATES.APPROVED) {
-        this._showPanel(null);
-        const loginUser = document.getElementById('login-user');
-        if (loginUser && !loginUser.value) loginUser.value = this._service.getRecord()?.usuario || '';
-        this._onApproved?.();
-        this._app._renderer.toast('Acesso liberado pela governança. Crie o administrador.');
+      if (this.hasAccess()) {
+        this._grant();
       } else {
-        this._renderPending(result);
+        await this._renderStatus(result);
+        this._app._renderer.toast(result.offline ? 'Sem conexão com a governança.' : 'Acesso ainda não liberado.');
       }
     } finally {
       if (button) button.disabled = false;
     }
   }
 
+  _grant() {
+    this._showPanel(null);
+    const loginUser = document.getElementById('login-user');
+    if (loginUser && !loginUser.value) loginUser.value = this._service.getRecord()?.usuario || '';
+    this._onGranted?.();
+    this._app._renderer.toast('Acesso liberado pela Governança Systekna.');
+  }
+
+  /** Perdeu a permissão com o app aberto: encerra a sessão e mostra a tela de sem permissão. */
+  async _lockOut(result) {
+    if (this._app._auth.getSession()) this._app._discardSession();
+    await this._renderStatus(result);
+  }
+
   // ---------------------------------------------------------------------------
-  // Após o login: sincroniza licença e módulos sem travar a operação offline
+  // Após o login e com o app aberto: permissões sempre vindas do Firebase
   // ---------------------------------------------------------------------------
 
   async syncAfterLogin() {
-    if (this._service.getRecord()) {
-      this._lastSync = Date.now();
-      await this._service.refresh();
-    }
+    this._lastSync = Date.now();
+    const result = await this._service.refresh();
+    if (!this.hasAccess()) return this._lockOut(result);
     this.applyState();
   }
 
@@ -185,18 +227,25 @@ export class GovernanceController {
   }
 
   async resync() {
-    if (this._syncing || !this._app._auth.getSession() || !this._service.getRecord()) return;
+    const inSession = Boolean(this._app._auth.getSession());
+    const waiting = !inSession && this._isGateOpen() && this._service.getRecord();
+    if (this._syncing || (!inSession && !waiting)) return;
     if (Date.now() - this._lastSync < GovernanceController.MIN_GAP_MS) return;
     this._syncing = true;
     this._lastSync = Date.now();
     try {
-      const before = JSON.stringify(this._service.getRecord()?.lastState || null) + this.isBlocked();
-      await this._service.refresh();
-      const after = JSON.stringify(this._service.getRecord()?.lastState || null) + this.isBlocked();
+      const before = JSON.stringify(this._service.getRecord()?.lastState || null);
+      const result = await this._service.refresh();
+      if (!inSession) {
+        if (this.hasAccess()) this._grant();
+        else await this._renderStatus(result);
+        return;
+      }
+      if (!this.hasAccess()) return this._lockOut(result);
       // Só redesenha quando algo mudou, para não atrapalhar quem está lançando
-      if (before !== after) {
+      if (before !== JSON.stringify(this._service.getRecord()?.lastState || null)) {
         this.applyState();
-        this._app._renderer.toast(this.isBlocked() ? this.blockMessage() : 'A Governança Systekna atualizou as permissões deste aparelho.');
+        this._app._renderer.toast('A Governança Systekna atualizou as permissões deste aparelho.');
       }
     } finally {
       this._syncing = false;
@@ -204,11 +253,6 @@ export class GovernanceController {
   }
 
   applyState() {
-    const banner = document.getElementById('gov-banner');
-    if (banner) {
-      banner.textContent = this.isBlocked() ? this.blockMessage() : '';
-      banner.classList.toggle('hidden', !this.isBlocked());
-    }
     const tables = this.allowsTables();
     for (const id of ['home-new-order', 'home-all-tables']) {
       document.getElementById(id)?.classList.toggle('hidden', !tables);
