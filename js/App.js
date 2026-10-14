@@ -15,6 +15,7 @@ import { GovernanceService } from './application/services/GovernanceService.js';
 
 import { DomRenderer } from './ui/adapters/DomRenderer.js';
 import { DomEventHandler } from './ui/adapters/DomEventHandler.js';
+import { protectTypedSecrets, typedValue, clearTyped } from './ui/adapters/TypedSecrets.js';
 import { SalesController } from './ui/controllers/SalesController.js';
 import { StockController } from './ui/controllers/StockController.js';
 import { CashController } from './ui/controllers/CashController.js';
@@ -27,7 +28,7 @@ import { GovernanceController } from './ui/controllers/GovernanceController.js';
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '2.5.0';
+  static VERSION = '2.6.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -118,6 +119,10 @@ export class App {
     }
 
     this._governanceCtl.installErrorReporting();
+
+    // Padrão Systekna: o cofre do kit (PIN FINANC, biometria ou 12 palavras) abre o aparelho antes de tudo;
+    // a equipe (gerente e funcionários) entra depois, com o próprio login. O kit também registra o sw.js.
+    await window.vaultReady;
     this._governanceCtl.startWatching();
 
     try {
@@ -161,9 +166,6 @@ export class App {
       this._initAutoLock();
       this._initBroadcastChannel();
 
-      if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-        window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
-      }
     } catch (e) {
       const err = document.getElementById('auth-error');
       if (err) err.textContent = 'Falha ao iniciar o sistema: ' + e.message;
@@ -216,12 +218,15 @@ export class App {
     if (input) {
       input.placeholder = mode === 'pin' ? 'Digite seu PIN' : 'Informe a senha';
       input.inputMode = mode === 'pin' ? 'numeric' : 'text';
-      input.type = 'password';
-      input.value = '';
+      // PIN: texto mascarado (campo de senha chama o "salvar senha" do navegador), como no kit
+      input.type = mode === 'pin' ? 'text' : 'password';
+      input.classList.toggle('vault-masked', mode === 'pin');
+      clearTyped(input);
     }
   }
 
   _bindUiEvents() {
+    protectTypedSecrets();
     // Autenticação
     document.getElementById('login-autofill-form')?.addEventListener('submit', e => this._submit_login(e));
     document.getElementById('auth-senha')?.addEventListener('click', () => this._setAuthMode('senha'));
@@ -262,9 +267,15 @@ export class App {
   async _submit_login(event) {
     event.preventDefault();
     const username = document.getElementById('login-user')?.value.trim();
-    const secret = document.getElementById('login-secret')?.value;
     const errorEl = document.getElementById('auth-error');
     if (errorEl) errorEl.textContent = '';
+    let secret;
+    try {
+      secret = typedValue('login-secret');
+    } catch (e) {
+      if (errorEl) errorEl.textContent = e.message;
+      return;
+    }
 
     if (!username || !secret) {
       if (errorEl) errorEl.textContent = 'Informe usuário e credencial.';
@@ -278,7 +289,7 @@ export class App {
       const meta = this._auth.getMeta();
       if (!meta) {
         // Primeiro Administrador
-        const confirm = document.getElementById('setup-confirm')?.value;
+        const confirm = typedValue('setup-confirm');
         if (username.length < 3 || !this._auth.validatePassword(secret) || secret !== confirm) {
           throw new Error('Preencha o usuário e a senha forte confirmada (8+ caracteres).');
         }
@@ -294,7 +305,7 @@ export class App {
       }
 
       document.getElementById('auth-overlay')?.classList.add('hidden');
-      document.getElementById('login-secret').value = '';
+      clearTyped(document.getElementById('login-secret'));
       this._changeTab('inicio');
       this._syncUi();
       this._governanceCtl.syncAfterLogin().catch(() => {});
