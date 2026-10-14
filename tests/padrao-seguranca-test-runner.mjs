@@ -131,6 +131,14 @@ await testCase('SEG-12', 'Cofre no visual Aero: todo token de cor do kit é defi
   assert.ok(src('sw.js').includes("'./css/kit-aero.css'"));
 });
 
+await testCase('SEG-13', 'Barra de título: [menu do kit] [nome do estabelecimento] [avatar]', async () => {
+  const bar = /<header class="topbar">([\s\S]*?)<\/header>/.exec(html)[1];
+  const slot = bar.indexOf('data-vault-profile-slot'), nome = bar.indexOf('id="header-estabelecimento"'), avatar = bar.indexOf('id="user-avatar"');
+  assert.ok(slot >= 0 && slot < nome && nome < avatar, 'ordem da barra');
+  assert.match(src('js/App.js'), /nomeEstabelecimento\?\.trim\(\) \|\| 'BarGestão'/);
+  assert.match(src('css/kit-aero.css'), /#vaultProfileBtn \{[^}]*min-height: 0/);
+});
+
 const failed = results.filter(r => r === 'FAIL').length;
 console.log('='.repeat(70));
 console.log(`📊 TOTAL: ${results.length} | ✅ PASS: ${results.length - failed} | ❌ FAIL: ${failed}`);
