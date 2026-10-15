@@ -263,10 +263,9 @@ export class SecurityController {
   }
 
   async _forgetDevice() {
-    if (!confirm('Deseja realmente sair e esquecer este dispositivo? O PIN local será revogado.')) return;
+    if (!confirm('Sair deste aparelho? O login salvo será apagado e a próxima entrada pedirá usuário e senha.')) return;
     await this._app._auth.disableOwnPin();
-    this._app._discardSession();
-    this._app._renderer.toast('Dispositivo esquecido. Acesse novamente com sua senha mestre.');
+    this._app._signOut();
   }
 
   async _rotateRecovery() {

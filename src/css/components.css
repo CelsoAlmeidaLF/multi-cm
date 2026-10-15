@@ -2323,3 +2323,10 @@ hr.soft {
   font-size: 12px;
   overflow-wrap: anywhere;
 }
+
+/* Tela de entrada no celular: botões longos ("Esqueci a senha · Recuperar com 12 palavras") quebram linha em vez de
+   alargar o cartão para fora da tela (v2.7.0) */
+.auth-box .btn {
+  white-space: normal;
+  text-wrap: balance;
+}

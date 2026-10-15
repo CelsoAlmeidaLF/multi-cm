@@ -47,7 +47,13 @@ O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas 
 Duas camadas desde a v2.6.0, no padrão Systekna:
 
 1. **Cofre do aparelho (kit `stk-pkg-security`, por fora):** abre antes do app com o PIN FINANC, biometria, 12 palavras (BIP39-pt) ou certificado. `data-vault-app="multi-cm"` usa o FINANC ID compartilhado da mesma origem, e `App.init` espera `window.vaultReady`. O kit registra o `sw.js`. O menu ⋮ do kit fica na barra de título (`data-vault-profile-slot`); no celular o cadeado sai da barra e fica em Mais → Bloquear o aplicativo.
-2. **Equipe (por dentro):** gerente e funcionários entram com senha e PIN próprios, **só digitados** (`FinancTyped` do kit): sem colar nem autofill de gerenciador de senhas.
+2. **Equipe (por dentro):** gerente e funcionários entram com usuário e senha, **só digitados** (`FinancTyped` do kit): sem colar nem autofill de gerenciador de senhas.
+3. **Login salvo (v2.7.0) — um PIN só:** com "Manter conectado neste aparelho" (marcado por padrão), o 1º login com usuário e senha guarda a **chave que a senha libera** (nunca a senha) no cofre do kit (`window.secureStorage`, chave `bg-login-salvo-v1`), que só abre com o PIN do aparelho, a biometria ou as 12 palavras. Nas próximas vezes: PIN do aparelho → aprovação da Governança → entra direto como o último usuário.
+   - **Bloquear** (cadeado, inatividade) volta ao PIN do aparelho e entra de novo sem senha.
+   - **Trocar usuário** (barra e Mais) apaga o login salvo e mostra o login vazio, com o aparelho ainda desbloqueado.
+   - **Sair deste dispositivo** (Mais) apaga o login salvo e bloqueia: a próxima entrada pede o PIN do aparelho e depois usuário e senha.
+   - Usuário desativado ou removido, ou chave salva que não abre os dados: o login salvo é apagado e volta a pedir a senha.
+   - O PIN pessoal da equipe (PIN v2, abaixo) saiu da tela; o código continua para quem já o tinha, mas a entrada agora é por senha + login salvo.
 
 O kit usa `--surface`, `--surface-2` e `--ink-dim`; `src/css/kit-aero.css` liga esses tokens aos do Aero, sem editar a cópia do kit. O teste SEG-12 exige que todo token de cor do kit tenha valor no app.
 
@@ -64,6 +70,7 @@ O kit usa `--surface`, `--surface-2` e `--ink-dim`; `src/css/kit-aero.css` liga 
 | 2.6.0 | Padrão de segurança Systekna (cofre do kit por fora + equipe por dentro), senhas só digitadas, BG12 em BIP39-pt, `stk-pkg-governanca`, service worker v6 |
 | 2.6.1 | Cofre do kit legível no visual Aero (`kit-aero.css`) |
 | 2.6.2 | Menu do kit dentro da barra de título; nome do estabelecimento no título |
+| 2.7.0 | Login salvo: um PIN só (o do aparelho); depois do 1º login com usuário e senha, entra direto; Trocar usuário e Sair deste dispositivo; service worker v9 |
 
 Ao mudar arquivos do app, troque `VERSION` em `src/js/App.js`, `data-vault-version` e os textos de versão no `index.html`, `version` no `package.json` e a constante `CACHE` do `sw.js`.
 
