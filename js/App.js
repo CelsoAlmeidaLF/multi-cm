@@ -28,7 +28,7 @@ import { GovernanceController } from './ui/controllers/GovernanceController.js';
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '2.6.2';
+  static VERSION = '2.7.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -153,14 +153,17 @@ export class App {
           authrecover?.classList.toggle('hidden', !meta.recovery);
           const loginuser = document.getElementById('login-user');
           if (loginuser) loginuser.value = meta.lastUser || '';
-          const user = meta.usuarios?.find(x => x.usuario === meta.lastUser);
-          this._setAuthMode(user?.pin && user?.deviceSeal ? 'pin' : 'senha');
+          // Um PIN só: o do aparelho (kit). O login da equipe é por senha; depois fica salvo no cofre do kit.
+          this._setAuthMode('senha');
         }
       };
 
       // RN-FIREBASE.3: sem aprovação da governança (Firebase) o app não abre — vale também para
       // instalações antigas, que precisam se cadastrar para receber o UID
-      if (await this._governanceCtl.gate(showLoginOrSetup)) showLoginOrSetup();
+      if (await this._governanceCtl.gate(showLoginOrSetup)) {
+        showLoginOrSetup();
+        if (meta) await this._resumeSavedLogin();
+      }
 
       this._events.bindGlobalListeners();
       this._initAutoLock();
@@ -246,6 +249,8 @@ export class App {
     document.getElementById('more-caixa-acesso')?.addEventListener('click', () => this._changeTab('caixa'));
     document.getElementById('more-usuarios')?.addEventListener('click', () => this._changeTab('usuarios'));
     document.getElementById('more-lock')?.addEventListener('click', () => this._discardSession());
+    document.getElementById('more-switch-user')?.addEventListener('click', () => this._switchUser());
+    document.getElementById('top-switch-user')?.addEventListener('click', () => this._switchUser());
 
     // Modais e Diálogos de Fechamento
     document.querySelectorAll('[data-close-modal]').forEach(b => {
@@ -303,6 +308,10 @@ export class App {
         }
         await this._unlockData(this._auth.getVaultKey());
       }
+
+      const lembrar = document.getElementById('login-remember');
+      if (!lembrar || lembrar.checked) await this._auth.rememberLogin(window.secureStorage);
+      else this._auth.forgetLogin(window.secureStorage);
 
       document.getElementById('auth-overlay')?.classList.add('hidden');
       clearTyped(document.getElementById('login-secret'));
@@ -655,11 +664,66 @@ export class App {
   }
 
   _discardSession() {
+    // Com login salvo, bloquear volta ao PIN do aparelho (o kit recarrega a página e, com o PIN, entra de novo)
+    if (this._auth.hasSavedLogin(window.secureStorage) && typeof window.lockVault === 'function') {
+      this._auth.discardSession();
+      this._data = null;
+      window.lockVault();
+      return;
+    }
     this._auth.discardSession();
     this._data = null;
     document.getElementById('auth-overlay')?.classList.remove('hidden');
     this._setAuthMode('senha');
     this._renderer.toast('Sessão encerrada.');
+  }
+
+  /** Entra sozinho com o login salvo no cofre do kit. Qualquer falha apaga o login salvo e mostra a tela de senha. */
+  async _resumeSavedLogin() {
+    const store = window.secureStorage;
+    if (!this._governanceCtl.hasAccess() || !this._auth.hasSavedLogin(store)) return false;
+    try {
+      const r = await this._auth.resumeLogin(store);
+      if (!r) return false;
+      await this._unlockData(r.key);
+    } catch (e) {
+      this._auth.discardSession();
+      this._auth.forgetLogin(store);
+      this._data = null;
+      const err = document.getElementById('auth-error');
+      if (err) err.textContent = 'O login salvo não abriu os dados. Entre com usuário e senha.';
+      return false;
+    }
+    document.getElementById('auth-overlay')?.classList.add('hidden');
+    this._changeTab('inicio');
+    this._syncUi();
+    this._governanceCtl.syncAfterLogin().catch(() => {});
+    this._renderer.toast('Bem-vindo de volta, ' + this._auth.getSession().usuario + '.');
+    return true;
+  }
+
+  /** Trocar usuário: esquece o login salvo e mostra a tela de login vazia (o aparelho segue desbloqueado). */
+  _switchUser() {
+    this._auth.forgetLogin(window.secureStorage);
+    this._auth.discardSession();
+    this._data = null;
+    const user = document.getElementById('login-user');
+    if (user) user.value = '';
+    document.getElementById('auth-overlay')?.classList.remove('hidden');
+    this._setAuthMode('senha');
+    user?.focus();
+  }
+
+  /** Sair: esquece o login salvo e bloqueia pelo kit; na próxima vez, PIN do aparelho e depois usuário e senha. */
+  _signOut() {
+    this._auth.forgetLogin(window.secureStorage);
+    this._auth.discardSession();
+    this._data = null;
+    if (typeof window.lockVault === 'function') window.lockVault();
+    else {
+      document.getElementById('auth-overlay')?.classList.remove('hidden');
+      this._setAuthMode('senha');
+    }
   }
 
 }

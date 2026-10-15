@@ -228,6 +228,52 @@ export class AuthService {
     await this.saveMeta(draft);
   }
 
+  /**
+   * Login salvo (v2.7.0): depois do 1º login com usuário e senha, a chave do cofre fica guardada no cofre do kit
+   * (window.secureStorage), que só abre com o PIN do aparelho, biometria ou as 12 palavras. Na próxima abertura o
+   * PIN do aparelho já entra como esse usuário. Guarda a chave que a senha libera, nunca a senha.
+   * Usuário desativado ou removido, ou chave que não abre os dados: o login salvo é apagado e volta a pedir a senha.
+   */
+  static LOGIN_SALVO = 'bg-login-salvo-v1';
+
+  async rememberLogin(store) {
+    if (!store || !this._session || !(this._vaultraw instanceof Uint8Array)) return false;
+    const hex = Array.from(this._vaultraw, x => x.toString(16).padStart(2, '0')).join('');
+    store.setItem(AuthService.LOGIN_SALVO, JSON.stringify({ v: 1, usuario: this._session.usuario, chave: hex, em: Date.now() }));
+    return true;
+  }
+
+  forgetLogin(store) {
+    try { store?.removeItem(AuthService.LOGIN_SALVO); } catch { /* cofre do kit bloqueado: nada a esquecer agora */ }
+  }
+
+  hasSavedLogin(store) {
+    try { return !!store?.getItem(AuthService.LOGIN_SALVO); } catch { return false; }
+  }
+
+  async resumeLogin(store) {
+    let texto, salvo;
+    try { texto = store?.getItem(AuthService.LOGIN_SALVO); } catch { return null; }
+    if (!texto) return null;
+    try { salvo = JSON.parse(texto); } catch { salvo = null; }
+    const user = salvo && this._meta?.usuarios?.find(u => u.usuario === salvo.usuario && u.ativo !== false);
+    if (!salvo || salvo.v !== 1 || !user || !/^[0-9a-f]{64}$/.test(salvo.chave || '')) {
+      this.forgetLogin(store);
+      return null;
+    }
+    const raw = Uint8Array.from(salvo.chave.match(/.{2}/g), h => parseInt(h, 16));
+    const key = await this._crypto.importAesKey(raw);
+    this._vaultraw = raw;
+    this._vaultkey = key;
+    this._session = { usuario: user.usuario, perfil: user.perfil };
+    if (this._meta.lastUser !== user.usuario) {
+      const draft = structuredClone(this._meta);
+      draft.lastUser = user.usuario;
+      await this.saveMeta(draft);
+    }
+    return { raw, key, session: this._session };
+  }
+
   discardSession() {
     this._session = null;
     if (this._vaultraw instanceof Uint8Array) {
