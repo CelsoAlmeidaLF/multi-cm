@@ -9,7 +9,7 @@ const runners = readdirSync(dir).filter(f => f.endsWith('-test-runner.mjs')).sor
 const falhas = [];
 
 for (const runner of runners) {
-  const r = spawnSync(process.execPath, [join(dir, runner)], { stdio: 'inherit' });
+  const r = spawnSync(process.execPath, [join(dir, runner)], { stdio: 'inherit', cwd: join(dir, '..') });
   if (r.status !== 0) falhas.push(runner);
 }
 

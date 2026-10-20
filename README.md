@@ -71,6 +71,7 @@ O kit usa `--surface`, `--surface-2` e `--ink-dim`; `src/css/kit-aero.css` liga 
 | 2.6.1 | Cofre do kit legível no visual Aero (`kit-aero.css`) |
 | 2.6.2 | Menu do kit dentro da barra de título; nome do estabelecimento no título |
 | 2.7.0 | Login salvo: um PIN só (o do aparelho); depois do 1º login com usuário e senha, entra direto; Trocar usuário e Sair deste dispositivo; service worker v9 |
+| 2.8.0 | Kit de segurança 2.1: contador de PIN errado que não zera ao recarregar (espera crescente; na 10ª só biometria ou 12 palavras), proteção contra limpeza pedida ao navegador, Configurações → Seus dados (espaço e proteção; o backup do bar continua o do próprio app); service worker v10 |
 
 Ao mudar arquivos do app, troque `VERSION` em `src/js/App.js`, `data-vault-version` e os textos de versão no `index.html`, `version` no `package.json` e a constante `CACHE` do `sw.js`.
 

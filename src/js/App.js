@@ -28,7 +28,7 @@ import { GovernanceController } from './ui/controllers/GovernanceController.js';
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '2.7.0';
+  static VERSION = '2.8.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -502,12 +502,18 @@ export class App {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
+  static safeSetText(idOrEl, value) {
+    const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (el) el.textContent = String(value ?? '');
+  }
+
   _syncUi() {
     const session = this._auth.getSession();
     if (!session) return;
-    document.getElementById('header-user').textContent = session.usuario;
-    document.getElementById('header-role').textContent = session.perfil;
-    document.getElementById('user-avatar').textContent = session.usuario.charAt(0).toUpperCase();
+    App.safeSetText('header-user', session.usuario);
+    App.safeSetText('header-role', session.perfil);
+    App.safeSetText('user-avatar', session.usuario.charAt(0).toUpperCase());
+
     // Barra de título: [menu do kit] [nome do estabelecimento cadastrado na governança] [avatar]
     const estabelecimento = document.getElementById('header-estabelecimento');
     if (estabelecimento) {
@@ -516,32 +522,16 @@ export class App {
       estabelecimento.title = nome;
     }
 
-    const moreUser = document.getElementById('more-username');
-    if (moreUser) moreUser.textContent = session.usuario;
-    const moreRole = document.getElementById('more-role');
-    if (moreRole) moreRole.textContent = session.perfil === 'gerente' ? 'Gerente Geral' : 'Operador';
-    const moreAvatar = document.getElementById('more-avatar');
-    if (moreAvatar) moreAvatar.textContent = session.usuario.charAt(0).toUpperCase();
+    App.safeSetText('more-username', session.usuario);
+    App.safeSetText('more-role', session.perfil === 'gerente' ? 'Gerente Geral' : 'Operador');
+    App.safeSetText('more-avatar', session.usuario.charAt(0).toUpperCase());
 
     // Sincronização Dinâmica da Versão do APP (Aba de Configurações)
-    const appVersionPill = document.getElementById('app-version-pill');
-    if (appVersionPill) appVersionPill.textContent = `v${App.VERSION}`;
-
-    const versionStatusPill = document.getElementById('version-status-pill');
-    if (versionStatusPill) versionStatusPill.textContent = `v${App.VERSION}`;
-
-    const versionSpecCode = document.getElementById('version-spec-code');
-    if (versionSpecCode) versionSpecCode.textContent = `v${App.VERSION} (Aero 2.0)`;
-
-    const appBuildInfo = document.getElementById('app-build-info');
-    if (appBuildInfo) {
-      appBuildInfo.textContent = `Versão ${App.VERSION} · Build ${App.BUILD} · ${App.AERO_SPEC}`;
-    }
-
-    const appFooterVersion = document.getElementById('app-footer-version');
-    if (appFooterVersion) {
-      appFooterVersion.textContent = `${App.EDITION_LABEL} v${App.VERSION} · Design System ${App.AERO_SPEC} · Dados locais criptografados`;
-    }
+    App.safeSetText('app-version-pill', `v${App.VERSION}`);
+    App.safeSetText('version-status-pill', `v${App.VERSION}`);
+    App.safeSetText('version-spec-code', `v${App.VERSION} (Aero 2.0)`);
+    App.safeSetText('app-build-info', `Versão ${App.VERSION} · Build ${App.BUILD} · ${App.AERO_SPEC}`);
+    App.safeSetText('app-footer-version', `${App.EDITION_LABEL} v${App.VERSION} · Design System ${App.AERO_SPEC} · Dados locais criptografados`);
 
     document.querySelectorAll('.manager-only').forEach(el => el.classList.toggle('hidden', !this._auth.isManager()));
     this._changeTab(this._currenttab);
@@ -647,7 +637,7 @@ export class App {
     if (!root) return;
     root.replaceChildren();
     const users = this._auth.getMeta()?.usuarios || [];
-    document.getElementById('usuarios-count').textContent = `${users.length} usuário(s)`;
+    App.safeSetText('usuarios-count', `${users.length} usuário(s)`);
 
     for (const u of users) {
       const el = this._renderer.make('div', 'entry');

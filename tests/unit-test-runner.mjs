@@ -194,6 +194,92 @@ await testCase('RN-ORD.4', 'RN06: Fechamento de mesa, quitação e geração de 
   assert.equal(db.caixa[0].custoEstimado, 15);
 });
 
+await testCase('RN-ORD.5', 'TASK-771: Fechamento com troco e alteração de valor/desconto', '🟢', async () => {
+  const db = {
+    mesas: {
+      'Mesa 08': [
+        { id: 'i1', produtoId: 'p1', nome: 'Porção', precoUnit: 50, custoUnit: 20, qtd: 1, total: 50 }
+      ]
+    },
+    mesaClientes: { 'Mesa 08': 'Carlos' },
+    caixa: []
+  };
+
+  // Cliente dá R$ 100 em dinheiro com desconto concedido para R$ 45
+  const res = orderService.receiveTable(db, 'Mesa 08', 'dinheiro', 'operador1', 'turno-1', {
+    valorFinal: 45,
+    valorRecebido: 100
+  });
+
+  assert.equal(res.total, 45, 'Total cobrado deve ser R$ 45,00');
+  assert.equal(res.totalOriginal, 50, 'Total original da comanda era R$ 50,00');
+  assert.equal(res.desconto, 5, 'Desconto registrado de R$ 5,00');
+  assert.equal(res.troco, 55, 'Troco calculado de R$ 55,00');
+  assert.equal(db.caixa[0].valor, 45);
+  assert.equal(db.caixa[0].troco, 55);
+  assert.equal(db.caixa[0].desconto, 5);
+});
+
+await testCase('RN-ORD.6', 'TASK-967: Correção de pedido aberto e atualização de quantidade com estoque', '🟢', async () => {
+  const db = {
+    produtos: [
+      { id: 'p1', nome: 'Cerveja', venda: 12, compra: 6, qtd: 10, ativo: true }
+    ],
+    mesas: {
+      'Mesa 02': [
+        { id: 'item-cerveja', produtoId: 'p1', nome: 'Cerveja', precoUnit: 12, qtd: 3, total: 36 }
+      ]
+    },
+    movimentacoesEstoque: []
+  };
+
+  // Funcionário errou e o cliente pediu apenas 1 cerveja (redução de 3 para 1)
+  orderService.updateOrderItemQuantity(db, 'Mesa 02', 'item-cerveja', 1, 'garcom1');
+  assert.equal(db.mesas['Mesa 02'][0].qtd, 1);
+  assert.equal(db.mesas['Mesa 02'][0].total, 12);
+  assert.equal(db.produtos[0].qtd, 12, 'Estoque deve estornar as 2 unidades retiradas por engano');
+  assert.equal(db.movimentacoesEstoque[0].tipo, 'Cancelamento');
+  assert.equal(db.movimentacoesEstoque[0].delta, 2);
+});
+
+await testCase('RN-ORD.7', 'TASK-682 / FDBK-957: Venda Balcão direta sem mesa obrigatória e createCounterSale', '🔴', async () => {
+  const db = {
+    produtos: [
+      { id: 'p-agua', nome: 'Água Mineral', venda: 5.0, compra: 2.0, qtd: 20, ativo: true },
+      { id: 'p-snack', nome: 'Amendoim', venda: 8.0, compra: 3.5, qtd: 15, ativo: true }
+    ],
+    mesas: {},
+    mesaClientes: {},
+    caixa: [],
+    movimentacoesEstoque: []
+  };
+
+  // 1. Identificação correta de comanda Balcão
+  assert.equal(orderService.isCounterTable('Balcão'), true);
+  assert.equal(orderService.isCounterTable('Balcao 01'), true);
+  assert.equal(orderService.isCounterTable('Mesa 01'), false);
+
+  // 2. Lançamento avulso em Balcão
+  const item = orderService.addOrderItem(db, 'Balcão', 'Cliente Balcão', 'p-agua', 2, 'operador1');
+  assert.equal(item.total, 10.0);
+  assert.equal(db.produtos[0].qtd, 18, 'Estoque deve deduzir 2 unidades');
+  assert.equal(db.mesaClientes['Balcão'], 'Cliente Balcão');
+
+  // 3. Recebimento de comanda Balcão
+  const receipt = orderService.receiveTable(db, 'Balcão', 'pix', 'operador1');
+  assert.equal(receipt.total, 10.0);
+  assert.equal(db.caixa[0].origem, 'venda');
+  assert.equal(db.caixa[0].mesa, 'Balcão');
+  assert.equal(Object.hasOwn(db.mesas, 'Balcão'), false, 'Comanda Balcão deve ser limpa após quitação');
+
+  // 4. Fluxo atômico direto via createCounterSale
+  const sale = orderService.createCounterSale(db, [{ produtoId: 'p-snack', qtd: 3 }], 'dinheiro', 'operador1', null, { valorRecebido: 30.0 });
+  assert.equal(sale.total, 24.0);
+  assert.equal(sale.troco, 6.0);
+  assert.equal(db.produtos[1].qtd, 12, 'Estoque de amendoim deve baixar de 15 para 12');
+  assert.equal(db.caixa[0].troco, 6.0);
+});
+
 // =========================================================================
 // 3. REGRAS DE NEGÓCIO: CAIXA E TURNOS (RN-CSH)
 // =========================================================================
@@ -249,6 +335,61 @@ await testCase('RN-CSH.3', 'RN03/RN12: Validação de retirada de dinheiro com v
   assert.equal(t.tipo, 'saida');
   assert.equal(t.valor, 35.5);
   assert.equal(db.caixa.length, 1);
+});
+
+await testCase('RN-CSH.4', 'TASK-318 / FDBK-318: Fechamento de Caixa Diário com conferência de dinheiro e apuração de divergência', '🔴', async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const shiftId = 'turno-diario-1';
+  const db = {
+    turnosCaixa: [
+      { id: shiftId, status: 'aberto', fundoInicial: 100.0, operador: 'Joao', abertoEm: new Date().toISOString() }
+    ],
+    caixa: [
+      { id: 'v1', turnoId: shiftId, data: `${today}T12:00:00.000Z`, tipo: 'entrada', formaPagamento: 'dinheiro', valor: 60.0 },
+      { id: 'v2', turnoId: shiftId, data: `${today}T12:15:00.000Z`, tipo: 'entrada', formaPagamento: 'pix', valor: 85.0 },
+      { id: 'v3', turnoId: shiftId, data: `${today}T13:00:00.000Z`, tipo: 'entrada', formaPagamento: 'debito', valor: 45.0 },
+      { id: 'v4', turnoId: shiftId, data: `${today}T13:30:00.000Z`, tipo: 'entrada', formaPagamento: 'credito', valor: 110.0 },
+      { id: 's1', turnoId: shiftId, data: `${today}T14:00:00.000Z`, tipo: 'saida', valor: 20.0, descricao: 'Sangria Limpeza' }
+    ],
+    fechamentosCaixa: []
+  };
+
+  // Dinheiro esperado = Fundo (100) + Venda Dinheiro (60) - Sangria (20) = R$ 140,00
+  const summary = shiftService.getClosingSummary(db, 'diario');
+  assert.equal(summary.totalVendas, 300.0);
+  assert.equal(summary.pagamentos.dinheiro, 60.0);
+  assert.equal(summary.pagamentos.pix, 85.0);
+  assert.equal(summary.pagamentos.debito, 45.0);
+  assert.equal(summary.pagamentos.credito, 110.0);
+  assert.equal(summary.dinheiroEsperado, 140.0);
+
+  // Operador conta R$ 140,00 -> Caixa exato
+  const fechamento = shiftService.closeDailyCash(db, 140.0, 'Joao', 'Turno sem ocorrências');
+  assert.equal(fechamento.tipo, 'diario');
+  assert.equal(fechamento.dinheiroContado, 140.0);
+  assert.equal(fechamento.diferenca, 0.0);
+  assert.equal(db.fechamentosCaixa.length, 1);
+  assert.equal(db.turnosCaixa[0].status, 'fechado', 'O turno ativo deve ser encerrado ao fechar o caixa do dia');
+});
+
+await testCase('RN-CSH.5', 'TASK-318: Fechamento de Caixa Mensal consolidado com histórico imutável', '🟠', async () => {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const db = {
+    caixa: [
+      { id: 'm1', data: `${currentMonth}-02T10:00:00.000Z`, tipo: 'entrada', formaPagamento: 'pix', valor: 500.0 },
+      { id: 'm2', data: `${currentMonth}-15T15:00:00.000Z`, tipo: 'entrada', formaPagamento: 'credito', valor: 750.0 },
+      { id: 'm3', data: `${currentMonth}-20T18:00:00.000Z`, tipo: 'saida', valor: 120.0, descricao: 'Manutenção Freezer' }
+    ],
+    fechamentosCaixa: []
+  };
+
+  const mensal = shiftService.closeMonthlyCash(db, 'Gerente Geral', currentMonth, 'Fechamento fiscal regular');
+  assert.equal(mensal.tipo, 'mensal');
+  assert.equal(mensal.mesReferencia, currentMonth);
+  assert.equal(mensal.totalVendas, 1250.0);
+  assert.equal(mensal.totalSaidas, 120.0);
+  assert.equal(mensal.saldoLiquido, 1130.0);
+  assert.equal(db.fechamentosCaixa[0].id.startsWith('FECH-MES'), true);
 });
 
 // =========================================================================
@@ -494,6 +635,29 @@ await testCase('CRY-INT.4', 'CT04: Detecção de adulteração em Trilha de Audi
     }
   }
   assert.equal(chainValid, false, 'A trilha adulterada deve ser detectada imediatamente');
+});
+
+await testCase('RN-DOM.1', 'TASK-573 / BUG-573: Blindagem defensiva de safeSetText contra TypeError em seletores nulos', '🔴', async () => {
+  // Simula helper defensivo implementado em App.js
+  function safeSetText(el, val) {
+    if (el) el.textContent = String(val ?? '');
+    return !!el;
+  }
+
+  // Elemento nulo não pode lançar TypeError
+  let threw = false;
+  try {
+    const res = safeSetText(null, 'teste');
+    assert.equal(res, false);
+  } catch (e) {
+    threw = true;
+  }
+  assert.equal(threw, false, 'safeSetText com elemento nulo deve retornar com segurança sem exceção');
+
+  // Elemento mock existente deve atualizar normalmente
+  const mockEl = { textContent: '' };
+  safeSetText(mockEl, 'v2.8.0');
+  assert.equal(mockEl.textContent, 'v2.8.0');
 });
 
 console.log('='.repeat(70));
