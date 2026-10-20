@@ -153,19 +153,26 @@ export class SalesController {
       for (const item of items) {
         const line = this._app._renderer.make('div', 'itemline');
         const itemInfo = this._app._renderer.make('span', '', `${item.qtd} × ${item.nome}`);
-        const rightGroup = this._app._renderer.make('span', 'itemline-actions', '', { style: 'display:inline-flex;align-items:center;gap:6px;' });
+        const rightGroup = this._app._renderer.make('span', 'itemline-actions');
         
-        const btnMinus = this._app._renderer.btn('−', () => this._changeItemQuantity(name, item.id, Number(item.qtd) - 1), 'btn-item-qty');
-        btnMinus.style.cssText = 'padding:0 6px;min-height:22px;height:22px;font-size:12px;line-height:1;border-radius:4px;';
-        btnMinus.title = item.qtd > 1 ? 'Reduzir 1 unidade' : 'Excluir item do pedido';
+        const btnMinus = this._app._renderer.btn('−', () => this._changeItemQuantity(name, item.id, Number(item.qtd) - 1), 'btn ghost btn-item-qty');
+        btnMinus.title = item.qtd > 1 ? 'Reduzir 1 unidade' : 'Excluir item da comanda';
 
-        const btnPlus = this._app._renderer.btn('+', () => this._changeItemQuantity(name, item.id, Number(item.qtd) + 1), 'btn-item-qty');
-        btnPlus.style.cssText = 'padding:0 6px;min-height:22px;height:22px;font-size:12px;line-height:1;border-radius:4px;';
+        const qtyBadge = this._app._renderer.make('span', 'pill', `${item.qtd}`);
+        qtyBadge.style.cssText = 'padding:2px 6px;font-size:11px;min-width:22px;text-align:center;';
+
+        const btnPlus = this._app._renderer.btn('+', () => this._changeItemQuantity(name, item.id, Number(item.qtd) + 1), 'btn ghost btn-item-qty');
         btnPlus.title = 'Aumentar 1 unidade';
+
+        const btnDel = this._app._renderer.btn('', () => this._removeItem(name, item.id, item.nome), 'btn ghost item-del-btn');
+        btnDel.title = 'Excluir este item da comanda';
+        btnDel.append(this._app._renderer.icon('i-trash'));
 
         rightGroup.append(
           btnMinus,
+          qtyBadge,
           btnPlus,
+          btnDel,
           this._app._renderer.make('strong', '', this._app._renderer.money(item.total))
         );
         line.append(itemInfo, rightGroup);
@@ -175,7 +182,8 @@ export class SalesController {
       const actions = this._app._renderer.make('div', 'actions');
       actions.append(
         this._app._renderer.btn('Adicionar pedido', () => this._chooseTable(name), 'btn'),
-        this._app._renderer.btn('Cliente', () => this._editTableClient(name), 'btn outline'),
+        this._app._renderer.btn('Corrigir pedidos', () => this._openEditOrderModal(name), 'btn outline'),
+        this._app._renderer.btn('Cliente', () => this._editTableClient(name), 'btn ghost'),
         this._app._renderer.btn('Receber', () => this._closeTable(name), 'btn ghost')
       );
       card.append(actions);
@@ -294,12 +302,61 @@ export class SalesController {
     const table = isCounter ? 'Balcão' : this._app._order.resolveTableName(this._app._data, Number(rawVal));
     const isOpen = Object.hasOwn(this._app._data.mesas || {}, table);
     const clientInput = document.getElementById('mesa-cliente');
+    const preview = document.getElementById('comanda-atual-preview');
+
     if (isOpen && clientInput) {
       clientInput.value = this._app._data.mesaClientes?.[table] || (isCounter ? 'Cliente Balcão' : '');
-      clientInput.readOnly = !isCounter;
+      clientInput.readOnly = false;
     } else if (clientInput) {
       if (isCounter && !clientInput.value) clientInput.value = 'Cliente Balcão';
       clientInput.readOnly = false;
+    }
+
+    if (isOpen && preview) {
+      preview.classList.remove('hidden');
+      preview.replaceChildren();
+      const items = this._app._data.mesas[table] || [];
+      const total = this._app._order.calculateOrderTotal(items);
+
+      const header = this._app._renderer.make('div', '', '');
+      header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.85rem;';
+      header.innerHTML = `<strong>Itens já nesta comanda (${items.length}):</strong><span class="pill good">${this._app._renderer.money(total)}</span>`;
+      preview.append(header);
+
+      for (const it of items) {
+        const row = this._app._renderer.make('div', 'corrigir-item-row');
+        row.style.cssText = 'padding:6px 10px;margin-bottom:4px;';
+        const info = this._app._renderer.make('div', 'corrigir-item-info');
+        info.innerHTML = `<strong style="font-size:13px">${it.nome}</strong> <small style="color:var(--muted);">${it.qtd} × ${this._app._renderer.money(it.precoUnit)} = ${this._app._renderer.money(it.total)}</small>`;
+
+        const ctrl = this._app._renderer.make('div', 'corrigir-item-ctrl');
+        const btnM = this._app._renderer.btn('−', async () => {
+          await this._changeItemQuantity(table, it.id, Number(it.qtd) - 1);
+          this._updateTableContext();
+        }, 'btn ghost btn-item-qty');
+
+        const qVal = this._app._renderer.make('span', 'pill', `${it.qtd}`);
+        qVal.style.cssText = 'min-width:24px;text-align:center;padding:2px 6px;';
+
+        const btnP = this._app._renderer.btn('+', async () => {
+          await this._changeItemQuantity(table, it.id, Number(it.qtd) + 1);
+          this._updateTableContext();
+        }, 'btn ghost btn-item-qty');
+
+        const btnD = this._app._renderer.btn('', async () => {
+          await this._removeItem(table, it.id, it.nome);
+          this._updateTableContext();
+        }, 'btn ghost item-del-btn');
+        btnD.title = 'Excluir este item';
+        btnD.append(this._app._renderer.icon('i-trash'));
+
+        ctrl.append(btnM, qVal, btnP, btnD);
+        row.append(info, ctrl);
+        preview.append(row);
+      }
+    } else if (preview) {
+      preview.classList.add('hidden');
+      preview.replaceChildren();
     }
   }
 
@@ -351,17 +408,92 @@ export class SalesController {
   async _changeItemQuantity(tablename, itemid, novaQtd) {
     const session = this._app._auth.getSession();
     if (novaQtd <= 0) {
-      const ok = await this._app._commit(draft => {
-        this._app._order.removeOrderItem(draft, tablename, itemid, 'Correção de item pelo funcionário', session.usuario);
-      }, 'Remoção de item da comanda');
-      if (ok) this._app._renderer.toast('Item removido e devolvido ao estoque.');
-      return;
+      return this._removeItem(tablename, itemid);
     }
     const ok = await this._app._commit(draft => {
       this._app._order.updateOrderItemQuantity(draft, tablename, itemid, novaQtd, session.usuario);
     }, 'Ajuste de quantidade na comanda');
     if (ok) this._app._renderer.toast('Quantidade atualizada com sucesso.');
+    return ok;
   }
+
+  async _removeItem(tablename, itemid, itemnome = '') {
+    const session = this._app._auth.getSession();
+    const ok = await this._app._commit(draft => {
+      this._app._order.removeOrderItem(draft, tablename, itemid, `Item ${itemnome || ''} estornado pelo funcionário`, session.usuario);
+    }, 'Remoção de item da comanda');
+    if (ok) {
+      this._app._renderer.toast(`Item ${itemnome ? `"${itemnome}"` : ''} removido e devolvido ao estoque.`);
+    }
+    return ok;
+  }
+
+  _openEditOrderModal(tablename) {
+    this._editingOrderTable = tablename;
+    const items = this._app._data.mesas?.[tablename] || [];
+    const cliente = this._app._data.mesaClientes?.[tablename] || 'Cliente não informado';
+    const total = this._app._order.calculateOrderTotal(items);
+
+    App.safeSetText('corrigir-mesa-titulo', tablename);
+    App.safeSetText('corrigir-mesa-subtitulo', `Cliente: ${cliente}`);
+    App.safeSetText('corrigir-mesa-total', this._app._renderer.money(total));
+
+    const root = document.getElementById('corrigir-itens-lista');
+    if (!root) return;
+    root.replaceChildren();
+
+    if (!items.length) {
+      root.append(this._app._renderer.empty('Nenhum item lançado nesta comanda.'));
+      this._app._renderer._openModal('modal-corrigir-comanda');
+      return;
+    }
+
+    for (const item of items) {
+      const row = this._app._renderer.make('div', 'corrigir-item-row');
+
+      const info = this._app._renderer.make('div', 'corrigir-item-info');
+      const title = this._app._renderer.make('strong', 'corrigir-item-title', item.nome);
+      const sub = this._app._renderer.make('span', 'corrigir-item-sub',
+        `${this._app._renderer.money(item.precoUnit)} cada • Total: ${this._app._renderer.money(item.total)}`);
+      info.append(title, sub);
+
+      const ctrl = this._app._renderer.make('div', 'corrigir-item-ctrl');
+      const btnMinus = this._app._renderer.btn('−', async () => {
+        await this._changeItemQuantity(tablename, item.id, Number(item.qtd) - 1);
+        if (this._app._data.mesas?.[tablename]?.length) {
+          this._openEditOrderModal(tablename);
+        } else {
+          this._app._renderer._closeModal('modal-corrigir-comanda');
+        }
+      }, 'btn ghost btn-item-qty');
+
+      const qtySpan = this._app._renderer.make('strong', 'num', `${item.qtd} un`);
+      qtySpan.style.cssText = 'min-width:44px;text-align:center;font-size:13px;';
+
+      const btnPlus = this._app._renderer.btn('+', async () => {
+        await this._changeItemQuantity(tablename, item.id, Number(item.qtd) + 1);
+        this._openEditOrderModal(tablename);
+      }, 'btn ghost btn-item-qty');
+
+      const btnDel = this._app._renderer.btn('', async () => {
+        await this._removeItem(tablename, item.id, item.nome);
+        if (this._app._data.mesas?.[tablename]?.length) {
+          this._openEditOrderModal(tablename);
+        } else {
+          this._app._renderer._closeModal('modal-corrigir-comanda');
+        }
+      }, 'btn ghost item-del-btn');
+      btnDel.title = 'Excluir item e devolver ao estoque';
+      btnDel.append(this._app._renderer.icon('i-trash'));
+
+      ctrl.append(btnMinus, qtySpan, btnPlus, btnDel);
+      row.append(info, ctrl);
+      root.append(row);
+    }
+
+    this._app._renderer._openModal('modal-corrigir-comanda');
+  }
+
 
   _syncTroco() {
     const totalOriginal = this._closingTotal || 0;

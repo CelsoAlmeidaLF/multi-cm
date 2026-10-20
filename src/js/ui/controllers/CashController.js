@@ -115,6 +115,12 @@ export class CashController {
     // Renderização do Painel de Turno de Caixa
     this._renderShiftPanel();
 
+    // Renderização do Gráfico de Vendas por Dia
+    this._renderChart();
+
+    // Renderização do Histórico de Fechamentos
+    this._renderClosingHistory();
+
     const root = document.getElementById('livro-caixa');
     if (!root) return;
     root.replaceChildren();
@@ -135,6 +141,89 @@ export class CashController {
       head.append(left, right);
       el.append(head);
       root.append(el);
+    }
+  }
+
+  _renderChart() {
+    const root = document.getElementById('chart-caixa');
+    if (!root || !this._app._data) return;
+    root.replaceChildren();
+
+    const data = this._app._cash.getChartData(this._app._data);
+    const max = Math.max(...data.map(d => d.total), 1);
+
+    for (const d of data) {
+      const col = this._app._renderer.make('div', 'chart-col');
+      const val = this._app._renderer.make(
+        'span',
+        'chart-value',
+        d.total > 0 ? this._app._renderer.money(d.total) : 'R$ 0'
+      );
+      const pct = Math.round((d.total / max) * 100);
+      const body = this._app._renderer.make('div', 'chart-body', '', {
+        style: `--h: ${Math.max(4, pct)}%`
+      });
+      body.title = `${d.label}: ${this._app._renderer.money(d.total)}`;
+      const label = this._app._renderer.make('span', 'chart-label', d.label);
+
+      col.append(val, body, label);
+      root.append(col);
+    }
+  }
+
+  _renderClosingHistory() {
+    const root = document.getElementById('lista-fechamentos-historico');
+    const countEl = document.getElementById('fechamentos-count');
+    if (!root || !this._app._data) return;
+    root.replaceChildren();
+
+    const fechamentos = (this._app._data.fechamentosCaixa || []).slice().reverse();
+    if (countEl) countEl.textContent = `${fechamentos.length} fechamento${fechamentos.length === 1 ? '' : 's'}`;
+
+    if (fechamentos.length === 0) {
+      const empty = this._app._renderer.make('div', 'empty-state', 'Nenhum fechamento registrado até o momento.');
+      empty.style.padding = '16px';
+      empty.style.textAlign = 'center';
+      empty.style.color = 'var(--text-muted)';
+      root.append(empty);
+      return;
+    }
+
+    for (const f of fechamentos) {
+      const item = this._app._renderer.make('div', 'entry');
+      const head = this._app._renderer.make('div', 'entry-head');
+      const left = this._app._renderer.make('div', 'entry-left');
+
+      const title = this._app._renderer.make('strong', '', `Fechamento ${f.tipo === 'mensal' ? 'Mensal' : 'Diário'} (${f.dataReferencia || '—'})`);
+      const meta = this._app._renderer.make('div', 'meta', `${this._app._renderer.dateLabel(f.fechadoEm)} • Operador: ${f.operador || '—'}`);
+      left.append(title, meta);
+
+      const right = this._app._renderer.make('div', 'entry-right');
+      right.style.textAlign = 'right';
+      const val = this._app._renderer.make('strong', 'text-good', this._app._renderer.money(f.totalVendas));
+      right.append(val);
+
+      if (typeof f.diferenca === 'number') {
+        const isOk = Math.abs(f.diferenca) < 0.01;
+        const diffBadge = this._app._renderer.make(
+          'span',
+          `pill ${isOk ? 'good' : 'warn'}`,
+          isOk ? 'Exato' : (f.diferenca > 0 ? `+${this._app._renderer.money(f.diferenca)}` : `${this._app._renderer.money(f.diferenca)}`)
+        );
+        diffBadge.style.marginLeft = '8px';
+        right.append(diffBadge);
+      }
+
+      head.append(left, right);
+      item.append(head);
+
+      if (f.observacoes) {
+        const obs = this._app._renderer.make('div', 'meta', `Obs: ${f.observacoes}`);
+        obs.style.marginTop = '4px';
+        obs.style.fontStyle = 'italic';
+        item.append(obs);
+      }
+      root.append(item);
     }
   }
 
@@ -259,6 +348,7 @@ export class CashController {
     if (ok) {
       this._app._renderer._closeModal('modal-fechamento-caixa');
       this._app._renderer.toast(`Fechamento de caixa (${tipo}) registrado com sucesso!`);
+      this._renderCash();
     }
   }
 
@@ -280,6 +370,7 @@ export class CashController {
     if (ok) {
       this._app._renderer._closeModal('modal-retirada');
       this._app._renderer.toast('Retirada registrada no caixa.');
+      this._renderCash();
     }
   }
 

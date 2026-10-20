@@ -67,7 +67,21 @@ export class ShiftService {
       ? (ref || now.toISOString().slice(0, 7))
       : (ref || now.toISOString().slice(0, 10));
 
-    const movements = (database.caixa || []).filter(c => c.data && c.data.startsWith(prefix));
+    const localDay = d => {
+      const dt = new Date(d);
+      return Number.isNaN(dt.getTime()) ? '' : `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    };
+    const localMonth = d => {
+      const dt = new Date(d);
+      return Number.isNaN(dt.getTime()) ? '' : `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    };
+
+    const movements = (database.caixa || []).filter(c => {
+      if (!c.data) return false;
+      if (c.data.startsWith(prefix)) return true;
+      if (tipo === 'mensal') return localMonth(c.data) === prefix;
+      return localDay(c.data) === prefix;
+    });
     const entradas = movements.filter(c => c.tipo === 'entrada');
     const saidas = movements.filter(c => c.tipo === 'saida');
 

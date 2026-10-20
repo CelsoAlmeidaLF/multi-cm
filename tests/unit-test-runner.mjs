@@ -727,16 +727,61 @@ await testCase('RN-KDF.1', 'TASK-105: Isolamento KDF PBKDF2 com fallback e integ
   assert.deepEqual(Array.from(u1), Array.from(u2), 'KDF PBKDF2 deve ser estritamente determinístico');
 });
 
-await testCase('RN-GOV.3', 'Disponibilidade comercial: Aba Vendas e Venda Balcão operam mesmo sem mesas na governança', '🔴', async () => {
-  // Mock de governança sem mesas liberadas (ex: Loja de salgados / pastelaria)
-  const allowsTables = false;
+await testCase('RN-ORD.8', 'TASK-968: Cancelamento e exclusão de item de comanda com estorno de estoque', '🔴', async () => {
+  const db = {
+    produtos: [{ id: 'p1', nome: 'Batata Frita', venda: 25.0, compra: 10.0, qtd: 10, ativo: true }],
+    mesas: {},
+    mesaClientes: {},
+    movimentacoesEstoque: [],
+    cancelamentos: []
+  };
 
-  // Lógica de desvio validada em App.js
-  let targetTab = 'vendas';
-  // RN: Vendas NUNCA deve ser desviada para início mesmo com allowsTables falso
-  const navTabsBlocked = []; // Vendas permanece livre
-  assert.equal(navTabsBlocked.includes('vendas'), false, 'Aba vendas nunca deve estar na lista de abas bloqueadas');
-  assert.equal(targetTab, 'vendas', 'Aba vendas deve permanecer ativa para permitir Venda Balcão');
+  orderService.addOrderItem(db, 'Mesa 01', 'Cliente Teste', 'p1', 2, 'garcom1');
+  assert.equal(db.produtos[0].qtd, 8, 'Estoque deve ser reduzido para 8');
+  assert.equal(db.mesas['Mesa 01'].length, 1);
+
+  const itemId = db.mesas['Mesa 01'][0].id;
+  orderService.cancelOrderItem(db, 'Mesa 01', itemId, 'Pedido duplicado por engano', 'garcom1');
+
+  assert.equal(db.produtos[0].qtd, 10, 'Estoque deve retornar a 10 após estorno');
+  assert.equal(db.mesas['Mesa 01'], undefined, 'Comanda vazia deve ser desalocada');
+  assert.equal(db.cancelamentos.length, 1, 'Registro de cancelamento deve ser criado para auditoria');
+  assert.equal(db.movimentacoesEstoque[0].tipo, 'Cancelamento');
+});
+
+await testCase('RN-CSH.6', 'TASK-969: Consolidação de dados para gráfico semanal de vendas (getChartData)', '🟡', async () => {
+  const db = {
+    caixa: [
+      { id: 'c1', tipo: 'entrada', origem: 'venda', valor: 150.0, data: new Date().toISOString() },
+      { id: 'c2', tipo: 'entrada', origem: 'venda', valor: 85.5, data: new Date().toISOString() },
+      { id: 'c3', tipo: 'saida', origem: 'retirada', valor: 50.0, data: new Date().toISOString() }
+    ]
+  };
+
+  const chartData = cashService.getChartData(db);
+  assert.equal(chartData.length, 7, 'O gráfico deve retornar exatamente 7 dias');
+  const todayBucket = chartData[chartData.length - 1];
+  assert.equal(todayBucket.total, 235.5, 'O total de hoje no gráfico deve somar apenas as entradas de vendas (150 + 85.5)');
+});
+
+await testCase('RN-CSH.7', 'TASK-970: Fechamento de caixa com histórico e integridade de contagem', '🔴', async () => {
+  const db = {
+    caixa: [
+      { id: 'c1', tipo: 'entrada', origem: 'venda', formaPagamento: 'dinheiro', valor: 100.0, data: new Date().toISOString() },
+      { id: 'c2', tipo: 'entrada', origem: 'venda', formaPagamento: 'pix', valor: 50.0, data: new Date().toISOString() }
+    ],
+    turnosCaixa: [{ id: 't1', status: 'aberto', fundoInicial: 50.0, abertoEm: new Date().toISOString(), operador: 'caixa1' }],
+    fechamentosCaixa: []
+  };
+
+  const fechamento = shiftService.closeDailyCash(db, 150.0, 'caixa1', 'Fechamento sem divergência');
+  assert.equal(fechamento.tipo, 'diario');
+  assert.equal(fechamento.totalVendas, 150.0);
+  assert.equal(fechamento.dinheiroEsperado, 150.0); // 50 fundo + 100 dinheiro
+  assert.equal(fechamento.dinheiroContado, 150.0);
+  assert.equal(fechamento.diferenca, 0);
+  assert.equal(db.fechamentosCaixa.length, 1, 'Fechamento deve ser persistido em database.fechamentosCaixa');
+  assert.equal(db.turnosCaixa[0].status, 'fechado', 'Turno ativo deve ser automaticamente encerrado');
 });
 
 console.log('='.repeat(70));
