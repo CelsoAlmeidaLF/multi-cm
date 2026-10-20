@@ -1,7 +1,8 @@
 import { ICryptoPort } from '../../domain/interfaces/ICryptoPort.js';
+import { KdfWorkerAdapter } from './KdfWorkerAdapter.js';
 
 /**
- * Adaptador de Criptografia Baseado na Web Crypto API (SubtleCrypto)
+ * Adaptador de Criptografia Baseado na Web Crypto API (SubtleCrypto) com isolamento em Worker
  */
 export class WebCryptoAdapter extends ICryptoPort {
   _enc = new TextEncoder();
@@ -41,12 +42,7 @@ export class WebCryptoAdapter extends ICryptoPort {
     if (!Number.isSafeInteger(iterations) || iterations < 450000 || iterations > 1400000) {
       throw new Error('Parâmetros de chave KDF inválidos. Mínimo de 450.000 iterações obrigatório.');
     }
-    const base = await crypto.subtle.importKey('raw', this._enc.encode(password), 'PBKDF2', false, ['deriveBits']);
-    const derived = await crypto.subtle.deriveBits(
-      { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
-      base,
-      256
-    );
+    const derived = await KdfWorkerAdapter.deriveBits(this._enc.encode(password), salt, iterations, 256, 'SHA-256');
     return new Uint8Array(derived);
   }
 

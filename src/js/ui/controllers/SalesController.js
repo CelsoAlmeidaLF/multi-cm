@@ -31,6 +31,40 @@ export class SalesController {
     document.getElementById('fechamento-valor-final')?.addEventListener('input', () => this._syncTroco());
     document.getElementById('fechamento-valor-recebido')?.addEventListener('input', () => this._syncTroco());
     document.getElementById('fechamento-pagamento')?.addEventListener('change', () => this._syncTroco());
+    document.getElementById('imprimir-comanda-fiscal')?.addEventListener('click', () => this._printOrderReceipt());
+  }
+
+  async _printOrderReceipt() {
+    const mesa = this._closingmesa;
+    if (!mesa || !this._app._data?.mesas?.[mesa]) {
+      this._app._renderer.toast('Nenhuma comanda ativa selecionada para impressão.');
+      return;
+    }
+    const items = this._app._data.mesas[mesa] || [];
+    const total = this._app._order.calculateOrderTotal(items);
+    const cliente = document.getElementById('fechamento-cliente')?.textContent || 'Cliente';
+    const estabelecimento = this._app._governance?.getRecord()?.nomeEstabelecimento || 'BarGestão';
+    const finalVal = Number(document.getElementById('fechamento-valor-final')?.value || total);
+    const recebidoVal = Number(document.getElementById('fechamento-valor-recebido')?.value || finalVal);
+    const trocoVal = Math.max(0, recebidoVal - finalVal);
+
+    const pedidoData = {
+      mesa,
+      clienteNome: cliente,
+      abertoEm: Date.now(),
+      garcom: this._app._auth.getSession()?.usuario || 'Operador',
+      itens: items,
+      total: finalVal,
+      valorPago: recebidoVal,
+      troco: trocoVal
+    };
+
+    try {
+      await this._app._printer.printOrderReceipt(pedidoData, estabelecimento);
+      this._app._renderer.toast('Comprovante enviado para a impressora térmica.');
+    } catch (err) {
+      this._app._renderer.toast(`Impressão térmica: ${err.message}`);
+    }
   }
 
   // RN-FIREBASE.2: módulo de mesas só opera quando liberado pela governança, exceto para Venda Balcão

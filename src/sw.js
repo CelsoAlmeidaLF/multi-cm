@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-standard-v10';
+const CACHE = 'bargestao-standard-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -39,6 +39,7 @@ const ASSETS = [
   './js/domain/interfaces/ICryptoPort.js',
   './js/domain/interfaces/IStoragePort.js',
   './js/domain/interfaces/IGovernancePort.js',
+  './js/domain/interfaces/IThermalPrinterPort.js',
   './js/domain/entities/Product.js',
   './js/domain/entities/OrderItem.js',
   './js/domain/entities/Table.js',
@@ -49,6 +50,9 @@ const ASSETS = [
   './js/domain/entities/GovernanceUid.js',
   './js/domain/values/Bg12LegacyWords.js',
   './js/infrastructure/adapters/WebCryptoAdapter.js',
+  './js/infrastructure/adapters/KdfWorkerAdapter.js',
+  './js/infrastructure/workers/kdf.worker.js',
+  './js/infrastructure/adapters/WebSerialPrinterAdapter.js',
   './js/infrastructure/adapters/StorageAdapter.js',
   './js/infrastructure/adapters/ConcurrencyAdapter.js',
   './js/infrastructure/adapters/BinaryExportAdapter.js',
