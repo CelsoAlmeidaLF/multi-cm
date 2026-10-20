@@ -9,11 +9,19 @@ export class OrderService {
     return String(n).padStart(2, '0');
   }
 
+  isCounterTable(tablename) {
+    return /^Balc[aã]o/i.test(String(tablename || '').trim());
+  }
+
   nameForTable(num) {
+    if (typeof num === 'string' && this.isCounterTable(num)) return 'Balcão';
     return `Mesa ${this._pad(num)}`;
   }
 
   resolveTableName(database, num) {
+    if (typeof num === 'string' && this.isCounterTable(num)) {
+      return 'Balcão';
+    }
     const regex = /^Mesa\s*0*(\d+)$/i;
     const match = Object.keys(database.mesas || {}).find(s => {
       const m = s.match(regex);
@@ -23,6 +31,7 @@ export class OrderService {
   }
 
   tableNumberFromKey(name) {
+    if (this.isCounterTable(name)) return 'Balcão';
     const match = String(name).match(/^Mesa\s*0*(\d+)$/i);
     return match ? Number(match[1]) : NaN;
   }
@@ -44,7 +53,8 @@ export class OrderService {
     if (!Object.hasOwn(database.mesas, tablename)) {
       database.mesas[tablename] = [];
     }
-    database.mesaClientes[tablename] = database.mesaClientes[tablename] || clientname || 'Cliente não informado';
+    const defaultClient = this.isCounterTable(tablename) ? 'Cliente Balcão' : 'Cliente não informado';
+    database.mesaClientes[tablename] = database.mesaClientes[tablename] || clientname || defaultClient;
 
     const item = new OrderItem({
       produtoId: prod.id,
@@ -64,11 +74,27 @@ export class OrderService {
       delta: -qtd,
       antes,
       depois: prod.qtd,
-      motivo: `Comanda ${tablename}`,
+      motivo: this.isCounterTable(tablename) ? 'Venda Balcão' : `Comanda ${tablename}`,
       usuario: username || 'Sistema'
     });
     (database.movimentacoesEstoque ||= []).unshift(mov.toJSON());
     return item.toJSON();
+  }
+
+  createCounterSale(database, itemsList, formapagamento, username, shiftid = null, options = {}) {
+    if (!Array.isArray(itemsList) || itemsList.length === 0) {
+      throw new Error('Lista de itens de venda balcão está vazia.');
+    }
+    const tablename = 'Balcão';
+    const client = options.cliente || 'Cliente Balcão';
+    const addedItems = [];
+
+    for (const it of itemsList) {
+      const added = this.addOrderItem(database, tablename, client, it.produtoId, it.qtd, username);
+      addedItems.push(added);
+    }
+
+    return this.receiveTable(database, tablename, formapagamento, username, shiftid, options);
   }
 
   cancelOrderItemWithRole(database, tablename, itemid, reason, username, role = 'gerente') {
@@ -126,11 +152,75 @@ export class OrderService {
     database.mesaClientes[tablename] = novocliente.trim();
   }
 
-  receiveTable(database, tablename, formapagamento, username, shiftid = null) {
+  updateOrderItemQuantity(database, tablename, itemid, novaQtd, username) {
+    const items = database.mesas[tablename];
+    if (!items?.length) throw new Error('Comanda não possui itens.');
+
+    const item = items.find(i => String(i.id) === String(itemid));
+    if (!item) throw new Error('Item não encontrado na comanda.');
+
+    if (!Number.isSafeInteger(novaQtd) || novaQtd <= 0) {
+      throw new Error('Quantidade inválida para atualização.');
+    }
+
+    const prod = (database.produtos || []).find(p => String(p.id) === String(item.produtoId));
+    const delta = novaQtd - Number(item.qtd);
+
+    if (delta > 0 && prod) {
+      if (prod.qtd < delta) {
+        throw new Error(`Estoque insuficiente para acréscimo. Disponível: ${prod.qtd} un.`);
+      }
+      const antes = prod.qtd;
+      prod.qtd -= delta;
+      (database.movimentacoesEstoque ||= []).unshift(new StockMovement({
+        produtoId: prod.id,
+        produtoNome: prod.nome,
+        tipo: 'Venda',
+        delta: -delta,
+        antes,
+        depois: prod.qtd,
+        motivo: `Correção Comanda ${tablename} (Acréscimo)`,
+        usuario: username || 'Sistema'
+      }).toJSON());
+    } else if (delta < 0 && prod) {
+      const dev = Math.abs(delta);
+      const antes = prod.qtd;
+      prod.qtd += dev;
+      (database.movimentacoesEstoque ||= []).unshift(new StockMovement({
+        produtoId: prod.id,
+        produtoNome: prod.nome,
+        tipo: 'Cancelamento',
+        delta: dev,
+        antes,
+        depois: prod.qtd,
+        motivo: `Correção Comanda ${tablename} (Redução)`,
+        usuario: username || 'Sistema'
+      }).toJSON());
+    }
+
+    item.qtd = novaQtd;
+    item.total = Math.round((Number(item.precoUnit) * novaQtd + Number.EPSILON) * 100) / 100;
+    return item;
+  }
+
+  removeOrderItem(database, tablename, itemid, reason, username) {
+    return this.cancelOrderItem(database, tablename, itemid, reason || 'Correção de pedido incorreto', username);
+  }
+
+  receiveTable(database, tablename, formapagamento, username, shiftid = null, options = {}) {
     const items = database.mesas[tablename];
     if (!items?.length) throw new Error('Mesa indisponível ou vazia.');
 
-    const total = this.calculateOrderTotal(items);
+    const totalOriginal = this.calculateOrderTotal(items);
+    const valorCobrado = (options.valorFinal !== undefined && Number(options.valorFinal) >= 0)
+      ? Math.round((Number(options.valorFinal) + Number.EPSILON) * 100) / 100
+      : totalOriginal;
+    const valorRecebido = options.valorRecebido !== undefined
+      ? Math.round((Number(options.valorRecebido) + Number.EPSILON) * 100) / 100
+      : valorCobrado;
+    const troco = Math.max(0, Math.round((valorRecebido - valorCobrado + Number.EPSILON) * 100) / 100);
+    const desconto = Math.max(0, Math.round((totalOriginal - valorCobrado + Number.EPSILON) * 100) / 100);
+
     const cliente = database.mesaClientes[tablename] || 'Cliente não informado';
     const costKnown = items.every(i => Number.isFinite(i.custoUnit));
     const custoEstimado = costKnown ? Math.round((items.reduce((s, i) => s + (i.custoUnit || 0) * (i.qtd || 0), 0) + Number.EPSILON) * 100) / 100 : null;
@@ -138,11 +228,15 @@ export class OrderService {
     (database.caixa ||= []).unshift({
       id: crypto.randomUUID(),
       data: new Date().toISOString(),
-      descricao: `Venda ${tablename} (${username})`,
+      descricao: `Venda ${tablename} (${username})${desconto > 0 ? ` [Desc. R$ ${desconto.toFixed(2)}]` : ''}`,
       tipo: 'entrada',
       origem: 'venda',
       formaPagamento: formapagamento,
-      valor: total,
+      valor: valorCobrado,
+      totalOriginal,
+      valorRecebido,
+      troco,
+      desconto,
       mesa: tablename,
       cliente,
       itens: structuredClone(items),
@@ -153,6 +247,6 @@ export class OrderService {
     delete database.mesas[tablename];
     delete database.mesaClientes[tablename];
     delete (database.pagamentosParciais || {})[tablename];
-    return { total, cliente };
+    return { total: valorCobrado, totalOriginal, valorRecebido, troco, desconto, cliente };
   }
 }

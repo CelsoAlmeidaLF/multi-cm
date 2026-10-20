@@ -14,6 +14,7 @@ export class SalesController {
 
   bind() {
     document.getElementById('abrir-nova-mesa')?.addEventListener('click', () => this._click_new_order());
+    document.getElementById('abrir-venda-balcao')?.addEventListener('click', () => this._click_counter_order());
     document.getElementById('mesas-busca')?.addEventListener('input', () => this._renderTables());
     document.getElementById('mesa-numero')?.addEventListener('input', () => this._updateTableContext());
     document.getElementById('mesa-aberta-select')?.addEventListener('change', e => this._change_table_select(e));
@@ -27,12 +28,16 @@ export class SalesController {
     document.getElementById('form-editar-cliente')?.addEventListener('submit', e => this._submit_edit_client(e));
     document.getElementById('form-fechar-mesa')?.addEventListener('submit', e => this._submit_close_table(e));
     document.getElementById('form-cancelar-item')?.addEventListener('submit', e => this._submit_cancel_item(e));
+    document.getElementById('fechamento-valor-final')?.addEventListener('input', () => this._syncTroco());
+    document.getElementById('fechamento-valor-recebido')?.addEventListener('input', () => this._syncTroco());
+    document.getElementById('fechamento-pagamento')?.addEventListener('change', () => this._syncTroco());
   }
 
-  // RN-FIREBASE.2: módulo de mesas só opera quando liberado pela governança
-  _ensureTablesAllowed() {
+  // RN-FIREBASE.2: módulo de mesas só opera quando liberado pela governança, exceto para Venda Balcão
+  _ensureTablesAllowed(tableName = null) {
+    if (tableName && this._app._order.isCounterTable(tableName)) return true;
     if (this._app._governanceCtl.allowsTables()) return true;
-    this._app._renderer.toast('O módulo de mesas não foi liberado pela Governança Systekna para este estabelecimento.');
+    this._app._renderer.toast('O módulo de mesas não foi liberado pela Governança Systekna. Utilize o botão Venda Balcão para pedidos diretos.');
     return false;
   }
 
@@ -73,22 +78,39 @@ export class SalesController {
 
     const search = document.getElementById('mesas-busca')?.value.toLowerCase().trim() || '';
     const entries = Object.entries(this._app._data.mesas || {});
-    document.getElementById('stat-mesas').textContent = String(entries.length);
-    document.getElementById('mesas-count').textContent = `${entries.length} mesa(s)`;
+    const tablesAllowed = this._app._governanceCtl.allowsTables();
+
+    // Se mesas estão desabilitadas na governança, exibe aviso e lista apenas comandas de Balcão
+    if (!tablesAllowed) {
+      const banner = this._app._renderer.make('div', 'alert-box', '');
+      banner.style.cssText = 'background:rgba(224,193,133,0.12);border:1px solid rgba(224,193,133,0.3);padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:0.85rem;color:var(--ink);';
+      banner.textContent = 'Módulo de mesas desabilitado pela governança. Utilize o botão Venda Balcão para atendimento rápido.';
+      root.append(banner);
+    }
+
+    const counterCount = entries.filter(([n]) => this._app._order.isCounterTable(n)).length;
+    const regularCount = entries.length - counterCount;
+    App.safeSetText('stat-mesas', String(entries.length));
+    App.safeSetText('mesas-count', counterCount > 0 ? `${regularCount} mesa(s) • ${counterCount} balcão` : `${entries.length} mesa(s)`);
 
     let total = 0;
     for (const [name, items] of entries) {
       const sum = this._app._order.calculateOrderTotal(items);
       total += sum;
-      const cliente = this._app._data.mesaClientes?.[name] || 'Cliente não informado';
+      const isCounter = this._app._order.isCounterTable(name);
+      const cliente = this._app._data.mesaClientes?.[name] || (isCounter ? 'Cliente Balcão' : 'Cliente não informado');
 
       if (search && !`${name} ${cliente}`.toLowerCase().includes(search)) continue;
 
-      const card = this._app._renderer.make('div', 'entry mesa-entry');
+      const card = this._app._renderer.make('div', `entry mesa-entry ${isCounter ? 'counter-entry' : ''}`);
+      if (isCounter) {
+        card.style.cssText = 'border-left: 3px solid var(--accent); background: rgba(111,207,151,0.04);';
+      }
       const head = this._app._renderer.make('div', 'entry-head');
       const left = this._app._renderer.make('div', 'entry-left');
+      const titleSpan = this._app._renderer.make('strong', '', isCounter ? `[Balcão] ${name}` : name);
       left.append(
-        this._app._renderer.make('strong', '', name),
+        titleSpan,
         this._app._renderer.make('div', 'meta', cliente)
       );
       head.append(left, this._app._renderer.make('strong', 'entry-strong', this._app._renderer.money(sum)));
@@ -96,10 +118,23 @@ export class SalesController {
 
       for (const item of items) {
         const line = this._app._renderer.make('div', 'itemline');
-        line.append(
-          this._app._renderer.make('span', '', `${item.qtd} × ${item.nome}`),
-          this._app._renderer.make('span', '', this._app._renderer.money(item.total))
+        const itemInfo = this._app._renderer.make('span', '', `${item.qtd} × ${item.nome}`);
+        const rightGroup = this._app._renderer.make('span', 'itemline-actions', '', { style: 'display:inline-flex;align-items:center;gap:6px;' });
+        
+        const btnMinus = this._app._renderer.btn('−', () => this._changeItemQuantity(name, item.id, Number(item.qtd) - 1), 'btn-item-qty');
+        btnMinus.style.cssText = 'padding:0 6px;min-height:22px;height:22px;font-size:12px;line-height:1;border-radius:4px;';
+        btnMinus.title = item.qtd > 1 ? 'Reduzir 1 unidade' : 'Excluir item do pedido';
+
+        const btnPlus = this._app._renderer.btn('+', () => this._changeItemQuantity(name, item.id, Number(item.qtd) + 1), 'btn-item-qty');
+        btnPlus.style.cssText = 'padding:0 6px;min-height:22px;height:22px;font-size:12px;line-height:1;border-radius:4px;';
+        btnPlus.title = 'Aumentar 1 unidade';
+
+        rightGroup.append(
+          btnMinus,
+          btnPlus,
+          this._app._renderer.make('strong', '', this._app._renderer.money(item.total))
         );
+        line.append(itemInfo, rightGroup);
         card.append(line);
       }
 
@@ -178,57 +213,86 @@ export class SalesController {
     this._updateOrderPrice();
   }
 
+  _click_counter_order() {
+    const mesaInput = document.getElementById('mesa-numero');
+    const clientInput = document.getElementById('mesa-cliente');
+    if (mesaInput) {
+      mesaInput.value = 'Balcão';
+      mesaInput.readOnly = true;
+    }
+    if (clientInput) {
+      clientInput.value = this._app._data.mesaClientes?.['Balcão'] || 'Cliente Balcão';
+      clientInput.readOnly = false;
+    }
+    this._app._renderer._openModal('modal-pedido', 'venda-busca');
+  }
+
   _click_new_order() {
     if (!this._ensureTablesAllowed()) return;
-    document.getElementById('mesa-numero').value = '';
-    document.getElementById('mesa-cliente').value = '';
-    document.getElementById('mesa-cliente').readOnly = false;
+    const mesaInput = document.getElementById('mesa-numero');
+    const clientInput = document.getElementById('mesa-cliente');
+    if (mesaInput) {
+      mesaInput.value = '';
+      mesaInput.readOnly = false;
+    }
+    if (clientInput) {
+      clientInput.value = '';
+      clientInput.readOnly = false;
+    }
     this._app._renderer._openModal('modal-pedido', 'mesa-numero');
   }
 
   _chooseTable(name) {
-    if (!this._ensureTablesAllowed()) return;
-    const num = this._app._order.tableNumberFromKey(name);
-    document.getElementById('mesa-numero').value = String(num);
+    if (!this._ensureTablesAllowed(name)) return;
+    const isCounter = this._app._order.isCounterTable(name);
+    const mesaInput = document.getElementById('mesa-numero');
+    if (mesaInput) {
+      mesaInput.value = isCounter ? 'Balcão' : String(this._app._order.tableNumberFromKey(name));
+      mesaInput.readOnly = isCounter;
+    }
     this._updateTableContext();
     this._app._renderer._openModal('modal-pedido', 'venda-busca');
   }
 
   _updateTableContext() {
-    const num = Number(document.getElementById('mesa-numero')?.value);
-    const table = this._app._order.resolveTableName(this._app._data, num);
+    const rawVal = document.getElementById('mesa-numero')?.value.trim();
+    const isCounter = this._app._order.isCounterTable(rawVal) || rawVal?.toLowerCase() === 'balcao';
+    const table = isCounter ? 'Balcão' : this._app._order.resolveTableName(this._app._data, Number(rawVal));
     const isOpen = Object.hasOwn(this._app._data.mesas || {}, table);
     const clientInput = document.getElementById('mesa-cliente');
     if (isOpen && clientInput) {
-      clientInput.value = this._app._data.mesaClientes?.[table] || '';
-      clientInput.readOnly = true;
+      clientInput.value = this._app._data.mesaClientes?.[table] || (isCounter ? 'Cliente Balcão' : '');
+      clientInput.readOnly = !isCounter;
     } else if (clientInput) {
+      if (isCounter && !clientInput.value) clientInput.value = 'Cliente Balcão';
       clientInput.readOnly = false;
     }
   }
 
   async _submit_add_item(event) {
     event.preventDefault();
-    if (!this._ensureTablesAllowed()) return;
-    const num = Number(document.getElementById('mesa-numero').value);
-    const client = document.getElementById('mesa-cliente').value.trim();
-    const prodId = document.getElementById('venda-produto').value;
-    const qty = Number(document.getElementById('venda-qtd').value) || 1;
+    const rawMesa = document.getElementById('mesa-numero')?.value.trim();
+    const isCounter = this._app._order.isCounterTable(rawMesa) || rawMesa?.toLowerCase() === 'balcao';
+    if (!isCounter && !this._ensureTablesAllowed(rawMesa)) return;
 
-    const table = this._app._order.resolveTableName(this._app._data, num);
+    const table = isCounter ? 'Balcão' : this._app._order.resolveTableName(this._app._data, Number(rawMesa));
+    const client = document.getElementById('mesa-cliente')?.value.trim() || (isCounter ? 'Cliente Balcão' : '');
+    const prodId = document.getElementById('venda-produto')?.value;
+    const qty = Number(document.getElementById('venda-qtd')?.value) || 1;
+
     const isNew = !Object.hasOwn(this._app._data.mesas || {}, table);
-    if (isNew && !client) {
+    if (isNew && !client && !isCounter) {
       this._app._renderer.toast('Informe o nome do cliente para abrir a comanda.');
       return;
     }
 
     const ok = await this._app._commit(draft => {
       this._app._order.addOrderItem(draft, table, client, prodId, qty, this._app._auth.getSession().usuario);
-    }, 'Inclusão de pedido em comanda');
+    }, isCounter ? 'Inclusão de pedido no balcão' : `Inclusão de pedido em comanda`);
 
     if (ok) {
       this._app._renderer._closeModal('modal-pedido');
-      this._app._renderer.toast(`Pedido lançado para ${table}.`);
+      this._app._renderer.toast(`Pedido lançado com sucesso (${table}).`);
     }
   }
 
@@ -250,13 +314,63 @@ export class SalesController {
     }
   }
 
+  async _changeItemQuantity(tablename, itemid, novaQtd) {
+    const session = this._app._auth.getSession();
+    if (novaQtd <= 0) {
+      const ok = await this._app._commit(draft => {
+        this._app._order.removeOrderItem(draft, tablename, itemid, 'Correção de item pelo funcionário', session.usuario);
+      }, 'Remoção de item da comanda');
+      if (ok) this._app._renderer.toast('Item removido e devolvido ao estoque.');
+      return;
+    }
+    const ok = await this._app._commit(draft => {
+      this._app._order.updateOrderItemQuantity(draft, tablename, itemid, novaQtd, session.usuario);
+    }, 'Ajuste de quantidade na comanda');
+    if (ok) this._app._renderer.toast('Quantidade atualizada com sucesso.');
+  }
+
+  _syncTroco() {
+    const totalOriginal = this._closingTotal || 0;
+    const inputFinal = document.getElementById('fechamento-valor-final');
+    const inputRecebido = document.getElementById('fechamento-valor-recebido');
+    const forma = document.getElementById('fechamento-pagamento')?.value;
+
+    const valorCobrado = inputFinal && inputFinal.value !== '' ? Number(inputFinal.value) : totalOriginal;
+    const valorRecebido = inputRecebido && inputRecebido.value !== '' ? Number(inputRecebido.value) : valorCobrado;
+
+    const troco = Math.max(0, Math.round((valorRecebido - valorCobrado + Number.EPSILON) * 100) / 100);
+    const desconto = Math.max(0, Math.round((totalOriginal - valorCobrado + Number.EPSILON) * 100) / 100);
+
+    const displayTroco = document.getElementById('fechamento-troco-display');
+    if (displayTroco) {
+      displayTroco.textContent = forma === 'dinheiro' || troco > 0
+        ? `Troco a devolver: ${this._app._renderer.money(troco)}`
+        : `Troco: ${this._app._renderer.money(0)}`;
+    }
+
+    const displayDesc = document.getElementById('fechamento-desconto-display');
+    if (displayDesc) {
+      displayDesc.textContent = desconto > 0 ? `Desconto: ${this._app._renderer.money(desconto)}` : '';
+    }
+  }
+
   _closeTable(name) {
     this._closingmesa = name;
     const items = this._app._data.mesas?.[name] || [];
     const total = this._app._order.calculateOrderTotal(items);
+    this._closingTotal = total;
+
     document.getElementById('fechamento-mesa').textContent = name;
     document.getElementById('fechamento-cliente').textContent = `Cliente: ${this._app._data.mesaClientes?.[name] || ''}`;
     document.getElementById('fechamento-total').textContent = this._app._renderer.money(total);
+
+    const inputFinal = document.getElementById('fechamento-valor-final');
+    if (inputFinal) inputFinal.value = total.toFixed(2);
+
+    const inputRecebido = document.getElementById('fechamento-valor-recebido');
+    if (inputRecebido) inputRecebido.value = total.toFixed(2);
+
+    this._syncTroco();
     this._app._renderer._openModal('modal-fechamento');
   }
 
@@ -265,13 +379,26 @@ export class SalesController {
     const formapagamento = document.getElementById('fechamento-pagamento').value;
     const shift = this._app._shift.getActiveShift(this._app._data);
 
+    const valorFinalInput = document.getElementById('fechamento-valor-final');
+    const valorRecebidoInput = document.getElementById('fechamento-valor-recebido');
+
+    const valorFinal = valorFinalInput && valorFinalInput.value !== '' ? Number(valorFinalInput.value) : undefined;
+    const valorRecebido = valorRecebidoInput && valorRecebidoInput.value !== '' ? Number(valorRecebidoInput.value) : valorFinal;
+
     const ok = await this._app._commit(draft => {
-      this._app._order.receiveTable(draft, this._closingmesa, formapagamento, this._app._auth.getSession().usuario, shift?.id || null);
+      this._app._order.receiveTable(
+        draft,
+        this._closingmesa,
+        formapagamento,
+        this._app._auth.getSession().usuario,
+        shift?.id || null,
+        { valorFinal, valorRecebido }
+      );
     }, 'Fechamento e quitação de mesa');
 
     if (ok) {
       this._app._renderer._closeModal('modal-fechamento');
-      this._app._renderer.toast('Comanda recebida com sucesso.');
+      this._app._renderer.toast('Comanda recebida com sucesso e registrada no caixa.');
     }
   }
 }

@@ -61,6 +61,12 @@ export class CashController {
       const p = document.getElementById('quick-cash-period')?.value || 'hoje';
       this._exportCashReport('xlsx', p);
     });
+
+    // Fechamento de Caixa Diário e Mensal (TASK-318 / FDBK-318)
+    document.getElementById('abrir-fechamento-caixa')?.addEventListener('click', () => this._openClosingModal());
+    document.getElementById('form-fechamento-caixa')?.addEventListener('submit', e => this._submit_closing(e));
+    document.getElementById('fechamento-tipo-select')?.addEventListener('change', () => this._updateClosingSummaryView());
+    document.getElementById('fechamento-dinheiro-contado')?.addEventListener('input', () => this._syncClosingDiff());
   }
 
   _renderCash() {
@@ -68,19 +74,22 @@ export class CashController {
     const period = document.getElementById('caixa-periodo')?.value || 'hoje';
     const metrics = this._app._cash.calculateMetrics(this._app._data, period);
 
-    document.getElementById('cash-vendas').textContent = String(metrics.salesCount);
-    document.getElementById('cash-faturamento').textContent = this._app._renderer.money(metrics.sold);
-    document.getElementById('cash-aberto').textContent = this._app._renderer.money(metrics.openValue);
-    document.getElementById('cash-ticket').textContent = this._app._renderer.money(metrics.ticket);
-    document.getElementById('cash-saidas').textContent = this._app._renderer.money(metrics.outgoing);
-    document.getElementById('cash-saldo').textContent = this._app._renderer.money(metrics.balance);
+    App.safeSetText('cash-vendas', String(metrics.salesCount));
+    App.safeSetText('cash-faturamento', this._app._renderer.money(metrics.sold));
+    App.safeSetText('cash-aberto', this._app._renderer.money(metrics.openValue));
+    App.safeSetText('cash-ticket', this._app._renderer.money(metrics.ticket));
+    App.safeSetText('cash-saidas', this._app._renderer.money(metrics.outgoing));
+    App.safeSetText('cash-saldo', this._app._renderer.money(metrics.balance));
+
+    // Renderização do Painel de Turno de Caixa
+    this._renderShiftPanel();
 
     const root = document.getElementById('livro-caixa');
     if (!root) return;
     root.replaceChildren();
 
     const entries = this._app._cash.getFilteredEntries(this._app._data, period);
-    document.getElementById('caixa-count').textContent = `${entries.length} registros`;
+    App.safeSetText('caixa-count', `${entries.length} registros`);
 
     for (const e of entries) {
       const el = this._app._renderer.make('div', 'entry');
@@ -95,6 +104,130 @@ export class CashController {
       head.append(left, right);
       el.append(head);
       root.append(el);
+    }
+  }
+
+  _renderShiftPanel() {
+    const shiftStatus = document.getElementById('v9-shift-status');
+    const shiftBody = document.getElementById('v9-shift-body');
+    if (!shiftBody) return;
+
+    const active = this._app._shift.getActiveShift(this._app._data);
+    if (!active) {
+      if (shiftStatus) shiftStatus.textContent = 'Nenhum turno aberto';
+      shiftBody.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid var(--line);">
+          <div>
+            <strong style="display:block;font-size:0.95rem;">Caixa livre / Turno fechado</strong>
+            <small style="color:var(--text-muted);">Abra um novo turno com fundo de troco para iniciar a conciliação.</small>
+          </div>
+          <button type="button" class="btn btn-primary" id="v9-btn-novo-turno">Iniciar Turno</button>
+        </div>
+      `;
+      document.getElementById('v9-btn-novo-turno')?.addEventListener('click', () => this._promptOpenShift());
+    } else {
+      const totals = this._app._shift.calculateShiftTotals(this._app._data, active);
+      if (shiftStatus) shiftStatus.textContent = `Turno ativo • Operador: ${active.operador}`;
+      shiftBody.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:12px;background:rgba(111,207,151,0.03);border-radius:8px;border:1px solid rgba(111,207,151,0.2);margin-bottom:12px;">
+          <div><small style="color:var(--text-muted);display:block;">Fundo Inicial</small><strong class="num">${this._app._renderer.money(active.fundoInicial)}</strong></div>
+          <div><small style="color:var(--text-muted);display:block;">Entradas (Dinheiro)</small><strong class="num text-good">+ ${this._app._renderer.money(totals.cashIn)}</strong></div>
+          <div><small style="color:var(--text-muted);display:block;">Retiradas / Sangrias</small><strong class="num text-bad">− ${this._app._renderer.money(totals.cashOut)}</strong></div>
+          <div><small style="color:var(--text-muted);display:block;">Dinheiro Esperado</small><strong class="num text-good" style="font-size:1.05rem;">${this._app._renderer.money(totals.esperado)}</strong></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" class="btn ghost minor manager-only" id="v9-btn-sangria">Registrar Retirada</button>
+          <button type="button" class="btn minor" id="v9-btn-fechar">Fechar Caixa do Dia</button>
+        </div>
+      `;
+      document.getElementById('v9-btn-sangria')?.addEventListener('click', () => this._openWithdrawalModal());
+      document.getElementById('v9-btn-fechar')?.addEventListener('click', () => this._openClosingModal());
+    }
+  }
+
+  async _promptOpenShift() {
+    const session = this._app._auth.getSession();
+    const fundoStr = prompt('Informe o valor do Fundo de Caixa Inicial (R$):', '100.00');
+    if (fundoStr === null) return;
+    const fundo = parseFloat(fundoStr.replace(',', '.'));
+    if (isNaN(fundo) || fundo < 0) {
+      this._app._renderer.toast('Valor de fundo inicial inválido.');
+      return;
+    }
+    const ok = await this._app._commit(draft => {
+      this._app._shift.openShift(draft, fundo, session.usuario);
+    }, 'Abertura de turno de caixa');
+    if (ok) {
+      this._app._renderer.toast(`Turno aberto com fundo de ${this._app._renderer.money(fundo)}.`);
+    }
+  }
+
+  _openClosingModal() {
+    const form = document.getElementById('form-fechamento-caixa');
+    if (form) form.reset();
+    this._updateClosingSummaryView();
+    this._app._renderer._openModal('modal-fechamento-caixa', 'fechamento-dinheiro-contado');
+  }
+
+  _updateClosingSummaryView() {
+    const tipo = document.getElementById('fechamento-tipo-select')?.value || 'diario';
+    const summary = this._app._shift.getClosingSummary(this._app._data, tipo);
+
+    App.safeSetText('fechamento-resumo-periodo', tipo === 'diario' ? `Hoje (${summary.referencia})` : `Mês (${summary.referencia})`);
+    App.safeSetText('fechamento-total-vendas', this._app._renderer.money(summary.totalVendas));
+    App.safeSetText('fechamento-total-saidas', this._app._renderer.money(summary.totalSaidas));
+    App.safeSetText('fechamento-saldo-liquido', this._app._renderer.money(summary.saldoLiquido));
+    App.safeSetText('fechamento-dinheiro', this._app._renderer.money(summary.pagamentos.dinheiro));
+    App.safeSetText('fechamento-pix', this._app._renderer.money(summary.pagamentos.pix));
+    App.safeSetText('fechamento-debito', this._app._renderer.money(summary.pagamentos.debito));
+    App.safeSetText('fechamento-credito', this._app._renderer.money(summary.pagamentos.credito));
+    App.safeSetText('fechamento-dinheiro-esperado', this._app._renderer.money(summary.dinheiroEsperado));
+
+    const contadoInput = document.getElementById('fechamento-dinheiro-contado');
+    if (contadoInput && !contadoInput.value) {
+      contadoInput.value = summary.dinheiroEsperado.toFixed(2);
+    }
+    this._syncClosingDiff();
+  }
+
+  _syncClosingDiff() {
+    const tipo = document.getElementById('fechamento-tipo-select')?.value || 'diario';
+    const summary = this._app._shift.getClosingSummary(this._app._data, tipo);
+    const contado = parseFloat(document.getElementById('fechamento-dinheiro-contado')?.value || '0') || 0;
+    const diff = Math.round((contado - summary.dinheiroEsperado + Number.EPSILON) * 100) / 100;
+    const diffEl = document.getElementById('fechamento-diferenca-valor');
+    if (!diffEl) return;
+
+    if (Math.abs(diff) < 0.01) {
+      diffEl.textContent = 'Caixa Exato (Sem divergência)';
+      diffEl.className = 'pill good';
+    } else if (diff > 0) {
+      diffEl.textContent = `Sobra: + ${this._app._renderer.money(diff)}`;
+      diffEl.className = 'pill good';
+    } else {
+      diffEl.textContent = `Falta: − ${this._app._renderer.money(Math.abs(diff))}`;
+      diffEl.className = 'pill warn';
+    }
+  }
+
+  async _submit_closing(event) {
+    event.preventDefault();
+    const tipo = document.getElementById('fechamento-tipo-select')?.value || 'diario';
+    const contado = parseFloat(document.getElementById('fechamento-dinheiro-contado')?.value || '0') || 0;
+    const observacoes = document.getElementById('fechamento-observacoes')?.value.trim() || '';
+    const session = this._app._auth.getSession();
+
+    const ok = await this._app._commit(draft => {
+      if (tipo === 'diario') {
+        this._app._shift.closeDailyCash(draft, contado, session.usuario, observacoes);
+      } else {
+        this._app._shift.closeMonthlyCash(draft, session.usuario, null, observacoes);
+      }
+    }, `Fechamento de caixa ${tipo}`);
+
+    if (ok) {
+      this._app._renderer._closeModal('modal-fechamento-caixa');
+      this._app._renderer.toast(`Fechamento de caixa (${tipo}) registrado com sucesso!`);
     }
   }
 

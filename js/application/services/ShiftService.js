@@ -60,4 +60,97 @@ export class ShiftService {
     shift.observacoes = String(observacoes || '');
     return shift;
   }
+
+  getClosingSummary(database, tipo = 'diario', ref = null) {
+    const now = new Date();
+    const prefix = tipo === 'mensal'
+      ? (ref || now.toISOString().slice(0, 7))
+      : (ref || now.toISOString().slice(0, 10));
+
+    const movements = (database.caixa || []).filter(c => c.data && c.data.startsWith(prefix));
+    const entradas = movements.filter(c => c.tipo === 'entrada');
+    const saidas = movements.filter(c => c.tipo === 'saida');
+
+    const totalVendas = Math.round((entradas.reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const totalSaidas = Math.round((saidas.reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+
+    const dinheiro = Math.round((entradas.filter(c => c.formaPagamento === 'dinheiro').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const pix = Math.round((entradas.filter(c => c.formaPagamento === 'pix').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const debito = Math.round((entradas.filter(c => c.formaPagamento === 'debito').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const credito = Math.round((entradas.filter(c => c.formaPagamento === 'credito').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const outros = Math.round((entradas.filter(c => !['dinheiro', 'pix', 'debito', 'credito'].includes(c.formaPagamento)).reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+
+    const activeShift = this.getActiveShift(database);
+    const fundoInicial = activeShift ? Number(activeShift.fundoInicial || 0) : 0;
+    const saidasDinheiro = Math.round((saidas.reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const dinheiroEsperado = Math.round((fundoInicial + dinheiro - saidasDinheiro + Number.EPSILON) * 100) / 100;
+
+    return {
+      tipo,
+      referencia: prefix,
+      totalVendas,
+      totalSaidas,
+      saldoLiquido: Math.round((totalVendas - totalSaidas + Number.EPSILON) * 100) / 100,
+      quantidadeVendas: entradas.length,
+      quantidadeSaidas: saidas.length,
+      pagamentos: { dinheiro, pix, debito, credito, outros },
+      fundoInicial,
+      dinheiroEsperado,
+      hasActiveShift: !!activeShift
+    };
+  }
+
+  closeDailyCash(database, contado, operador, observacoes = '') {
+    const summary = this.getClosingSummary(database, 'diario');
+    const count = Math.round((Number(contado) + Number.EPSILON) * 100) / 100;
+    if (!Number.isFinite(count) || count < 0) throw new Error('Valor contado em dinheiro inválido.');
+
+    const activeShift = this.getActiveShift(database);
+    let shiftFechado = null;
+    if (activeShift) {
+      shiftFechado = this.closeShift(database, count, operador, observacoes);
+    }
+
+    const diferenca = Math.round((count - summary.dinheiroEsperado + Number.EPSILON) * 100) / 100;
+    const record = {
+      id: `FECH-DIA-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
+      tipo: 'diario',
+      dataReferencia: summary.referencia,
+      fechadoEm: new Date().toISOString(),
+      operador: operador || 'Sistema',
+      totalVendas: summary.totalVendas,
+      totalSaidas: summary.totalSaidas,
+      saldoLiquido: summary.saldoLiquido,
+      pagamentos: summary.pagamentos,
+      fundoInicial: summary.fundoInicial,
+      dinheiroEsperado: summary.dinheiroEsperado,
+      dinheiroContado: count,
+      diferenca,
+      observacoes: String(observacoes || ''),
+      turnoId: shiftFechado?.id || null
+    };
+
+    (database.fechamentosCaixa ||= []).unshift(record);
+    return record;
+  }
+
+  closeMonthlyCash(database, operador, mesRef = null, observacoes = '') {
+    const summary = this.getClosingSummary(database, 'mensal', mesRef);
+    const record = {
+      id: `FECH-MES-${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
+      tipo: 'mensal',
+      mesReferencia: summary.referencia,
+      fechadoEm: new Date().toISOString(),
+      operador: operador || 'Sistema',
+      totalVendas: summary.totalVendas,
+      totalSaidas: summary.totalSaidas,
+      saldoLiquido: summary.saldoLiquido,
+      quantidadeVendas: summary.quantidadeVendas,
+      pagamentos: summary.pagamentos,
+      observacoes: String(observacoes || '')
+    };
+
+    (database.fechamentosCaixa ||= []).unshift(record);
+    return record;
+  }
 }
