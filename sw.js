@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-standard-v12';
+const CACHE = 'bargestao-standard-v13';
 const ASSETS = [
   './',
   './index.html',

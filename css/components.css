@@ -2330,3 +2330,74 @@ hr.soft {
   white-space: normal;
   text-wrap: balance;
 }
+
+/* Controles de Correção e Ajuste de Itens da Comanda */
+.itemline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.itemline-actions .btn-item-qty {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemline-actions .item-del-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--down, #E08585);
+  border-radius: 6px;
+}
+
+.itemline-actions .item-del-btn:hover {
+  background: rgba(224, 133, 133, 0.15);
+}
+
+.corrigir-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.corrigir-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.corrigir-item-title {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.corrigir-item-sub {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.corrigir-item-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
