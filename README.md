@@ -72,6 +72,7 @@ O kit usa `--surface`, `--surface-2` e `--ink-dim`; `src/css/kit-aero.css` liga 
 | 2.6.2 | Menu do kit dentro da barra de título; nome do estabelecimento no título |
 | 2.7.0 | Login salvo: um PIN só (o do aparelho); depois do 1º login com usuário e senha, entra direto; Trocar usuário e Sair deste dispositivo; service worker v9 |
 | 2.8.0 | Kit de segurança 2.1: contador de PIN errado que não zera ao recarregar (espera crescente; na 10ª só biometria ou 12 palavras), proteção contra limpeza pedida ao navegador, Configurações → Seus dados (espaço e proteção; o backup do bar continua o do próprio app); service worker v10 |
+| 2.9.0 | Driver Web Serial ESC/POS nativo para impressora térmica (115200 bps e corte guilhotina), derivação criptográfica KDF off-thread em Web Worker a 60 FPS, Venda Rápida / Balcão Direto sem mesa obrigatória, Fechamento de Caixa Diário e Mensal consolidado por método de pagamento com conciliação física de gaveta, blindagem defensiva DOM e service worker v12 |
 
 Ao mudar arquivos do app, troque `VERSION` em `src/js/App.js`, `data-vault-version` e os textos de versão no `index.html`, `version` no `package.json` e a constante `CACHE` do `sw.js`.
 

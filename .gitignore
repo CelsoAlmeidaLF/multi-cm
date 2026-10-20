@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+
+# Restrição Inviolável Systekna - Proibido versionar APKs
+*.apk
+*.ap_
+*.aab
+
+# Sistema e Logs
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Variáveis locais e segredos
+.env
+.env.local

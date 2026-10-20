@@ -257,4 +257,13 @@ export class OrderService {
   closeOrder(...args) {
     return this.receiveTable(...args);
   }
+
+  createDirectSale(...args) {
+    return this.createCounterSale(...args);
+  }
+
+  processDirectSale(...args) {
+    return this.createCounterSale(...args);
+  }
 }
+
