@@ -249,4 +249,12 @@ export class OrderService {
     delete (database.pagamentosParciais || {})[tablename];
     return { total: valorCobrado, totalOriginal, valorRecebido, troco, desconto, cliente };
   }
+
+  closeTable(...args) {
+    return this.receiveTable(...args);
+  }
+
+  closeOrder(...args) {
+    return this.receiveTable(...args);
+  }
 }
