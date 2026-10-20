@@ -254,15 +254,12 @@ export class GovernanceController {
 
   applyState() {
     const tables = this.allowsTables();
-    for (const id of ['home-new-order', 'home-all-tables']) {
-      document.getElementById(id)?.classList.toggle('hidden', !tables);
-    }
+    document.getElementById('home-all-tables')?.classList.toggle('hidden', !tables);
+    document.getElementById('home-new-order')?.classList.remove('hidden');
+
     const xlsx = this.allowsXlsxExport();
     for (const id of ['cash-export-xlsx', 'more-export-excel']) {
       document.getElementById(id)?.classList.toggle('hidden', !xlsx);
-    }
-    if (!tables && this._app._currenttab === 'vendas') {
-      this._app._currenttab = 'inicio';
     }
     if (this._app._auth.getSession()) {
       this._app._changeTab(this._app._currenttab);

@@ -67,6 +67,37 @@ export class CashController {
     document.getElementById('form-fechamento-caixa')?.addEventListener('submit', e => this._submit_closing(e));
     document.getElementById('fechamento-tipo-select')?.addEventListener('change', () => this._updateClosingSummaryView());
     document.getElementById('fechamento-dinheiro-contado')?.addEventListener('input', () => this._syncClosingDiff());
+    document.getElementById('imprimir-fechamento-fiscal')?.addEventListener('click', () => this._printClosingReceipt());
+  }
+
+  async _printClosingReceipt() {
+    if (!this._app._data) return;
+    const tipo = document.getElementById('fechamento-tipo-select')?.value || 'diario';
+    const resumo = this._app._shift.getClosingSummary(this._app._data, tipo);
+    const contado = Number(document.getElementById('fechamento-dinheiro-contado')?.value || 0);
+    const obs = document.getElementById('fechamento-observacoes')?.value || '';
+    const estabelecimento = this._app._governance?.getRecord()?.nomeEstabelecimento || 'BarGestão';
+
+    const fechamentoData = {
+      id: `FECH-${tipo === 'mensal' ? 'MES' : 'DIA'}-DEMO-${Date.now()}`,
+      tipo,
+      data: new Date().toISOString(),
+      operador: this._app._auth.getSession()?.usuario || 'Operador',
+      totalVendas: resumo.totalVendas,
+      totalRetiradas: resumo.totalRetiradas,
+      dinheiroEsperado: resumo.dinheiroEsperado,
+      dinheiroContado: contado,
+      diferenca: contado - resumo.dinheiroEsperado,
+      totaisPorForma: resumo.totaisPorForma,
+      observacoes: obs
+    };
+
+    try {
+      await this._app._printer.printCashClosingReceipt(fechamentoData, estabelecimento);
+      this._app._renderer.toast('Comprovante de fechamento impresso via ESC/POS.');
+    } catch (err) {
+      this._app._renderer.toast(`Impressão térmica: ${err.message}`);
+    }
   }
 
   _renderCash() {

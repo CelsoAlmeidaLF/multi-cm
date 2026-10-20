@@ -21,6 +21,7 @@ import { StockController } from './ui/controllers/StockController.js';
 import { CashController } from './ui/controllers/CashController.js';
 import { SecurityController } from './ui/controllers/SecurityController.js';
 import { GovernanceController } from './ui/controllers/GovernanceController.js';
+import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrinterAdapter.js';
 
 /**
  * Orquestrador Central da Aplicação — BarGestão Standard
@@ -83,6 +84,7 @@ export class App {
     this._storage = new StorageAdapter();
     this._concurrency = new ConcurrencyAdapter();
     this._export = new BinaryExportAdapter();
+    this._printer = new WebSerialPrinterAdapter();
 
     this._auth = new AuthService(this._crypto, this._storage);
     this._stock = new StockService();
@@ -240,13 +242,24 @@ export class App {
     document.getElementById('top-logout')?.addEventListener('click', () => this._discardSession());
 
     // Seção Início
-    document.getElementById('home-new-order')?.addEventListener('click', () => this._salesCtl._click_new_order());
+    document.getElementById('home-new-order')?.addEventListener('click', () => {
+      if (this._governanceCtl.allowsTables()) {
+        this._salesCtl._click_new_order();
+      } else {
+        this._salesCtl._click_counter_order();
+      }
+    });
+    document.getElementById('home-counter-order')?.addEventListener('click', () => this._salesCtl._click_counter_order());
     document.getElementById('home-all-tables')?.addEventListener('click', () => this._changeTab('vendas'));
     document.getElementById('home-all-stock')?.addEventListener('click', () => this._changeTab('estoque'));
 
     // Mais Opções (navegação)
     document.getElementById('more-caixa')?.addEventListener('click', () => this._changeTab('caixa'));
     document.getElementById('more-caixa-acesso')?.addEventListener('click', () => this._changeTab('caixa'));
+    document.getElementById('more-fechamento-caixa')?.addEventListener('click', () => {
+      this._changeTab('caixa');
+      this._cashCtl._openClosingModal();
+    });
     document.getElementById('more-usuarios')?.addEventListener('click', () => this._changeTab('usuarios'));
     document.getElementById('more-lock')?.addEventListener('click', () => this._discardSession());
     document.getElementById('more-switch-user')?.addEventListener('click', () => this._switchUser());
@@ -490,14 +503,12 @@ export class App {
 
   _changeTab(tab) {
     if (!this._auth.getSession()) return;
-    const tablesAllowed = this._governanceCtl.allowsTables();
-    if (tab === 'vendas' && !tablesAllowed) tab = 'inicio';
     this._currenttab = tab;
     document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
     const breadcrumb = document.getElementById('breadcrumb');
     if (breadcrumb) breadcrumb.textContent = '/ ' + this._renderer._titles[tab];
 
-    this._renderer.renderNavigation(this._currenttab, this._auth.isManager(), t => this._changeTab(t), tablesAllowed ? [] : ['vendas']);
+    this._renderer.renderNavigation(this._currenttab, this._auth.isManager(), t => this._changeTab(t), []);
     if (tab === 'inicio') this._renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
