@@ -1,0 +1,253 @@
+/* ==========================================================================
+   BarGestão — Comanda em tela cheia (v3.1.0). Design System Aero.
+   Lançar, corrigir e receber na mesma tela; cabeçalho e rodapé fixos.
+   ========================================================================== */
+.comanda-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-gradient);
+  color: var(--ink);
+  animation: section-fade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.comanda-screen.hidden { display: none; }
+
+.cmd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(30, 55, 90, 0.05);
+}
+
+.cmd-head-text { flex: 1; min-width: 0; }
+
+.cmd-head-text h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmd-head-text p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmd-icon-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(175, 200, 235, 0.45);
+  border-radius: 12px;
+  background: rgba(235, 242, 252, 0.85);
+  color: #3b577a;
+}
+
+.cmd-icon-btn.hidden { display: none; }
+.cmd-icon-btn svg { width: 22px; height: 22px; }
+.cmd-icon-btn:active { transform: scale(0.94); }
+
+.cmd-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 14px 18px;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cmd-body > .card { margin: 0; }
+
+.cmd-new {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 10px;
+}
+
+.cmd-new.hidden { display: none; }
+
+.cmd-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cmd-block-head h2 { margin: 0; font-size: 15px; }
+.cmd-block-head small { color: var(--muted); font-size: 12px; }
+
+.cmd-itens { display: flex; flex-direction: column; gap: 8px; }
+
+.cmd-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cmd-item-info { flex: 1; min-width: 0; }
+
+.cmd-item-info strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.cmd-item-info span { font-size: 12px; color: var(--muted); }
+
+.cmd-item-ctrl { display: flex; align-items: center; gap: 6px; flex: none; }
+
+.cmd-qty-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(175, 200, 235, 0.5);
+  border-radius: 10px;
+  background: rgba(235, 242, 252, 0.9);
+  color: #3b577a;
+}
+
+.cmd-qty-btn svg { width: 18px; height: 18px; }
+.cmd-qty-btn:active { transform: scale(0.92); }
+
+.cmd-qty-btn.danger {
+  background: var(--bad-bg);
+  color: var(--bad);
+  border-color: rgba(199, 69, 80, 0.25);
+}
+
+.cmd-qty {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.cmd-block .table-search { margin-bottom: 8px; }
+.cmd-block .table-search input { min-height: 44px; }
+
+.comanda-screen .products-grid {
+  max-height: none;
+  overflow: visible;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .comanda-screen .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1100px) {
+  .comanda-screen .products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.cmd-grid .product-choice { min-height: 92px; position: relative; }
+.cmd-grid .product-choice:active:not(:disabled) { transform: scale(0.97); }
+
+.cmd-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 24px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.cmd-foot {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -10px 30px rgba(22, 48, 84, 0.09);
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.cmd-foot > * { max-width: 980px; margin-left: auto; margin-right: auto; }
+
+.cmd-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cmd-total span {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.cmd-total strong { font-size: 24px; letter-spacing: -0.5px; color: var(--ink); }
+
+.cmd-total-row .btn { min-height: 48px; padding: 0 22px; font-size: 15px; flex: 1; max-width: 260px; }
+.cmd-total-row .btn:disabled { opacity: 0.45; box-shadow: none; }
+
+.cmd-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.cmd-pay.hidden { display: none; }
+
+.cmd-pay-values { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.cmd-troco {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--good-bg);
+  border: 1px solid rgba(15, 134, 100, 0.2);
+}
+
+.cmd-troco strong { color: var(--good); font-size: 15px; }
+.cmd-troco span { font-size: 12px; color: var(--muted); }
+
+.cmd-pay-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cmd-pay-actions .btn { min-height: 44px; }
+
+@media (max-width: 380px) {
+  .cmd-new { grid-template-columns: 1fr; }
+  .cmd-qty-btn { width: 36px; height: 36px; }
+}
