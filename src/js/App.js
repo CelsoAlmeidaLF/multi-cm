@@ -29,7 +29,7 @@ import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrin
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '2.9.0';
+  static VERSION = '3.0.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
