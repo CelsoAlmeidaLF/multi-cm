@@ -151,6 +151,7 @@ export class CashController {
 
     const data = this._app._cash.getChartData(this._app._data);
     const max = Math.max(...data.map(d => d.total), 1);
+    const MAX_BAR_HEIGHT_PX = 145; // altura útil máxima da barra dentro de 230px de container
 
     for (const d of data) {
       const col = this._app._renderer.make('div', 'chart-col');
@@ -159,11 +160,13 @@ export class CashController {
         'chart-value',
         d.total > 0 ? this._app._renderer.money(d.total) : 'R$ 0'
       );
-      const pct = Math.round((d.total / max) * 100);
-      const body = this._app._renderer.make('div', 'chart-body', '', {
-        style: `--h: ${Math.max(4, pct)}%`
-      });
+      const pct = Math.max(0, Math.min(100, Math.round((d.total / max) * 100)));
+      const barH = d.total > 0 ? Math.max(10, Math.round((pct / 100) * MAX_BAR_HEIGHT_PX)) : 6;
+      
+      const body = this._app._renderer.make('div', 'chart-body');
+      body.style.cssText = `height:${barH}px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);transition:height 0.25s ease;`;
       body.title = `${d.label}: ${this._app._renderer.money(d.total)}`;
+      
       const label = this._app._renderer.make('span', 'chart-label', d.label);
 
       col.append(val, body, label);
@@ -283,38 +286,47 @@ export class CashController {
   }
 
   _openClosingModal() {
-    const form = document.getElementById('form-fechamento-caixa');
-    if (form) form.reset();
-    this._updateClosingSummaryView();
+    try {
+      const form = document.getElementById('form-fechamento-caixa');
+      if (form) form.reset();
+      this._updateClosingSummaryView();
+    } catch (err) {
+      console.warn('Falha defensiva ao atualizar resumo de fechamento:', err);
+    }
     this._app._renderer._openModal('modal-fechamento-caixa', 'fechamento-dinheiro-contado');
   }
 
   _updateClosingSummaryView() {
+    if (!this._app._data) return;
     const tipo = document.getElementById('fechamento-tipo-select')?.value || 'diario';
-    const summary = this._app._shift.getClosingSummary(this._app._data, tipo);
+    const summary = this._app._shift.getClosingSummary(this._app._data, tipo) || {};
+    const pags = summary.pagamentos || {};
 
-    App.safeSetText('fechamento-resumo-periodo', tipo === 'diario' ? `Hoje (${summary.referencia})` : `Mês (${summary.referencia})`);
-    App.safeSetText('fechamento-total-vendas', this._app._renderer.money(summary.totalVendas));
-    App.safeSetText('fechamento-total-saidas', this._app._renderer.money(summary.totalSaidas));
-    App.safeSetText('fechamento-saldo-liquido', this._app._renderer.money(summary.saldoLiquido));
-    App.safeSetText('fechamento-dinheiro', this._app._renderer.money(summary.pagamentos.dinheiro));
-    App.safeSetText('fechamento-pix', this._app._renderer.money(summary.pagamentos.pix));
-    App.safeSetText('fechamento-debito', this._app._renderer.money(summary.pagamentos.debito));
-    App.safeSetText('fechamento-credito', this._app._renderer.money(summary.pagamentos.credito));
-    App.safeSetText('fechamento-dinheiro-esperado', this._app._renderer.money(summary.dinheiroEsperado));
+    App.safeSetText('fechamento-resumo-periodo', tipo === 'diario' ? `Hoje (${summary.referencia || 'Hoje'})` : `Mês (${summary.referencia || 'Mês'})`);
+    App.safeSetText('fechamento-total-vendas', this._app._renderer.money(summary.totalVendas || 0));
+    App.safeSetText('fechamento-total-saidas', this._app._renderer.money(summary.totalSaidas || 0));
+    App.safeSetText('fechamento-saldo-liquido', this._app._renderer.money(summary.saldoLiquido || 0));
+    App.safeSetText('fechamento-dinheiro', this._app._renderer.money(pags.dinheiro || 0));
+    App.safeSetText('fechamento-pix', this._app._renderer.money(pags.pix || 0));
+    App.safeSetText('fechamento-debito', this._app._renderer.money(pags.debito || 0));
+    App.safeSetText('fechamento-credito', this._app._renderer.money(pags.credito || 0));
+    App.safeSetText('fechamento-dinheiro-esperado', this._app._renderer.money(summary.dinheiroEsperado || 0));
 
     const contadoInput = document.getElementById('fechamento-dinheiro-contado');
     if (contadoInput && !contadoInput.value) {
-      contadoInput.value = summary.dinheiroEsperado.toFixed(2);
+      contadoInput.value = Number(summary.dinheiroEsperado || 0).toFixed(2);
     }
     this._syncClosingDiff();
+    this._renderClosingHistory();
   }
 
   _syncClosingDiff() {
+    if (!this._app._data) return;
     const tipo = document.getElementById('fechamento-tipo-select')?.value || 'diario';
-    const summary = this._app._shift.getClosingSummary(this._app._data, tipo);
+    const summary = this._app._shift.getClosingSummary(this._app._data, tipo) || {};
     const contado = parseFloat(document.getElementById('fechamento-dinheiro-contado')?.value || '0') || 0;
-    const diff = Math.round((contado - summary.dinheiroEsperado + Number.EPSILON) * 100) / 100;
+    const esperado = Number(summary.dinheiroEsperado || 0);
+    const diff = Math.round((contado - esperado + Number.EPSILON) * 100) / 100;
     const diffEl = document.getElementById('fechamento-diferenca-valor');
     if (!diffEl) return;
 

@@ -67,12 +67,9 @@ export class SalesController {
     }
   }
 
-  // RN-FIREBASE.2: módulo de mesas só opera quando liberado pela governança, exceto para Venda Balcão
+  // Mesas e comandas no BarGestão: operação sempre liberada para atendimento
   _ensureTablesAllowed(tableName = null) {
-    if (tableName && this._app._order.isCounterTable(tableName)) return true;
-    if (this._app._governanceCtl.allowsTables()) return true;
-    this._app._renderer.toast('O módulo de mesas não foi liberado pela Governança Systekna. Utilize o botão Venda Balcão para pedidos diretos.');
-    return false;
+    return true;
   }
 
   // Seleção de mesa já aberta no modal de pedido (antes apontava para um método inexistente)
@@ -112,15 +109,6 @@ export class SalesController {
 
     const search = document.getElementById('mesas-busca')?.value.toLowerCase().trim() || '';
     const entries = Object.entries(this._app._data.mesas || {});
-    const tablesAllowed = this._app._governanceCtl.allowsTables();
-
-    // Se mesas estão desabilitadas na governança, exibe aviso e lista apenas comandas de Balcão
-    if (!tablesAllowed) {
-      const banner = this._app._renderer.make('div', 'alert-box', '');
-      banner.style.cssText = 'background:rgba(224,193,133,0.12);border:1px solid rgba(224,193,133,0.3);padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:0.85rem;color:var(--ink);';
-      banner.textContent = 'Módulo de mesas desabilitado pela governança. Utilize o botão Venda Balcão para atendimento rápido.';
-      root.append(banner);
-    }
 
     const counterCount = entries.filter(([n]) => this._app._order.isCounterTable(n)).length;
     const regularCount = entries.length - counterCount;
@@ -152,30 +140,10 @@ export class SalesController {
 
       for (const item of items) {
         const line = this._app._renderer.make('div', 'itemline');
-        const itemInfo = this._app._renderer.make('span', '', `${item.qtd} × ${item.nome}`);
-        const rightGroup = this._app._renderer.make('span', 'itemline-actions');
-        
-        const btnMinus = this._app._renderer.btn('−', () => this._changeItemQuantity(name, item.id, Number(item.qtd) - 1), 'btn ghost btn-item-qty');
-        btnMinus.title = item.qtd > 1 ? 'Reduzir 1 unidade' : 'Excluir item da comanda';
-
-        const qtyBadge = this._app._renderer.make('span', 'pill', `${item.qtd}`);
-        qtyBadge.style.cssText = 'padding:2px 6px;font-size:11px;min-width:22px;text-align:center;';
-
-        const btnPlus = this._app._renderer.btn('+', () => this._changeItemQuantity(name, item.id, Number(item.qtd) + 1), 'btn ghost btn-item-qty');
-        btnPlus.title = 'Aumentar 1 unidade';
-
-        const btnDel = this._app._renderer.btn('', () => this._removeItem(name, item.id, item.nome), 'btn ghost item-del-btn');
-        btnDel.title = 'Excluir este item da comanda';
-        btnDel.append(this._app._renderer.icon('i-trash'));
-
-        rightGroup.append(
-          btnMinus,
-          qtyBadge,
-          btnPlus,
-          btnDel,
-          this._app._renderer.make('strong', '', this._app._renderer.money(item.total))
+        line.append(
+          this._app._renderer.make('span', '', `${item.qtd} × ${item.nome}`),
+          this._app._renderer.make('span', '', this._app._renderer.money(item.total))
         );
-        line.append(itemInfo, rightGroup);
         card.append(line);
       }
 
@@ -189,7 +157,7 @@ export class SalesController {
       card.append(actions);
       root.append(card);
     }
-    document.getElementById('stat-valor').textContent = this._app._renderer.money(total);
+    App.safeSetText('stat-valor', this._app._renderer.money(total));
     if (!entries.length) root.append(this._app._renderer.empty('Nenhuma mesa aberta.'));
   }
 
