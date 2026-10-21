@@ -12,6 +12,7 @@ import { CashService } from './application/services/CashService.js';
 import { ShiftService } from './application/services/ShiftService.js';
 import { RecoveryService } from './application/services/RecoveryService.js';
 import { GovernanceService } from './application/services/GovernanceService.js';
+import { BackgroundLockPolicy } from './application/services/BackgroundLockPolicy.js';
 
 import { DomRenderer } from './ui/adapters/DomRenderer.js';
 import { DomEventHandler } from './ui/adapters/DomEventHandler.js';
@@ -29,7 +30,7 @@ import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrin
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '3.0.1';
+  static VERSION = '3.0.2';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -107,10 +108,20 @@ export class App {
     this._lastactivity = Date.now();
   }
 
+  _backgroundLock = new BackgroundLockPolicy();
+
+  /** Esconder o app (inclui o F5): com o cofre do kit o bloqueio fica para o retorno, preservando a recarga. */
   handleBackgroundHide() {
-    if (this._auth.getSession() && this._settings.lockOnHide !== false) {
-      this._discardSession();
-    }
+    const action = this._backgroundLock.onHide({
+      hasSession: Boolean(this._auth.getSession()),
+      lockOnHide: this._settings.lockOnHide !== false,
+      kitVaultLock: typeof window.lockVault === 'function' && this._auth.hasSavedLogin(window.secureStorage)
+    });
+    if (action === 'discard') this._discardSession();
+  }
+
+  handleBackgroundReturn() {
+    if (this._backgroundLock.onReturn({ hasSession: Boolean(this._auth.getSession()) })) this._discardSession();
   }
 
   async init() {
