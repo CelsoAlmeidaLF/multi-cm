@@ -231,9 +231,10 @@ export class AuthService {
   // ---------------------------------------------------------------------------
   // Equipe (v3.2.0): só o gerente cadastra. Todos os usuários abrem a MESMA chave do cofre, cada um embrulhada
   // pela própria senha (wrapKey); por isso quem cadastra precisa estar com o cofre aberto (sessão de gerente).
-  // Desativar bloqueia o login no app; não troca a chave dos dados (ver decisão registrada no PR).
+  // Remover apaga o usuário E troca a chave dos dados (removeUserAndRotateKey): a senha antiga dele deixa de abrir o cofre.
   // ---------------------------------------------------------------------------
-  static PROFILES = ['gerente', 'vendedor'];
+  // Perfis canônicos do app (os mesmos que o BackupService aceita): gerente e operador (funcionário).
+  static PROFILES = ['gerente', 'operador'];
   static USER_NAME = /^[\p{L}\p{N}][\p{L}\p{N} ._-]{2,59}$/u;
 
   _requireManager() {
@@ -242,17 +243,12 @@ export class AuthService {
     }
   }
 
-  _activeUsers(meta = this._meta) {
-    return (meta?.usuarios || []).filter(u => u.ativo !== false);
-  }
-
   /** Lista sem segredos (nada de senha embrulhada, selo ou PIN). */
   listUsers() {
     return (this._meta?.usuarios || []).map(u => ({
       usuario: u.usuario,
       perfil: u.perfil,
       email: u.email || null,
-      ativo: u.ativo !== false,
       temPin: Boolean(u.pin && u.deviceSeal)
     }));
   }
@@ -270,8 +266,8 @@ export class AuthService {
     const mail = String(email || '').trim();
     if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Error('E-mail inválido.');
     if (this._meta.usuarios.some(u => u.usuario.toLowerCase() === name.toLowerCase())) throw new Error('Já existe um usuário com esse nome.');
-    if (limit !== null && this._activeUsers().length >= limit) {
-      throw new Error(`Limite de ${limit} usuário${limit === 1 ? '' : 's'} ativo${limit === 1 ? '' : 's'} do plano atingido. Desative alguém ou fale com a Governança Systekna para ampliar.`);
+    if (limit !== null && this._meta.usuarios.length >= limit) {
+      throw new Error(`Limite de ${limit} usuário${limit === 1 ? '' : 's'} do plano atingido. Remova alguém ou fale com a Governança Systekna para ampliar.`);
     }
     const draft = structuredClone(this._meta);
     draft.usuarios.push({
@@ -288,10 +284,9 @@ export class AuthService {
   }
 
   /**
-   * Edita perfil, e-mail, ativo, senha (redefinição) e remoção do PIN. Regras: não rebaixar nem desativar a si mesmo
-   * e sempre sobrar ao menos um gerente ativo. Reativar respeita o limite do plano.
+   * Edita perfil, e-mail, senha (redefinição) e remoção do PIN. Não rebaixa a si mesmo e sempre sobra ao menos um gerente.
    */
-  async updateUser(usuario, changes = {}, limit = null) {
+  async updateUser(usuario, changes = {}) {
     this._requireManager();
     const draft = structuredClone(this._meta);
     const target = draft.usuarios.find(u => u.usuario === usuario);
@@ -308,13 +303,6 @@ export class AuthService {
       if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Error('E-mail inválido.');
       target.email = mail || null;
     }
-    if (changes.ativo !== undefined) {
-      if (self && changes.ativo === false) throw new Error('Você não pode desativar o seu próprio usuário.');
-      if (changes.ativo === true && target.ativo === false && limit !== null && this._activeUsers(draft).length >= limit) {
-        throw new Error(`Limite de ${limit} usuário${limit === 1 ? '' : 's'} ativo${limit === 1 ? '' : 's'} do plano atingido.`);
-      }
-      target.ativo = changes.ativo === true;
-    }
     if (changes.senha) {
       if (!this.validatePassword(changes.senha)) throw new Error('A senha deve ter 8 ou mais caracteres.');
       target.senha = await this._crypto.wrapKey(changes.senha, this._vaultraw);
@@ -325,9 +313,75 @@ export class AuthService {
       target.pin = null;
       target.deviceSeal = null;
     }
-    if (!this._activeUsers(draft).some(u => u.perfil === 'gerente')) throw new Error('É preciso manter ao menos um gerente ativo.');
+    if (!draft.usuarios.some(u => u.perfil === 'gerente')) throw new Error('É preciso manter ao menos um gerente.');
     await this.saveMeta(draft);
-    return { usuario, perfil: target.perfil, ativo: target.ativo !== false };
+    return { usuario, perfil: target.perfil };
+  }
+
+  /** Quem precisa de senha nova para a troca de chave: todos os que ficam, menos o gerente que está removendo. */
+  usersNeedingNewPassword(usuario) {
+    return (this._meta?.usuarios || []).filter(u => u.usuario !== usuario && u.usuario !== this._session?.usuario).map(u => u.usuario);
+  }
+
+  /**
+   * Remove o usuário e TROCA a chave dos dados (revogação de verdade).
+   * O app não sabe a senha de ninguém (zero-knowledge): cada um que fica ganha, aqui, uma senha nova definida pelo gerente,
+   * e a chave nova é embrulhada por ela. O gerente confirma a própria senha.
+   * Atômico: a ordem é (1) gravar os dados sob a chave nova e conferir, (2) gravar o cadastro com as novas credenciais
+   * (ponto de efetivação), (3) trocar a chave em memória. Se (1) ou (2) falhar, o cadastro e a chave em memória não mudam
+   * e os dados continuam abrindo com a chave antiga (o pacote novo é ignorado na abertura: só vale o que a chave abre).
+   *
+   * @param {string} usuario quem sai
+   * @param {{managerPassword:string, newPasswords:Record<string,string>, writeData:(newKey:CryptoKey)=>Promise<void>,
+   *          makeRecovery?:(newRaw:Uint8Array)=>Promise<{record:object, phrase:string, token:string}>}} o
+   * @returns {Promise<{recovery:{phrase:string, token:string}|null}>}
+   */
+  async removeUserAndRotateKey(usuario, { managerPassword, newPasswords = {}, writeData, makeRecovery = null }) {
+    this._requireManager();
+    const self = this._session.usuario;
+    const target = this._meta.usuarios.find(u => u.usuario === usuario);
+    if (!target) throw new Error('Usuário não encontrado.');
+    if (usuario === self) throw new Error('Você não pode remover o seu próprio usuário.');
+    const remaining = this._meta.usuarios.filter(u => u.usuario !== usuario);
+    if (!remaining.some(u => u.perfil === 'gerente')) throw new Error('É preciso manter ao menos um gerente.');
+    if (typeof writeData !== 'function') throw new Error('Gravação dos dados indisponível.');
+
+    // Confere a senha do gerente (prova de posse) e a das novas senhas ANTES de mexer em qualquer coisa
+    const own = this._meta.usuarios.find(u => u.usuario === self);
+    const hexOf = b => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, '0')).join('');
+    let check;
+    try { check = await this._crypto.unwrapKey(String(managerPassword || ''), own.senha); } catch { throw new Error('Sua senha está incorreta.'); }
+    if (!this._crypto.equalHex(hexOf(check), hexOf(this._vaultraw))) throw new Error('Sua senha está incorreta.');
+    for (const name of this.usersNeedingNewPassword(usuario)) {
+      if (!this.validatePassword(newPasswords[name])) throw new Error(`Defina uma senha de 8 ou mais caracteres para ${name}.`);
+    }
+
+    const newRaw = this._crypto.randomBytes(32);
+    const newKey = await this._crypto.importAesKey(newRaw);
+    const draft = structuredClone(this._meta);
+    draft.usuarios = [];
+    for (const u of remaining) {
+      const secret = u.usuario === self ? managerPassword : newPasswords[u.usuario];
+      draft.usuarios.push({ ...structuredClone(u), senha: await this._crypto.wrapKey(secret, newRaw), pin: null, deviceSeal: null });
+    }
+    draft.chaveTrocadaEm = new Date().toISOString();
+
+    let recovery = null;
+    if (draft.recovery) {
+      if (typeof makeRecovery !== 'function') throw new Error('Registro de recuperação precisa ser renovado junto com a chave.');
+      const made = await makeRecovery(newRaw);
+      draft.recovery = made.record;
+      recovery = { phrase: made.phrase, token: made.token };
+    }
+
+    await writeData(newKey);          // (1) dados sob a chave nova, conferidos
+    await this.saveMeta(draft);       // (2) efetiva: a partir daqui o cadastro embrulha a chave nova
+
+    const oldRaw = this._vaultraw;    // (3) memória
+    this._vaultraw = newRaw;
+    this._vaultkey = newKey;
+    if (oldRaw instanceof Uint8Array) oldRaw.fill(0);
+    return { recovery };
   }
 
   /**

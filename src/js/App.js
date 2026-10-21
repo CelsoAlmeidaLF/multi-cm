@@ -470,6 +470,50 @@ export class App {
     return packet;
   }
 
+  /**
+   * Remove um usuário da equipe e troca a chave dos dados (ver AuthService.removeUserAndRotateKey).
+   * Depois da troca: reescreve o 2º slot com a chave nova, apaga cópias antigas (localStorage/backup-candidates),
+   * renova o login salvo do gerente e registra na auditoria (sem segredos).
+   * @returns {Promise<{phrase:string, token:string}|null>} nova frase de recuperação, se havia
+   */
+  async removeTeamUser(usuario, { managerPassword, newPasswords }) {
+    if (this._mutating || !this._data) throw new Error('Aguarde a operação em andamento.');
+    this._mutating = true;
+    let result;
+    try {
+      result = await this._auth.removeUserAndRotateKey(usuario, {
+        managerPassword,
+        newPasswords,
+        writeData: async newKey => {
+          const packet = await this._writeBusiness(this._data, newKey);
+          // confere que o pacote novo abre com a chave nova antes de efetivar o cadastro
+          await this._crypto.open(packet.payload, newKey, `BG:v7:operacional:${packet.seq}`);
+        },
+        makeRecovery: async newRaw => {
+          const { phrase, token } = await this._recovery.generatePhrase();
+          return { record: await this._recovery.buildRecoveryRecord(token, newRaw), phrase, token };
+        }
+      });
+    } finally {
+      this._mutating = false;
+    }
+    // Pós-efetivação (a troca já valeu): limpeza e trilha. Falhas aqui não desfazem a troca; o próximo _commit se corrige.
+    const newKey = this._auth.getVaultKey();
+    try {
+      await this._writeBusiness(this._data, newKey); // 2º slot também sob a chave nova
+      await this._storage.purgeCandidates(async packet => {
+        await this._crypto.open(packet.payload, newKey, `BG:v7:operacional:${packet.seq}`);
+        return true;
+      });
+    } catch (e) {
+      this._governanceCtl.report(e, 'storage');
+      this._renderer.toast('Usuário removido e chave trocada, mas a limpeza de cópias antigas falhou. Ela se completa na próxima alteração.');
+    }
+    if (this._auth.hasSavedLogin(window.secureStorage)) await this._auth.rememberLogin(window.secureStorage);
+    await this._commit(() => {}, `Remoção de usuário da equipe: ${usuario} (chave do cofre trocada)`);
+    return result.recovery;
+  }
+
   async _commit(mutationfn, actionlabel = 'Alteração operacional') {
     if (this._mutating || !this._data || !this._auth.getVaultKey()) {
       this._renderer.toast('Aguarde a operação em andamento ou desbloqueie o painel.');
@@ -521,6 +565,8 @@ export class App {
 
   _changeTab(tab) {
     if (!this._auth.getSession()) return;
+    // A aba Usuários só existe para o gerente: vendedor/operador nunca a abre, nem por chamada direta
+    if (tab === 'usuarios' && !this._auth.isManager()) tab = 'inicio';
     this._currenttab = tab;
     document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
     const breadcrumb = document.getElementById('breadcrumb');

@@ -1,13 +1,18 @@
 /**
- * Controller de UI: equipe (aba Usuários). Só o gerente cadastra, edita perfil e ativa/desativa.
+ * Controller de UI: equipe (aba Usuários). Só o gerente cadastra, edita perfil e remove (a remoção troca a chave dos dados).
+ * Quem não é gerente não vê a aba, o menu nem aviso algum; o AuthService também nega.
  * Regras de senha, perfil e limite do plano ficam no AuthService; aqui só formulário, lista e avisos.
  * Senhas só digitadas (kit): a leitura usa typedValue, que recusa texto colado ou preenchido por fora.
  */
-import { typedValue, clearTyped } from '../adapters/TypedSecrets.js';
+import { typedValue, clearTyped, protectField } from '../adapters/TypedSecrets.js';
+
+const PERFIL_ROTULO = { gerente: 'Gerente', operador: 'Operador (funcionário)' };
 
 export class TeamController {
   _app;
   _editing = null; // usuário em edição; null = cadastro novo
+  _removing = null;
+  _newFields = {};
 
   constructor(app) {
     this._app = app;
@@ -17,6 +22,8 @@ export class TeamController {
     document.getElementById('abrir-usuario')?.addEventListener('click', () => this.openCreate());
     document.getElementById('form-usuario')?.addEventListener('submit', e => this._submit(e));
     document.getElementById('usuario-cancelar')?.addEventListener('click', () => this._app._renderer._closeModal('modal-usuario'));
+    document.getElementById('form-remover-usuario')?.addEventListener('submit', e => this._submitRemove(e));
+    document.getElementById('remover-cancelar')?.addEventListener('click', () => this._app._renderer._closeModal('modal-remover-usuario'));
   }
 
   _limit() {
@@ -27,35 +34,28 @@ export class TeamController {
     const root = document.getElementById('lista-usuarios');
     if (!root) return;
     root.replaceChildren();
-    const r = this._app._renderer;
     const manager = this._app._auth.isManager();
     document.getElementById('abrir-usuario')?.classList.toggle('hidden', !manager);
+    if (!manager) return; // vendedor/operador: nada de lista, contagem ou aviso
+    const r = this._app._renderer;
     const users = this._app._auth.listUsers();
-    const ativos = users.filter(u => u.ativo).length;
     const limit = this._limit();
-    this._app.setText('usuarios-count', `${ativos} ativo${ativos === 1 ? '' : 's'}${limit ? ` de ${limit}` : ''}`);
-    if (!manager) {
-      root.append(r.empty('Somente o gerente gerencia a equipe.'));
-      return;
-    }
+    this._app.setText('usuarios-count', `${users.length} usuário${users.length === 1 ? '' : 's'}${limit ? ` de ${limit}` : ''}`);
     const me = this._app._auth.getSession()?.usuario;
     for (const u of users) {
-      const el = r.make('div', `entry${u.ativo ? '' : ' user-inactive'}`);
+      const el = r.make('div', 'entry');
       const head = r.make('div', 'entry-head');
       const left = r.make('div', 'entry-left');
       left.append(
         r.make('strong', '', u.usuario + (u.usuario === me ? ' (você)' : '')),
-        r.make('div', 'meta', `${u.perfil === 'gerente' ? 'Gerente' : 'Vendedor'}${u.email ? ` · ${u.email}` : ''}`)
+        r.make('div', 'meta', `${PERFIL_ROTULO[u.perfil] || u.perfil}${u.email ? ` · ${u.email}` : ''}`)
       );
       const pills = r.make('div', 'user-pills');
-      pills.append(r.make('span', `pill ${u.ativo ? 'good' : 'warn'}`, u.ativo ? 'Ativo' : 'Desativado'));
       if (u.temPin) pills.append(r.make('span', 'pill', 'PIN'));
       head.append(left, pills);
       const actions = r.make('div', 'actions');
       actions.append(r.btn('Editar', () => this.openEdit(u), 'btn ghost'));
-      if (u.usuario !== me) {
-        actions.append(r.btn(u.ativo ? 'Desativar' : 'Reativar', () => this.toggleActive(u), u.ativo ? 'btn danger' : 'btn ghost'));
-      }
+      if (u.usuario !== me) actions.append(r.btn('Remover', () => this.openRemove(u), 'btn danger'));
       el.append(head, actions);
       root.append(el);
     }
@@ -72,7 +72,7 @@ export class TeamController {
       return;
     }
     this._editing = null;
-    this._fillForm({ title: 'Cadastrar usuário', submit: 'Cadastrar usuário', login: '', loginLocked: false, email: '', perfil: 'vendedor', senhaLabel: 'SENHA', senhaRequired: true, editOptions: false });
+    this._fillForm({ title: 'Cadastrar usuário', submit: 'Cadastrar usuário', login: '', loginLocked: false, email: '', perfil: 'operador', senhaLabel: 'SENHA', senhaRequired: true, editOptions: false });
     this._app._renderer._openModal('modal-usuario', 'novo-user-login');
   }
 
@@ -110,7 +110,7 @@ export class TeamController {
       if (this._editing) {
         const changes = { perfil, email, removerPin: Boolean(document.getElementById('remover-user-pin')?.checked) };
         if (senha) changes.senha = senha;
-        await this._app._auth.updateUser(this._editing, changes, this._limit());
+        await this._app._auth.updateUser(this._editing, changes);
         label = `Edição de usuário da equipe: ${this._editing}`;
       } else {
         const usuario = document.getElementById('novo-user-login')?.value.trim();
@@ -129,16 +129,60 @@ export class TeamController {
     }
   }
 
-  async toggleActive(user) {
+  // ---------------------------------------------------------------- remover (troca de chave)
+
+  openRemove(user) {
+    if (!this._app._auth.isManager()) return;
+    if (user.usuario === this._app._auth.getSession()?.usuario) {
+      this._app._renderer.toast('Você não pode remover o seu próprio usuário.');
+      return;
+    }
+    this._removing = user.usuario;
+    this._app.setText('remover-titulo', `Remover ${user.usuario}`);
+    this._app.setText('remover-erro', '');
+    const own = document.getElementById('remover-senha-gerente');
+    if (own) clearTyped(own);
+    const box = document.getElementById('remover-novas-senhas');
+    box?.replaceChildren();
+    this._newFields = {};
+    for (const name of this._app._auth.usersNeedingNewPassword(user.usuario)) {
+      const label = this._app._renderer.make('label', '', `NOVA SENHA PARA ${name}`);
+      const input = this._app._renderer.make('input', '', undefined, { type: 'password', autocomplete: 'new-password', minlength: '8', placeholder: 'Mínimo 8 caracteres', required: '' });
+      label.append(input);
+      box?.append(label);
+      try { protectField(input); } catch { /* kit ausente (testes): campo comum */ }
+      this._newFields[name] = input;
+    }
+    this._app._renderer._openModal('modal-remover-usuario', 'remover-senha-gerente');
+  }
+
+  async _submitRemove(event) {
+    event.preventDefault();
+    this._app.setText('remover-erro', '');
+    const submit = document.getElementById('remover-submit');
+    if (submit) submit.disabled = true;
     try {
-      await this._app._auth.updateUser(user.usuario, { ativo: !user.ativo }, this._limit());
-      await this._audit(`${user.ativo ? 'Desativação' : 'Reativação'} de usuário da equipe: ${user.usuario}`);
-      this._app._renderer.toast(user.ativo ? `${user.usuario} desativado: não entra mais no app.` : `${user.usuario} reativado.`);
+      const managerPassword = typedValue('remover-senha-gerente') || '';
+      const newPasswords = {};
+      for (const [name, input] of Object.entries(this._newFields || {})) {
+        newPasswords[name] = input._typedProtected && input.value !== input._typed
+          ? (() => { throw new Error('Digite as senhas no teclado: colar não é aceito.'); })()
+          : input.value;
+      }
+      const usuario = this._removing;
+      const recovery = await this._app.removeTeamUser(usuario, { managerPassword, newPasswords });
+      for (const input of Object.values(this._newFields || {})) clearTyped(input);
+      clearTyped(document.getElementById('remover-senha-gerente'));
+      this._app._renderer._closeModal('modal-remover-usuario');
+      this._app._renderer.toast(`${usuario} removido. A chave dos dados foi trocada.`);
       this.render();
+      if (recovery) this._app._securityCtl?._displayRecovery?.(recovery.phrase, recovery.token);
       return true;
     } catch (e) {
-      this._app._renderer.toast(e.message);
+      this._app.setText('remover-erro', e.message);
       return false;
+    } finally {
+      if (submit) submit.disabled = false;
     }
   }
 

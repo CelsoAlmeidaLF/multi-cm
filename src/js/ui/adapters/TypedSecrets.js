@@ -16,6 +16,7 @@ export const TYPED_SECRET_FIELDS = Object.freeze({
   'recover-password': false,
   'recover-confirm': false,
   'novo-user-senha': false,
+  'remover-senha-gerente': false,
   'reauth-secret': false
 });
 
@@ -48,4 +49,13 @@ export function clearTyped(input) {
   if (!input) return;
   input.value = '';
   if (input._typedProtected) input._typed = '';
+}
+
+/** Protege um campo criado depois da inicialização (ex.: senhas novas na remoção de usuário). */
+export function protectField(input, digits = false, typed = globalThis.FinancTyped) {
+  if (!input || input._typedProtected) return false;
+  if (!typed?.only) throw new Error('Kit de segurança Systekna não carregado.');
+  typed.only(input, digits);
+  input._typedProtected = true;
+  return true;
 }
