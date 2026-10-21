@@ -62,6 +62,11 @@ export class GovernanceController {
     return false;
   }
 
+  /** Teto de usuários ativos do plano (null = sem limite). */
+  userLimit() {
+    return this._service.userLimit();
+  }
+
   /** Lança erro (dentro do _commit) se um produto novo ultrapassar o limite do plano. */
   ensureProductCapacity(database) {
     const limite = this._service.productLimit();
@@ -263,6 +268,7 @@ export class GovernanceController {
     }
     if (this._app._auth.getSession()) {
       this._app._changeTab(this._app._currenttab);
+      this._app._renderAll();
     }
   }
 

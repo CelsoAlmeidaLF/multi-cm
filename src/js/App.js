@@ -19,6 +19,7 @@ import { DomEventHandler } from './ui/adapters/DomEventHandler.js';
 import { protectTypedSecrets, typedValue, clearTyped } from './ui/adapters/TypedSecrets.js';
 import { SalesController } from './ui/controllers/SalesController.js';
 import { ComandaController } from './ui/controllers/ComandaController.js';
+import { TeamController } from './ui/controllers/TeamController.js';
 import { StockController } from './ui/controllers/StockController.js';
 import { CashController } from './ui/controllers/CashController.js';
 import { SecurityController } from './ui/controllers/SecurityController.js';
@@ -31,7 +32,7 @@ import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrin
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '3.1.0';
+  static VERSION = '3.2.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -100,6 +101,7 @@ export class App {
     this._events = new DomEventHandler(this);
     this._salesCtl = new SalesController(this);
     this._comandaCtl = new ComandaController(this);
+    this._teamCtl = new TeamController(this);
     this._stockCtl = new StockController(this);
     this._cashCtl = new CashController(this);
     this._securityCtl = new SecurityController(this);
@@ -291,6 +293,7 @@ export class App {
     // Seções delegadas aos controllers
     this._salesCtl.bind();
     this._comandaCtl.bind();
+    this._teamCtl.bind();
     this._stockCtl.bind();
     this._cashCtl.bind();
     this._securityCtl.bind();
@@ -467,6 +470,50 @@ export class App {
     return packet;
   }
 
+  /**
+   * Remove um usuário da equipe e troca a chave dos dados (ver AuthService.removeUserAndRotateKey).
+   * Depois da troca: reescreve o 2º slot com a chave nova, apaga cópias antigas (localStorage/backup-candidates),
+   * renova o login salvo do gerente e registra na auditoria (sem segredos).
+   * @returns {Promise<{phrase:string, token:string}|null>} nova frase de recuperação, se havia
+   */
+  async removeTeamUser(usuario, { managerPassword, newPasswords }) {
+    if (this._mutating || !this._data) throw new Error('Aguarde a operação em andamento.');
+    this._mutating = true;
+    let result;
+    try {
+      result = await this._auth.removeUserAndRotateKey(usuario, {
+        managerPassword,
+        newPasswords,
+        writeData: async newKey => {
+          const packet = await this._writeBusiness(this._data, newKey);
+          // confere que o pacote novo abre com a chave nova antes de efetivar o cadastro
+          await this._crypto.open(packet.payload, newKey, `BG:v7:operacional:${packet.seq}`);
+        },
+        makeRecovery: async newRaw => {
+          const { phrase, token } = await this._recovery.generatePhrase();
+          return { record: await this._recovery.buildRecoveryRecord(token, newRaw), phrase, token };
+        }
+      });
+    } finally {
+      this._mutating = false;
+    }
+    // Pós-efetivação (a troca já valeu): limpeza e trilha. Falhas aqui não desfazem a troca; o próximo _commit se corrige.
+    const newKey = this._auth.getVaultKey();
+    try {
+      await this._writeBusiness(this._data, newKey); // 2º slot também sob a chave nova
+      await this._storage.purgeCandidates(async packet => {
+        await this._crypto.open(packet.payload, newKey, `BG:v7:operacional:${packet.seq}`);
+        return true;
+      });
+    } catch (e) {
+      this._governanceCtl.report(e, 'storage');
+      this._renderer.toast('Usuário removido e chave trocada, mas a limpeza de cópias antigas falhou. Ela se completa na próxima alteração.');
+    }
+    if (this._auth.hasSavedLogin(window.secureStorage)) await this._auth.rememberLogin(window.secureStorage);
+    await this._commit(() => {}, `Remoção de usuário da equipe: ${usuario} (chave do cofre trocada)`);
+    return result.recovery;
+  }
+
   async _commit(mutationfn, actionlabel = 'Alteração operacional') {
     if (this._mutating || !this._data || !this._auth.getVaultKey()) {
       this._renderer.toast('Aguarde a operação em andamento ou desbloqueie o painel.');
@@ -518,6 +565,8 @@ export class App {
 
   _changeTab(tab) {
     if (!this._auth.getSession()) return;
+    // A aba Usuários só existe para o gerente: vendedor/operador nunca a abre, nem por chamada direta
+    if (tab === 'usuarios' && !this._auth.isManager()) tab = 'inicio';
     this._currenttab = tab;
     document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
     const breadcrumb = document.getElementById('breadcrumb');
@@ -576,7 +625,7 @@ export class App {
     this._stockCtl._renderCategories();
     this._cashCtl._renderCash();
     this._renderHome();
-    this._renderUsers();
+    this._teamCtl.render();
     this._comandaCtl.render();
   }
 
@@ -586,9 +635,10 @@ export class App {
     const sauda = document.getElementById('home-sauda');
     if (sauda) sauda.textContent = `Olá, ${session.usuario}. Acompanhe o atendimento.`;
 
-    const entries = Object.entries(this._data.mesas || {});
+    const tablesOn = this._governanceCtl.allowsTables();
+    const entries = Object.entries(this._data.mesas || {}).filter(([n]) => tablesOn || this._order.isCounterTable(n));
     const openCount = entries.length;
-    const openValue = Object.values(this._data.mesas || {}).flat().reduce((s, i) => s + Number(i.total || 0), 0);
+    const openValue = entries.flatMap(([, items]) => items).reduce((s, i) => s + Number(i.total || 0), 0);
 
     const openEl = document.getElementById('home-mesas');
     if (openEl) openEl.textContent = String(openCount);
@@ -660,27 +710,6 @@ export class App {
           stockListEl.append(row);
         }
       }
-    }
-  }
-
-  _renderUsers() {
-    const root = document.getElementById('lista-usuarios');
-    if (!root) return;
-    root.replaceChildren();
-    const users = this._auth.getMeta()?.usuarios || [];
-    App.safeSetText('usuarios-count', `${users.length} usuário(s)`);
-
-    for (const u of users) {
-      const el = this._renderer.make('div', 'entry');
-      const head = this._renderer.make('div', 'entry-head');
-      const left = this._renderer.make('div', 'entry-left');
-      left.append(
-        this._renderer.make('strong', '', u.usuario),
-        this._renderer.make('div', 'meta', `Perfil: ${u.perfil}`)
-      );
-      head.append(left);
-      el.append(head);
-      root.append(el);
     }
   }
 

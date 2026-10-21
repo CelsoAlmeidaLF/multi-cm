@@ -2,6 +2,8 @@
  * Controller de UI: Caixa, retiradas e relatórios exportados.
  * Extraído de App.js; acessa estado, serviços e o commit transacional via `this._app`.
  */
+import { compactMoney } from '../adapters/CompactMoney.js';
+
 export class CashController {
   _app;
 
@@ -158,14 +160,16 @@ export class CashController {
       const val = this._app._renderer.make(
         'span',
         'chart-value',
-        d.total > 0 ? this._app._renderer.money(d.total) : 'R$ 0'
+        compactMoney(d.total)
       );
+      val.title = this._app._renderer.money(d.total);
       const pct = Math.max(0, Math.min(100, Math.round((d.total / max) * 100)));
       const barH = d.total > 0 ? Math.max(10, Math.round((pct / 100) * MAX_BAR_HEIGHT_PX)) : 6;
       
       const body = this._app._renderer.make('div', 'chart-body');
       body.style.cssText = `height:${barH}px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);transition:height 0.25s ease;`;
       body.title = `${d.label}: ${this._app._renderer.money(d.total)}`;
+      col.setAttribute('aria-label', `${d.label}: ${this._app._renderer.money(d.total)}`);
       
       const label = this._app._renderer.make('span', 'chart-label', d.label);
 

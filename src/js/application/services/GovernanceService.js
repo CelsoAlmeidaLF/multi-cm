@@ -72,6 +72,9 @@ export class GovernanceService {
   /** Teto de produtos ativos definido no tenant; null = sem limite. */
   productLimit() { return this._client.limite('limiteProdutos'); }
 
+  /** Teto de usuários ativos da equipe (plano starter 2, pro 10, enterprise 100); null = sem limite. */
+  userLimit() { return this._client.limite('limiteUsuarios'); }
+
   static formatUid(id) { return formatarUid(id); }
   static evaluate(registration, tenant, now = Date.now()) { return avaliar(registration, tenant, now); }
   static normalizeRegistration(input) { return normalizarCadastro(input); }

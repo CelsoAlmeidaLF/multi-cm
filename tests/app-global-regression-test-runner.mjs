@@ -50,7 +50,7 @@ function instalarDom() {
 }
 function stubApp() {
   const textos = {};
-  const make = (tag, cls, txt) => ({ tag, cls, textContent: txt ?? '', style: {}, append() {}, appendChild() {} });
+  const make = (tag, cls, txt) => ({ tag, cls, textContent: txt ?? '', style: {}, append() {}, appendChild() {}, setAttribute() {} });
   const dados = {
     mesas: { 'Mesa 05': [{ id: 'i1', nome: 'Cerveja', qtd: 2, total: 19 }] },
     mesaClientes: { 'Mesa 05': 'Joao' },
