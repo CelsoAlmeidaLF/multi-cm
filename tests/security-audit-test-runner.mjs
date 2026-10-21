@@ -70,7 +70,7 @@ await secTest('SEC-02', 'Rejeição de KDF Downgrade com Iterações Insuficient
 // -----------------------------------------------------------------------------
 // 3. VULN-03: BROKEN ACCESS CONTROL NO SERVICE LAYER (CWE-284 / OWASP A01)
 // -----------------------------------------------------------------------------
-await secTest('SEC-03', 'Validação de Perfil de Gerente em Operações Críticas de Negócio', 'CWE-284', '6.5', async () => {
+await secTest('SEC-03', 'Validação de Perfil (gerente e vendedor) em Cancelamento de Item no Service', 'CWE-284', '6.5', async () => {
   const order = new OrderService();
   const db = {
     produtos: [{ id: 'p1', nome: 'Item', venda: 10, compra: 5, qtd: 10 }],
@@ -80,15 +80,19 @@ await secTest('SEC-03', 'Validação de Perfil de Gerente em Operações Crític
     movimentacoesEstoque: []
   };
 
-  // Se um vendedor puder chamar diretamente o cancelamento sem verificação de role:
-  // Segundo RN03, cancelamento é exclusivo de gerente
-  const callerRole = 'vendedor';
-  if (typeof order.cancelOrderItemWithRole === 'function') {
+  // v3.1.0 (decisão do Celso): gerente e vendedor (funcionário) cancelam item; qualquer outro perfil é negado.
+  // O controle continua no service: perfil desconhecido ou vazio não passa.
+  assert.equal(typeof order.cancelOrderItemWithRole, 'function', 'OrderService deve validar o perfil no nível de serviço.');
+  for (const perfilNegado of ['convidado', '', 'admin']) {
     assert.throws(() => {
-      order.cancelOrderItemWithRole(db, 'Mesa 01', 'item1', 'Motivo', 'vendedor1', callerRole);
+      order.cancelOrderItemWithRole(structuredClone(db), 'Mesa 01', 'item1', 'Motivo', 'u1', perfilNegado);
     }, /Acesso negado/);
-  } else {
-    throw new Error('OrderService não valida permissões de perfil (role) no nível de serviço.');
+  }
+  for (const perfilOk of ['vendedor', 'gerente']) {
+    const copia = structuredClone(db);
+    order.cancelOrderItemWithRole(copia, 'Mesa 01', 'item1', 'Pedido lançado por engano', 'u1', perfilOk);
+    assert.equal(copia.cancelamentos.length, 1);
+    assert.equal(copia.produtos[0].qtd, 12, 'estoque devolvido');
   }
 });
 

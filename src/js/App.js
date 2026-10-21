@@ -18,6 +18,7 @@ import { DomRenderer } from './ui/adapters/DomRenderer.js';
 import { DomEventHandler } from './ui/adapters/DomEventHandler.js';
 import { protectTypedSecrets, typedValue, clearTyped } from './ui/adapters/TypedSecrets.js';
 import { SalesController } from './ui/controllers/SalesController.js';
+import { ComandaController } from './ui/controllers/ComandaController.js';
 import { StockController } from './ui/controllers/StockController.js';
 import { CashController } from './ui/controllers/CashController.js';
 import { SecurityController } from './ui/controllers/SecurityController.js';
@@ -30,7 +31,7 @@ import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrin
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '3.0.2';
+  static VERSION = '3.1.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -98,6 +99,7 @@ export class App {
     this._renderer = new DomRenderer();
     this._events = new DomEventHandler(this);
     this._salesCtl = new SalesController(this);
+    this._comandaCtl = new ComandaController(this);
     this._stockCtl = new StockController(this);
     this._cashCtl = new CashController(this);
     this._securityCtl = new SecurityController(this);
@@ -254,10 +256,11 @@ export class App {
 
     // Seção Início
     document.getElementById('home-new-order')?.addEventListener('click', () => {
+      this._changeTab('vendas');
       if (this._governanceCtl.allowsTables()) {
-        this._salesCtl._click_new_order();
+        this._comandaCtl.openNew();
       } else {
-        this._salesCtl._click_counter_order();
+        this._comandaCtl.openCounter();
       }
     });
     document.getElementById('home-counter-order')?.addEventListener('click', () => this._salesCtl._click_counter_order());
@@ -287,6 +290,7 @@ export class App {
 
     // Seções delegadas aos controllers
     this._salesCtl.bind();
+    this._comandaCtl.bind();
     this._stockCtl.bind();
     this._cashCtl.bind();
     this._securityCtl.bind();
@@ -573,7 +577,7 @@ export class App {
     this._cashCtl._renderCash();
     this._renderHome();
     this._renderUsers();
-    this._salesCtl._renderProductSelects();
+    this._comandaCtl.render();
   }
 
   _renderHome() {
@@ -607,7 +611,7 @@ export class App {
           row.style.cursor = 'pointer';
           row.onclick = () => {
             this._changeTab('vendas');
-            this._salesCtl._chooseTable(name);
+            this._comandaCtl.open(name);
           };
 
           const left = this._renderer.make('div', 'home-mini-left');
@@ -681,6 +685,7 @@ export class App {
   }
 
   _discardSession() {
+    this._comandaCtl.reset();
     // Com login salvo, bloquear volta ao PIN do aparelho (o kit recarrega a página e, com o PIN, entra de novo)
     if (this._auth.hasSavedLogin(window.secureStorage) && typeof window.lockVault === 'function') {
       this._auth.discardSession();
