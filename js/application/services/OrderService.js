@@ -97,9 +97,12 @@ export class OrderService {
     return this.receiveTable(database, tablename, formapagamento, username, shiftid, options);
   }
 
+  /** Decisão do Celso (v3.1.0): gerente e vendedor (funcionário) cancelam item; outro perfil é negado. */
+  static CANCEL_ROLES = ['gerente', 'vendedor'];
+
   cancelOrderItemWithRole(database, tablename, itemid, reason, username, role = 'gerente') {
-    if (role !== 'gerente') {
-      throw new Error('Acesso negado: cancelamento de item exige perfil de gerente.');
+    if (!OrderService.CANCEL_ROLES.includes(role)) {
+      throw new Error('Acesso negado: perfil sem permissão para cancelar item da comanda.');
     }
     return this.cancelOrderItem(database, tablename, itemid, reason, username);
   }

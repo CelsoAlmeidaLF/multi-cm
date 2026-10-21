@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-v3-0-2';
+const CACHE = 'bargestao-v3-1-0';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './css/theme.css',
   './css/layout.css',
   './css/components.css',
+  './css/comanda.css',
   './css/kit-aero.css',
   './fonts/fonts.css',
   './fonts/ibm-plex-mono-latin-400.woff2',
@@ -71,6 +72,7 @@ const ASSETS = [
   './js/ui/adapters/DomEventHandler.js',
   './js/ui/adapters/TypedSecrets.js',
   './js/ui/controllers/SalesController.js',
+  './js/ui/controllers/ComandaController.js',
   './js/ui/controllers/StockController.js',
   './js/ui/controllers/CashController.js',
   './js/ui/controllers/SecurityController.js',
