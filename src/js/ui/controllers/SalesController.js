@@ -112,8 +112,8 @@ export class SalesController {
 
     const counterCount = entries.filter(([n]) => this._app._order.isCounterTable(n)).length;
     const regularCount = entries.length - counterCount;
-    App.safeSetText('stat-mesas', String(entries.length));
-    App.safeSetText('mesas-count', counterCount > 0 ? `${regularCount} mesa(s) • ${counterCount} balcão` : `${entries.length} mesa(s)`);
+    this._app.setText('stat-mesas', String(entries.length));
+    this._app.setText('mesas-count', counterCount > 0 ? `${regularCount} mesa(s) • ${counterCount} balcão` : `${entries.length} mesa(s)`);
 
     let total = 0;
     for (const [name, items] of entries) {
@@ -157,7 +157,7 @@ export class SalesController {
       card.append(actions);
       root.append(card);
     }
-    App.safeSetText('stat-valor', this._app._renderer.money(total));
+    this._app.setText('stat-valor', this._app._renderer.money(total));
     if (!entries.length) root.append(this._app._renderer.empty('Nenhuma mesa aberta.'));
   }
 
@@ -402,9 +402,9 @@ export class SalesController {
     const cliente = this._app._data.mesaClientes?.[tablename] || 'Cliente não informado';
     const total = this._app._order.calculateOrderTotal(items);
 
-    App.safeSetText('corrigir-mesa-titulo', tablename);
-    App.safeSetText('corrigir-mesa-subtitulo', `Cliente: ${cliente}`);
-    App.safeSetText('corrigir-mesa-total', this._app._renderer.money(total));
+    this._app.setText('corrigir-mesa-titulo', tablename);
+    this._app.setText('corrigir-mesa-subtitulo', `Cliente: ${cliente}`);
+    this._app.setText('corrigir-mesa-total', this._app._renderer.money(total));
 
     const root = document.getElementById('corrigir-itens-lista');
     if (!root) return;
