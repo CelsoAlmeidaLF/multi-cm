@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-v3-0-1';
+const CACHE = 'bargestao-v3-0-2';
 const ASSETS = [
   './',
   './index.html',
@@ -65,6 +65,7 @@ const ASSETS = [
   './js/application/services/ShiftService.js',
   './js/application/services/RecoveryService.js',
   './js/application/services/GovernanceService.js',
+  './js/application/services/BackgroundLockPolicy.js',
   './js/application/services/BackupService.js',
   './js/ui/adapters/DomRenderer.js',
   './js/ui/adapters/DomEventHandler.js',
