@@ -14,13 +14,27 @@ export class SalesController {
     document.getElementById('mesas-busca')?.addEventListener('input', () => this._renderTables());
   }
 
+  /** Rótulo do botão principal e aviso das comandas ocultas conforme o módulo de mesas da Governança. */
+  _syncTablesMode(tablesOn, hiddenCount) {
+    this._app.setText('abrir-nova-mesa-label', tablesOn ? 'Abrir mesa' : 'Venda no balcão');
+    const aviso = document.getElementById('mesas-ocultas-aviso');
+    if (aviso) {
+      aviso.classList.toggle('hidden', tablesOn || hiddenCount === 0);
+      aviso.textContent = `${hiddenCount} comanda${hiddenCount === 1 ? '' : 's'} de mesa aberta${hiddenCount === 1 ? '' : 's'} oculta${hiddenCount === 1 ? '' : 's'}: o módulo de mesas está desabilitado pela Governança. Elas voltam quando for reativado.`;
+    }
+  }
+
   _renderTables() {
     const root = document.getElementById('lista-mesas');
     if (!root || !this._app._data) return;
     root.replaceChildren();
 
     const search = document.getElementById('mesas-busca')?.value.toLowerCase().trim() || '';
-    const entries = Object.entries(this._app._data.mesas || {});
+    // Mesas desabilitadas pela Governança: só o balcão aparece; comandas de mesa já abertas ficam ocultas (e avisadas)
+    const allEntries = Object.entries(this._app._data.mesas || {});
+    const tablesOn = this._app._governanceCtl?.allowsTables?.() !== false;
+    const entries = tablesOn ? allEntries : allEntries.filter(([n]) => this._app._order.isCounterTable(n));
+    this._syncTablesMode(tablesOn, allEntries.length - entries.length);
 
     const counterCount = entries.filter(([n]) => this._app._order.isCounterTable(n)).length;
     const regularCount = entries.length - counterCount;

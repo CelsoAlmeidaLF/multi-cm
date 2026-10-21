@@ -19,6 +19,7 @@ import { DomEventHandler } from './ui/adapters/DomEventHandler.js';
 import { protectTypedSecrets, typedValue, clearTyped } from './ui/adapters/TypedSecrets.js';
 import { SalesController } from './ui/controllers/SalesController.js';
 import { ComandaController } from './ui/controllers/ComandaController.js';
+import { TeamController } from './ui/controllers/TeamController.js';
 import { StockController } from './ui/controllers/StockController.js';
 import { CashController } from './ui/controllers/CashController.js';
 import { SecurityController } from './ui/controllers/SecurityController.js';
@@ -31,7 +32,7 @@ import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrin
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '3.1.0';
+  static VERSION = '3.2.0';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -100,6 +101,7 @@ export class App {
     this._events = new DomEventHandler(this);
     this._salesCtl = new SalesController(this);
     this._comandaCtl = new ComandaController(this);
+    this._teamCtl = new TeamController(this);
     this._stockCtl = new StockController(this);
     this._cashCtl = new CashController(this);
     this._securityCtl = new SecurityController(this);
@@ -291,6 +293,7 @@ export class App {
     // Seções delegadas aos controllers
     this._salesCtl.bind();
     this._comandaCtl.bind();
+    this._teamCtl.bind();
     this._stockCtl.bind();
     this._cashCtl.bind();
     this._securityCtl.bind();
@@ -576,7 +579,7 @@ export class App {
     this._stockCtl._renderCategories();
     this._cashCtl._renderCash();
     this._renderHome();
-    this._renderUsers();
+    this._teamCtl.render();
     this._comandaCtl.render();
   }
 
@@ -586,9 +589,10 @@ export class App {
     const sauda = document.getElementById('home-sauda');
     if (sauda) sauda.textContent = `Olá, ${session.usuario}. Acompanhe o atendimento.`;
 
-    const entries = Object.entries(this._data.mesas || {});
+    const tablesOn = this._governanceCtl.allowsTables();
+    const entries = Object.entries(this._data.mesas || {}).filter(([n]) => tablesOn || this._order.isCounterTable(n));
     const openCount = entries.length;
-    const openValue = Object.values(this._data.mesas || {}).flat().reduce((s, i) => s + Number(i.total || 0), 0);
+    const openValue = entries.flatMap(([, items]) => items).reduce((s, i) => s + Number(i.total || 0), 0);
 
     const openEl = document.getElementById('home-mesas');
     if (openEl) openEl.textContent = String(openCount);
@@ -660,27 +664,6 @@ export class App {
           stockListEl.append(row);
         }
       }
-    }
-  }
-
-  _renderUsers() {
-    const root = document.getElementById('lista-usuarios');
-    if (!root) return;
-    root.replaceChildren();
-    const users = this._auth.getMeta()?.usuarios || [];
-    App.safeSetText('usuarios-count', `${users.length} usuário(s)`);
-
-    for (const u of users) {
-      const el = this._renderer.make('div', 'entry');
-      const head = this._renderer.make('div', 'entry-head');
-      const left = this._renderer.make('div', 'entry-left');
-      left.append(
-        this._renderer.make('strong', '', u.usuario),
-        this._renderer.make('div', 'meta', `Perfil: ${u.perfil}`)
-      );
-      head.append(left);
-      el.append(head);
-      root.append(el);
     }
   }
 

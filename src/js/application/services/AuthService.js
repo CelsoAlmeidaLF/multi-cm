@@ -228,6 +228,108 @@ export class AuthService {
     await this.saveMeta(draft);
   }
 
+  // ---------------------------------------------------------------------------
+  // Equipe (v3.2.0): só o gerente cadastra. Todos os usuários abrem a MESMA chave do cofre, cada um embrulhada
+  // pela própria senha (wrapKey); por isso quem cadastra precisa estar com o cofre aberto (sessão de gerente).
+  // Desativar bloqueia o login no app; não troca a chave dos dados (ver decisão registrada no PR).
+  // ---------------------------------------------------------------------------
+  static PROFILES = ['gerente', 'vendedor'];
+  static USER_NAME = /^[\p{L}\p{N}][\p{L}\p{N} ._-]{2,59}$/u;
+
+  _requireManager() {
+    if (!this._session || this._session.perfil !== 'gerente' || !(this._vaultraw instanceof Uint8Array)) {
+      throw new Error('Acesso negado: só o gerente gerencia a equipe.');
+    }
+  }
+
+  _activeUsers(meta = this._meta) {
+    return (meta?.usuarios || []).filter(u => u.ativo !== false);
+  }
+
+  /** Lista sem segredos (nada de senha embrulhada, selo ou PIN). */
+  listUsers() {
+    return (this._meta?.usuarios || []).map(u => ({
+      usuario: u.usuario,
+      perfil: u.perfil,
+      email: u.email || null,
+      ativo: u.ativo !== false,
+      temPin: Boolean(u.pin && u.deviceSeal)
+    }));
+  }
+
+  /**
+   * @param {{usuario:string, senha:string, perfil:string, email?:string}} input
+   * @param {number|null} limit limite de usuários ativos do plano (null = sem limite)
+   */
+  async addUser({ usuario, senha, perfil, email = '' }, limit = null) {
+    this._requireManager();
+    const name = String(usuario || '').trim();
+    if (!AuthService.USER_NAME.test(name)) throw new Error('Nome de usuário: 3 a 60 caracteres (letras, números, espaço, ponto, hífen ou sublinhado).');
+    if (!AuthService.PROFILES.includes(perfil)) throw new Error('Perfil inválido.');
+    if (!this.validatePassword(senha)) throw new Error('A senha deve ter 8 ou mais caracteres.');
+    const mail = String(email || '').trim();
+    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Error('E-mail inválido.');
+    if (this._meta.usuarios.some(u => u.usuario.toLowerCase() === name.toLowerCase())) throw new Error('Já existe um usuário com esse nome.');
+    if (limit !== null && this._activeUsers().length >= limit) {
+      throw new Error(`Limite de ${limit} usuário${limit === 1 ? '' : 's'} ativo${limit === 1 ? '' : 's'} do plano atingido. Desative alguém ou fale com a Governança Systekna para ampliar.`);
+    }
+    const draft = structuredClone(this._meta);
+    draft.usuarios.push({
+      usuario: name,
+      perfil,
+      email: mail || null,
+      senha: await this._crypto.wrapKey(senha, this._vaultraw),
+      pin: null,
+      deviceSeal: null,
+      ativo: true
+    });
+    await this.saveMeta(draft);
+    return { usuario: name, perfil };
+  }
+
+  /**
+   * Edita perfil, e-mail, ativo, senha (redefinição) e remoção do PIN. Regras: não rebaixar nem desativar a si mesmo
+   * e sempre sobrar ao menos um gerente ativo. Reativar respeita o limite do plano.
+   */
+  async updateUser(usuario, changes = {}, limit = null) {
+    this._requireManager();
+    const draft = structuredClone(this._meta);
+    const target = draft.usuarios.find(u => u.usuario === usuario);
+    if (!target) throw new Error('Usuário não encontrado.');
+    const self = usuario === this._session.usuario;
+
+    if (changes.perfil !== undefined) {
+      if (!AuthService.PROFILES.includes(changes.perfil)) throw new Error('Perfil inválido.');
+      if (self && changes.perfil !== 'gerente') throw new Error('Você não pode rebaixar o seu próprio perfil.');
+      target.perfil = changes.perfil;
+    }
+    if (changes.email !== undefined) {
+      const mail = String(changes.email || '').trim();
+      if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Error('E-mail inválido.');
+      target.email = mail || null;
+    }
+    if (changes.ativo !== undefined) {
+      if (self && changes.ativo === false) throw new Error('Você não pode desativar o seu próprio usuário.');
+      if (changes.ativo === true && target.ativo === false && limit !== null && this._activeUsers(draft).length >= limit) {
+        throw new Error(`Limite de ${limit} usuário${limit === 1 ? '' : 's'} ativo${limit === 1 ? '' : 's'} do plano atingido.`);
+      }
+      target.ativo = changes.ativo === true;
+    }
+    if (changes.senha) {
+      if (!this.validatePassword(changes.senha)) throw new Error('A senha deve ter 8 ou mais caracteres.');
+      target.senha = await this._crypto.wrapKey(changes.senha, this._vaultraw);
+      target.pin = null;       // redefinir a senha revoga o PIN local
+      target.deviceSeal = null;
+    }
+    if (changes.removerPin) {
+      target.pin = null;
+      target.deviceSeal = null;
+    }
+    if (!this._activeUsers(draft).some(u => u.perfil === 'gerente')) throw new Error('É preciso manter ao menos um gerente ativo.');
+    await this.saveMeta(draft);
+    return { usuario, perfil: target.perfil, ativo: target.ativo !== false };
+  }
+
   /**
    * Login salvo (v2.7.0): depois do 1º login com usuário e senha, a chave do cofre fica guardada no cofre do kit
    * (window.secureStorage), que só abre com o PIN do aparelho, biometria ou as 12 palavras. Na próxima abertura o

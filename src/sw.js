@@ -1,4 +1,4 @@
-const CACHE = 'bargestao-v3-1-0';
+const CACHE = 'bargestao-v3-2-0';
 const ASSETS = [
   './',
   './index.html',
@@ -73,6 +73,8 @@ const ASSETS = [
   './js/ui/adapters/TypedSecrets.js',
   './js/ui/controllers/SalesController.js',
   './js/ui/controllers/ComandaController.js',
+  './js/ui/controllers/TeamController.js',
+  './js/ui/adapters/CompactMoney.js',
   './js/ui/controllers/StockController.js',
   './js/ui/controllers/CashController.js',
   './js/ui/controllers/SecurityController.js',
