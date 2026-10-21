@@ -58,6 +58,8 @@ export class DomEventHandler {
   _visibilitychange(event) {
     if (document.hidden) {
       this._app.handleBackgroundHide();
+    } else {
+      this._app.handleBackgroundReturn();
     }
   }
 
