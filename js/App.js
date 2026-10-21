@@ -29,7 +29,7 @@ import { WebSerialPrinterAdapter } from './infrastructure/adapters/WebSerialPrin
  * Mantém sessão, cofre e o commit transacional; as telas ficam nos controllers de ui/controllers.
  */
 export class App {
-  static VERSION = '3.0.0';
+  static VERSION = '3.0.1';
   static BUILD = '2026.10';
   static EDITION_LABEL = 'BarGestão Standard';
   static AERO_SPEC = 'Aero Glassmorphism 2.0';
@@ -511,6 +511,11 @@ export class App {
     this._renderer.renderNavigation(this._currenttab, this._auth.isManager(), t => this._changeTab(t), []);
     if (tab === 'inicio') this._renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  /** Instância: usada pelos controllers (que não enxergam o símbolo `App`). */
+  setText(idOrEl, value) {
+    App.safeSetText(idOrEl, value);
   }
 
   static safeSetText(idOrEl, value) {

@@ -105,12 +105,12 @@ export class CashController {
     const period = document.getElementById('caixa-periodo')?.value || 'hoje';
     const metrics = this._app._cash.calculateMetrics(this._app._data, period);
 
-    App.safeSetText('cash-vendas', String(metrics.salesCount));
-    App.safeSetText('cash-faturamento', this._app._renderer.money(metrics.sold));
-    App.safeSetText('cash-aberto', this._app._renderer.money(metrics.openValue));
-    App.safeSetText('cash-ticket', this._app._renderer.money(metrics.ticket));
-    App.safeSetText('cash-saidas', this._app._renderer.money(metrics.outgoing));
-    App.safeSetText('cash-saldo', this._app._renderer.money(metrics.balance));
+    this._app.setText('cash-vendas', String(metrics.salesCount));
+    this._app.setText('cash-faturamento', this._app._renderer.money(metrics.sold));
+    this._app.setText('cash-aberto', this._app._renderer.money(metrics.openValue));
+    this._app.setText('cash-ticket', this._app._renderer.money(metrics.ticket));
+    this._app.setText('cash-saidas', this._app._renderer.money(metrics.outgoing));
+    this._app.setText('cash-saldo', this._app._renderer.money(metrics.balance));
 
     // Renderização do Painel de Turno de Caixa
     this._renderShiftPanel();
@@ -126,7 +126,7 @@ export class CashController {
     root.replaceChildren();
 
     const entries = this._app._cash.getFilteredEntries(this._app._data, period);
-    App.safeSetText('caixa-count', `${entries.length} registros`);
+    this._app.setText('caixa-count', `${entries.length} registros`);
 
     for (const e of entries) {
       const el = this._app._renderer.make('div', 'entry');
@@ -302,15 +302,15 @@ export class CashController {
     const summary = this._app._shift.getClosingSummary(this._app._data, tipo) || {};
     const pags = summary.pagamentos || {};
 
-    App.safeSetText('fechamento-resumo-periodo', tipo === 'diario' ? `Hoje (${summary.referencia || 'Hoje'})` : `Mês (${summary.referencia || 'Mês'})`);
-    App.safeSetText('fechamento-total-vendas', this._app._renderer.money(summary.totalVendas || 0));
-    App.safeSetText('fechamento-total-saidas', this._app._renderer.money(summary.totalSaidas || 0));
-    App.safeSetText('fechamento-saldo-liquido', this._app._renderer.money(summary.saldoLiquido || 0));
-    App.safeSetText('fechamento-dinheiro', this._app._renderer.money(pags.dinheiro || 0));
-    App.safeSetText('fechamento-pix', this._app._renderer.money(pags.pix || 0));
-    App.safeSetText('fechamento-debito', this._app._renderer.money(pags.debito || 0));
-    App.safeSetText('fechamento-credito', this._app._renderer.money(pags.credito || 0));
-    App.safeSetText('fechamento-dinheiro-esperado', this._app._renderer.money(summary.dinheiroEsperado || 0));
+    this._app.setText('fechamento-resumo-periodo', tipo === 'diario' ? `Hoje (${summary.referencia || 'Hoje'})` : `Mês (${summary.referencia || 'Mês'})`);
+    this._app.setText('fechamento-total-vendas', this._app._renderer.money(summary.totalVendas || 0));
+    this._app.setText('fechamento-total-saidas', this._app._renderer.money(summary.totalSaidas || 0));
+    this._app.setText('fechamento-saldo-liquido', this._app._renderer.money(summary.saldoLiquido || 0));
+    this._app.setText('fechamento-dinheiro', this._app._renderer.money(pags.dinheiro || 0));
+    this._app.setText('fechamento-pix', this._app._renderer.money(pags.pix || 0));
+    this._app.setText('fechamento-debito', this._app._renderer.money(pags.debito || 0));
+    this._app.setText('fechamento-credito', this._app._renderer.money(pags.credito || 0));
+    this._app.setText('fechamento-dinheiro-esperado', this._app._renderer.money(summary.dinheiroEsperado || 0));
 
     const contadoInput = document.getElementById('fechamento-dinheiro-contado');
     if (contadoInput && !contadoInput.value) {
