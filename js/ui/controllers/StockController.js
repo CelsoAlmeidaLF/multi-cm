@@ -247,33 +247,6 @@ export class StockController {
         prodCat.append(opt);
       }
     }
-
-    // Select e chips no PDV
-    const vendaCat = document.getElementById('venda-categoria');
-    if (vendaCat) {
-      const current = vendaCat.value;
-      vendaCat.replaceChildren(this._app._renderer.make('option', '', 'Todas as categorias', { value: '' }));
-      for (const cat of categorias) {
-        const opt = this._app._renderer.make('option', '', cat, { value: cat });
-        if (cat === current) opt.selected = true;
-        vendaCat.append(opt);
-      }
-    }
-
-    const vendaChips = document.getElementById('venda-chips');
-    if (vendaChips) {
-      vendaChips.replaceChildren();
-      const allBtn = this._app._renderer.btn('Todas', () => {
-        if (vendaCat) { vendaCat.value = ''; this._app._salesCtl._renderProductSelects(); }
-      }, `v9-pill ${!vendaCat?.value ? 'active' : ''}`);
-      vendaChips.append(allBtn);
-      for (const cat of categorias) {
-        const chip = this._app._renderer.btn(cat, () => {
-          if (vendaCat) { vendaCat.value = cat; this._app._salesCtl._renderProductSelects(); }
-        }, `v9-pill ${vendaCat?.value === cat ? 'active' : ''}`);
-        vendaChips.append(chip);
-      }
-    }
   }
 
   _openProductModal() {
