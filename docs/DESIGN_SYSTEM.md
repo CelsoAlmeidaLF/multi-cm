@@ -85,7 +85,16 @@ Os tokens estão centralizados em `multi-cm/src/css/theme.css` e utilizam CSS Cu
 | `--space-2xl` | `32px` | Respiro vertical de títulos e seções |
 | `--space-3xl` | `40px` | Margens de topo de layouts desktop |
 
-### 3.4. Tipografia & Escala Hierárquica
+### 3.4. Rolagem (Scroll)
+
+| Token | Valor | Uso |
+| :--- | :--- | :--- |
+| `--scroll-size` | `10px` | Largura/altura da barra no Safari (`::-webkit-scrollbar`) |
+| `--scroll-thumb` | `rgba(103, 123, 150, 0.26)` | Barra em repouso: fina e quase invisível |
+| `--scroll-thumb-hover` | `rgba(38, 109, 224, 0.5)` | Barra ao passar o mouse sobre a área (cor de acento) |
+| `--scroll-fade` | `28px` | Comprimento do esmaecido nas bordas de `.scroll-area` e `.scroll-x` |
+
+### 3.5. Tipografia & Escala Hierárquica
 
 - **Família Tipográfica:** `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
 - **Títulos:**
@@ -139,6 +148,17 @@ Resolve o alinhamento entre campos com rótulo (`.period-select`) e botões puro
 
 ### 4.7. Modais Aero (`.aero-modal`)
 Diálogos construídos sobre a tag nativa `<dialog>`, com animação de escala, backdrop escurecido com desfoque de 28px e cabeçalho com barra de kicker.
+
+### 4.8. Rolagem Aero (`theme.css`)
+Minimalista, discreta e elegante, sem JavaScript:
+- **Global:** `scrollbar-width: thin` + `scrollbar-color` (Firefox e Chrome 121+) e `::-webkit-scrollbar` (Safari). Trilho transparente; a barra fica quase invisível em repouso e ganha a cor de acento no hover. Listas que escondem a barra (`.category-chips`, menu lateral) continuam com `scrollbar-width: none`.
+- **Âncoras:** `scroll-behavior: smooth` (desligado com `prefers-reduced-motion`) e `scroll-padding-top` igual à topbar, para o título não ficar atrás dela.
+- **`.scroll-area`:** rolagem vertical própria com altura máxima em `--scroll-max` (padrão 320px), `overscroll-behavior: contain` e `scrollbar-gutter: stable`.
+- **`.scroll-x`:** faixa horizontal para chips e cards, com `scroll-snap` nos itens e barra escondida.
+- **Bordas esmaecidas inteligentes:** as duas classes esmaecem só o lado em que ainda há conteúdo, com `animation-timeline: scroll(self)` e as propriedades registradas `--fade-ini`/`--fade-fim`. Sem suporte, fica o esmaecido fixo do lado final.
+
+### 4.9. Outros componentes catalogados
+O catálogo vivo (`docs/design-system.html`) também mostra, com a marcação real do app: navegação (`.nav-item`, `.profile`/`.avatar`, `.mobile-nav`), comanda (`.category-chips`, `.product-choice` com `.cmd-badge`, `.cmd-item` com `.cmd-qty-btn`, `.cmd-pay`, `.cmd-total-row`), gráfico (`.chart-bars`/`.chart-col`), menu Mais (`.more-group`/`.more-link`), cartão de versão (`.version-card`), estado vazio (`.empty`), toast (`.toast`), palavras de recuperação (`.recovery-word-grid`), abas segmentadas (`.auth-tabs`), ícones do sprite e os tokens de espaço, raio e sombra. Ícone dentro de pill: `.pill svg` (12px).
 
 ---
 

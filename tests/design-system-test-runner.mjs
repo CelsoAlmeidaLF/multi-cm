@@ -45,7 +45,17 @@ const requiredSections = [
   'id="sec-toolbars"',
   'id="sec-dropdown"',
   'id="sec-lists"',
-  'id="sec-alerts"'
+  'id="sec-alerts"',
+  'id="sec-medidas"',
+  'id="sec-icones"',
+  'id="sec-rolagem"',
+  'id="sec-navegacao"',
+  'id="sec-comanda"',
+  'id="sec-grafico"',
+  'id="sec-mais"',
+  'id="sec-feedback"',
+  'id="sec-recuperacao"',
+  'id="sec-modal"'
 ];
 
 for (const sec of requiredSections) {
@@ -65,7 +75,16 @@ assert.ok(htmlContent.includes('class="dropdown-wrap"'), '[HTML_ERR] Componente 
 assert.ok(htmlContent.includes('dropdown-trigger'), '[HTML_ERR] Componente dropdown-trigger ausente');
 assert.ok(htmlContent.includes('dropdown-menu'), '[HTML_ERR] Componente dropdown-menu ausente');
 assert.ok(htmlContent.includes('<dialog class="aero-modal"'), '[HTML_ERR] Dialog modal aero nativo ausente');
+assert.ok(htmlContent.includes('class="scroll-area'), '[HTML_ERR] Utilitário .scroll-area ausente');
+assert.ok(htmlContent.includes('class="scroll-x'), '[HTML_ERR] Utilitário .scroll-x ausente');
 console.log('✅ [PASS] Todos os componentes atômicos e moleculares renderizados no template');
+
+// 3b. Rolagem Aero no CSS do app: tokens e regras para Firefox/Chrome e Safari
+const themeCss = fs.readFileSync(path.resolve(rootDir, 'src/css/theme.css'), 'utf-8');
+for (const marca of ['--scroll-thumb:', '--scroll-thumb-hover:', 'scrollbar-width: thin', '::-webkit-scrollbar-thumb', '.scroll-area {', '.scroll-x {', 'animation-timeline: scroll(self inline)']) {
+  assert.ok(themeCss.includes(marca), `[CSS_ERR] Rolagem Aero incompleta no theme.css: ${marca}`);
+}
+console.log('✅ [PASS] Rolagem Aero definida no theme.css (tokens, barra fina, .scroll-area e .scroll-x)');
 
 // 4. Verificação de Integridade Sintática
 assert.ok(htmlContent.includes('<!DOCTYPE html>'), '[SYNTAX_ERR] Doctype HTML5 ausente');

@@ -4,474 +4,416 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta name="theme-color" content="#eaf1fa"/>
-  <title>Design System Aero 2.0 — BarGestão Living Styleguide</title>
-  <!-- Estilos mestres importados do projeto principal (fora de src) -->
+  <title>BarGestão · Design System Aero 2.0</title>
+  <!-- Estilos do app: o catálogo usa exatamente o CSS que vai para produção -->
+  <link rel="icon" href="../src/icon-192.png"/>
   <link rel="stylesheet" href="../src/css/main.css"/>
   <style>
-    /* Estilos de suporte dedicados ao Showcase do Living Styleguide */
-    .styleguide-shell {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 32px 24px 80px;
+    html { scroll-padding-top: 72px; } /* a barra de seções do catálogo, no lugar da topbar do app */
+    /* Só o "chassi" do catálogo. Componente novo vai para src/css, nunca para cá. */
+    .styleguide-shell { max-width: 1400px; margin: 0 auto; padding: 32px 24px 96px; }
+    .sg-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 80; pointer-events: none; }
+    .sg-progress span { display: block; height: 100%; background: linear-gradient(90deg, #599af5, var(--accent)); transform-origin: 0 50%; transform: scaleX(0); }
+    .styleguide-header { background: var(--panel); backdrop-filter: blur(var(--panel-blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
+      border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 32px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .styleguide-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .sg-brand { display: flex; align-items: center; gap: 14px; }
+    .sg-head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .sg-nav { position: sticky; top: 0; z-index: 30; margin: 0 -24px 24px; padding: 10px 24px; background: rgba(234, 241, 250, 0.82);
+      backdrop-filter: blur(var(--topbar-blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--topbar-blur)) saturate(180%); border-bottom: 1px solid transparent; transition: border-color .2s, box-shadow .2s; }
+    .sg-nav.stuck { border-bottom-color: var(--line); box-shadow: 0 8px 24px rgba(32, 59, 95, 0.06); }
+    .sg-nav a { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--muted);
+      text-decoration: none; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, 0.7); transition: color .15s, background .15s, border-color .15s; }
+    .sg-nav a:hover { color: var(--accent); border-color: #bad3f8; }
+    .sg-nav a.on { color: #fff; background: var(--accent); border-color: var(--accent); }
+    .sg-nav a.on .sg-n { color: rgba(255, 255, 255, 0.75); }
+    .sg-n { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted-light); }
+    .component-section { background: var(--panel); backdrop-filter: blur(var(--panel-blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
+      border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+    .component-header { display: flex; gap: 14px; align-items: baseline; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+    .component-header .sg-n { font-size: 13px; }
+    .component-header h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; color: var(--ink); margin-bottom: 4px; }
+    .component-header p { font-size: 13px; color: var(--muted); margin: 0; max-width: 80ch; }
+    .component-header code, .sg-note code, .sg-h3 code { font-size: 12px; color: var(--accent); background: var(--accentSoft); padding: 1px 6px; border-radius: 6px; }
+    .swatches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+    .swatch-card { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--panel-solid); box-shadow: var(--shadow-sm); }
+    .swatch-color { height: 56px; border-bottom: 1px solid var(--line); }
+    .swatch-info { padding: 10px 12px; display: grid; gap: 2px; }
+    .swatch-info strong { font-size: 12px; color: var(--ink); }
+    .swatch-info span, .sg-space span, .sg-radius span, .sg-dl dd { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+    .swatch-info small { font-size: 11px; color: var(--muted-light); }
+    .demo-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .demo-box { border: 1px dashed rgba(111, 140, 179, 0.35); border-radius: var(--radius-md); padding: 20px; background: var(--panel-subtle); margin-bottom: 16px; min-width: 0; }
+    .demo-box:last-child { margin-bottom: 0; }
+    .sg-h2 { font-size: 16px; font-weight: 750; letter-spacing: -0.3px; }
+    .sg-h3 { font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+    .sg-h3 small { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--muted-light); }
+    .sg-h3:not(:first-child) { margin-top: 18px; }
+    .sg-num { font-size: 26px; font-weight: 850; letter-spacing: -0.8px; }
+    .sg-stack { display: flex; flex-direction: column; gap: 14px; }
+    .sg-m0 { margin: 0 !important; } .sg-mb { margin-bottom: 14px; } .sg-t22 { font-size: 22px; }
+    .sg-muted { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .sg-block { margin-top: 14px; max-width: 320px; }
+    .sg-note { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; }
+    .sg-tabs { max-width: 360px; margin-top: 14px; }
+    .checkline { margin-top: 12px; }
+    .sg-tokens { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; }
+    .sg-space { display: grid; grid-template-columns: 48px 120px auto; align-items: center; gap: 10px; padding: 4px 0; }
+    .sg-space i { display: block; height: 12px; border-radius: 4px; background: linear-gradient(90deg, #599af5, var(--accent)); }
+    .sg-space code, .sg-radius code, .sg-shadow code { font-size: 11.5px; color: var(--ink); }
+    .sg-radius-row, .sg-shadow-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .sg-radius { height: 72px; border: 2px solid #bad3f8; background: var(--accentSoft); display: grid; place-content: center; text-align: center; gap: 2px; }
+    .sg-shadow { height: 72px; border-radius: var(--radius-md); background: var(--panel-solid); display: grid; place-items: center; }
+    .sg-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+    .sg-icon { display: grid; justify-items: center; gap: 8px; padding: 14px 8px 10px; min-height: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-solid); color: var(--ink); }
+    .sg-icon:hover { border-color: #bad3f8; color: var(--accent); box-shadow: var(--shadow-sm); }
+    .sg-icon svg { width: 24px; height: 24px; stroke-width: 1.8; }
+    .sg-icon code { font-size: 11px; color: var(--muted); }
+    .sg-icon.copiado code { color: var(--good); }
+    .sg-drop { min-height: 170px; }
+    .sg-scroll-grid, .sg-nav-grid, .sg-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .sg-scroll { border-radius: var(--radius-sm); background: var(--panel-solid); border: 1px solid var(--line); padding: 4px 14px; }
+    .sg-scroll-x { padding-inline: 4px; }
+    .sg-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
+    .sg-dl dt code { font-size: 11.5px; } .sg-dl dd { margin: 0; }
+    .sg-sidenav { display: grid; gap: 4px; max-width: 260px; }
+    .sg-profile { margin-top: 16px; max-width: 260px; }
+    .sg-device .mobile-nav { position: static; border-radius: var(--radius-md); border: 1px solid var(--line); box-shadow: var(--shadow-sm); padding-bottom: 8px; }
+    @media (min-width: 768px) { .sg-device .mobile-nav { display: none; } }
+    @media (max-width: 767px) { .sg-only-desk { display: none; } }
+    .sg-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .sg-cmd { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .sg-cmd-foot { position: static; border-radius: var(--radius-md); }
+    .sg-inline { display: grid; gap: 14px; justify-items: start; }
+    .sg-inline .toast { position: static; }
+    .sg-top { position: fixed; right: 24px; bottom: 24px; z-index: 70; width: 44px; height: 44px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.86); color: var(--accent); box-shadow: var(--shadow); backdrop-filter: blur(var(--topbar-blur));
+      -webkit-backdrop-filter: blur(var(--topbar-blur)); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .25s, transform .25s; }
+    .sg-top.on { opacity: 1; transform: none; pointer-events: auto; }
+    .sg-top svg { width: 20px; height: 20px; transform: rotate(-90deg); }
+    @media (max-width: 900px) {
+      .sg-tokens, .sg-scroll-grid, .sg-nav-grid, .sg-two { grid-template-columns: minmax(0, 1fr); }
+      .sg-radius-row, .sg-shadow-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    .styleguide-header {
-      background: rgba(255, 255, 255, 0.72);
-      backdrop-filter: blur(var(--panel-blur)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
-      padding: 28px 32px;
-      margin-bottom: 32px;
-      box-shadow: var(--shadow);
-    }
-    .styleguide-header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    .styleguide-nav {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding-top: 14px;
-      border-top: 1px solid var(--line);
-    }
-    .styleguide-nav a {
-      font-size: 12px;
-      font-weight: 750;
-      color: var(--ink);
-      text-decoration: none;
-      padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      transition: all 0.15s ease;
-    }
-    .styleguide-nav a:hover {
-      background: #e5efff;
-      color: var(--accent);
-      border-color: #bad3f8;
-    }
-    .component-section {
-      background: rgba(255, 255, 255, 0.78);
-      backdrop-filter: blur(var(--panel-blur)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      margin-bottom: 28px;
-      box-shadow: var(--shadow-sm);
-    }
-    .component-header {
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--line);
-    }
-    .component-header h2 {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.4px;
-      color: var(--ink);
-      margin-bottom: 4px;
-    }
-    .component-header p {
-      font-size: 13px;
-      color: var(--muted);
-      margin: 0;
-    }
-    .swatches-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 14px;
-    }
-    .swatch-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.9);
-      box-shadow: var(--shadow-sm);
-    }
-    .swatch-color {
-      height: 56px;
-      width: 100%;
-    }
-    .swatch-info {
-      padding: 10px 12px;
-    }
-    .swatch-info strong {
-      display: block;
-      font-size: 12px;
-      color: var(--ink);
-    }
-    .swatch-info span {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      font-family: monospace;
-    }
-    .demo-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-    .demo-box {
-      border: 1px dashed rgba(111, 140, 179, 0.35);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      background: rgba(245, 250, 255, 0.45);
-      margin-bottom: 16px;
+    @media (max-width: 600px) {
+      .styleguide-shell { padding: 16px 16px 120px; }
+      .styleguide-header { padding: 20px; }
+      .sg-nav { margin: 0 -16px 16px; padding: 8px 16px; }
+      .component-section { padding: 18px 16px; }
+      .component-header { flex-direction: column; gap: 4px; }
+      .sg-space { grid-template-columns: 40px 1fr; } .sg-space span { display: none; }
+      .sg-top { bottom: 96px; right: 16px; }
     }
   </style>
 </head>
 <body>
-
-  <!-- SVG Sprite Padronizado BarGestão -->
-  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
-    <symbol id="i-bar" viewbox="0 0 24 24"><path d="M5 3h14l-2 6-5 4-5-4-2-6ZM12 13v7m-5 1h10M8 7h8"></path></symbol>
-    <symbol id="i-grid" viewbox="0 0 24 24"><rect height="7" rx="2" width="7" x="3" y="3"></rect><rect height="7" rx="2" width="7" x="14" y="3"></rect><rect height="7" rx="2" width="7" x="3" y="14"></rect><rect height="7" rx="2" width="7" x="14" y="14"></rect></symbol>
-    <symbol id="i-box" viewbox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4m-9 4v10"></path></symbol>
-    <symbol id="i-wallet" viewbox="0 0 24 24"><rect height="15" rx="3" width="18" x="3" y="5"></rect><path d="M3 9h18m-5 5h2M6 5V3h12"></path></symbol>
-    <symbol id="i-users" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"></path></symbol>
-    <symbol id="i-plus" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
-    <symbol id="i-lock" viewbox="0 0 24 24"><rect height="11" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol>
-    <symbol id="i-log" viewbox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"></path></symbol>
-    <symbol id="i-check" viewbox="0 0 24 24"><path d="m4 12 5 5L20 6"></path></symbol>
-    <symbol id="i-x" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol>
-    <symbol id="i-home" viewbox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z"></path></symbol>
-    <symbol id="i-more" viewbox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol>
-    <symbol id="i-search" viewbox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></symbol>
-    <symbol id="i-arrow" viewbox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
-    <symbol id="i-down" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
-    <symbol id="i-minus" viewbox="0 0 24 24"><path d="M5 12h14"></path></symbol>
-    <symbol id="i-download" viewbox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"></path></symbol>
-    <symbol id="i-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
-    <symbol id="i-spark" viewbox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Zm7 14 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z"></path></symbol>
-    <symbol id="i-trash" viewbox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></symbol>
-  </svg>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg"><symbol id="i-back" viewbox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol><symbol id="i-edit" viewbox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></symbol><symbol id="i-bar" viewbox="0 0 24 24"><path d="M5 3h14l-2 6-5 4-5-4-2-6ZM12 13v7m-5 1h10M8 7h8"></path></symbol><symbol id="i-grid" viewbox="0 0 24 24"><rect height="7" rx="2" width="7" x="3" y="3"></rect><rect height="7" rx="2" width="7" x="14" y="3"></rect><rect height="7" rx="2" width="7" x="3" y="14"></rect><rect height="7" rx="2" width="7" x="14" y="14"></rect></symbol><symbol id="i-box" viewbox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4m-9 4v10"></path></symbol><symbol id="i-wallet" viewbox="0 0 24 24"><rect height="15" rx="3" width="18" x="3" y="5"></rect><path d="M3 9h18m-5 5h2M6 5V3h12"></path></symbol><symbol id="i-users" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"></path></symbol><symbol id="i-plus" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol><symbol id="i-lock" viewbox="0 0 24 24"><rect height="11" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol><symbol id="i-log" viewbox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"></path></symbol><symbol id="i-check" viewbox="0 0 24 24"><path d="m4 12 5 5L20 6"></path></symbol><symbol id="i-x" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol><symbol id="i-home" viewbox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z"></path></symbol><symbol id="i-more" viewbox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol><symbol id="i-search" viewbox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></symbol><symbol id="i-arrow" viewbox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol><symbol id="i-down" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol><symbol id="i-minus" viewbox="0 0 24 24"><path d="M5 12h14"></path></symbol><symbol id="i-download" viewbox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"></path></symbol><symbol id="i-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol><symbol id="i-spark" viewbox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Zm7 14 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z"></path></symbol><symbol id="i-trash" viewbox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></symbol></svg>
+  <div class="sg-progress" aria-hidden="true"><span id="sg-progress"></span></div>
 
   <div class="styleguide-shell">
-
-    <!-- Header do Living Styleguide -->
     <header class="styleguide-header">
       <div class="styleguide-header-top">
-        <div style="display:flex;align-items:center;gap:14px;">
+        <div class="sg-brand">
           <div class="brand-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-bar"></use></svg></div>
           <div>
             <span class="eyebrow">SYSTEKNA · DESIGN SYSTEM</span>
-            <h1 class="page-title" style="margin:2px 0 0;">BarGestão Aero 2.0</h1>
-            <p class="page-sub" style="margin:0;">Catálogo Vivo de Componentes (Living Styleguide) & Especificação Visual L6</p>
+            <h1 class="page-title sg-m0">BarGestão Aero 2.0</h1>
+            <p class="page-sub sg-m0">Catálogo vivo dos componentes: tudo aqui usa o CSS real do app (<code>src/css/main.css</code>).</p>
           </div>
         </div>
-        <div style="display:flex;gap:10px;">
-          <a class="btn ghost" href="../src/index.html"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg> Abrir Sistema Principal</a>
-          <button class="btn" id="open-demo-modal" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-spark"></use></svg> Ver Modal Aero</button>
+        <div class="sg-head-actions">
+          <a class="btn ghost" href="../src/index.html"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg> Abrir o app</a>
         </div>
       </div>
-      <nav class="styleguide-nav">
-        <a href="#sec-tokens">1. Tokens & Cores</a>
-        <a href="#sec-typography">2. Tipografia</a>
-        <a href="#sec-buttons">3. Botões & Ações</a>
-        <a href="#sec-pills">4. Badges & Status</a>
-        <a href="#sec-forms">5. Campos & Filtros</a>
-        <a href="#sec-stats">6. Cards de Estatística</a>
-        <a href="#sec-toolbars">7. Toolbars & Alinhamento</a>
-        <a href="#sec-dropdown">8. Dropdown Aero</a>
-        <a href="#sec-lists">9. Entradas & Listas</a>
-        <a href="#sec-alerts">10. Painéis & Avisos</a>
-      </nav>
     </header>
 
-    <!-- 1. Tokens Cromáticos & Glassmorphism -->
+    <nav class="sg-nav" id="sg-nav" aria-label="Seções do catálogo"><div class="scroll-x"><a href="#sec-tokens" data-sec="sec-tokens"><span class="sg-n">01</span>Cores</a><a href="#sec-medidas" data-sec="sec-medidas"><span class="sg-n">02</span>Espaço, raio e sombra</a><a href="#sec-typography" data-sec="sec-typography"><span class="sg-n">03</span>Tipografia</a><a href="#sec-icones" data-sec="sec-icones"><span class="sg-n">04</span>Ícones</a><a href="#sec-buttons" data-sec="sec-buttons"><span class="sg-n">05</span>Botões</a><a href="#sec-pills" data-sec="sec-pills"><span class="sg-n">06</span>Badges</a><a href="#sec-forms" data-sec="sec-forms"><span class="sg-n">07</span>Campos e filtros</a><a href="#sec-stats" data-sec="sec-stats"><span class="sg-n">08</span>Estatísticas</a><a href="#sec-toolbars" data-sec="sec-toolbars"><span class="sg-n">09</span>Toolbars</a><a href="#sec-dropdown" data-sec="sec-dropdown"><span class="sg-n">10</span>Dropdown</a><a href="#sec-rolagem" data-sec="sec-rolagem"><span class="sg-n">11</span>Rolagem</a><a href="#sec-navegacao" data-sec="sec-navegacao"><span class="sg-n">12</span>Navegação</a><a href="#sec-lists" data-sec="sec-lists"><span class="sg-n">13</span>Mesas e listas</a><a href="#sec-comanda" data-sec="sec-comanda"><span class="sg-n">14</span>Comanda</a><a href="#sec-grafico" data-sec="sec-grafico"><span class="sg-n">15</span>Gráfico</a><a href="#sec-mais" data-sec="sec-mais"><span class="sg-n">16</span>Menu Mais e versão</a><a href="#sec-feedback" data-sec="sec-feedback"><span class="sg-n">17</span>Vazio e toast</a><a href="#sec-recuperacao" data-sec="sec-recuperacao"><span class="sg-n">18</span>Palavras de recuperação</a><a href="#sec-alerts" data-sec="sec-alerts"><span class="sg-n">19</span>Painéis e avisos</a><a href="#sec-modal" data-sec="sec-modal"><span class="sg-n">20</span>Modal</a></div></nav>
+
     <section class="component-section" id="sec-tokens">
-      <div class="component-header">
-        <h2>1. Tokens Cromáticos & Glassmorphism 2.0</h2>
-        <p>Paleta calibrada em tons frios com desfoque de superfície e contraste em conformidade com WCAG 2.1 AA.</p>
-      </div>
-      <div class="swatches-grid">
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--accent);"></div><div class="swatch-info"><strong>--accent</strong><span>#266de0</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--accent-hover);"></div><div class="swatch-info"><strong>--accent-hover</strong><span>#1757be</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--good); color:white;"></div><div class="swatch-info"><strong>--good</strong><span>#0f8664</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--warn); color:white;"></div><div class="swatch-info"><strong>--warn</strong><span>#c27c0e</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--bad); color:white;"></div><div class="swatch-info"><strong>--bad</strong><span>#c74550</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--ink); color:white;"></div><div class="swatch-info"><strong>--ink</strong><span>#14253c</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--muted); color:white;"></div><div class="swatch-info"><strong>--muted</strong><span>#677b96</span></div></div>
-        <div class="swatch-card"><div class="swatch-color" style="background:var(--bg); border:1px solid var(--line);"></div><div class="swatch-info"><strong>--bg</strong><span>#eaf1fa</span></div></div>
-      </div>
+      <div class="component-header"><span class="sg-n">01</span><div><h2>Cores</h2><p>Paleta fria do Aero 2.0. O valor de cada token é lido do <code>theme.css</code> ao abrir a página, então o catálogo nunca fica desatualizado.</p></div></div>
+      <div class="swatches-grid"><div class="swatch-card"><div class="swatch-color" style="background:var(--accent)"></div><div class="swatch-info"><strong>--accent</strong><span data-token="--accent"></span><small>Ação principal, links</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--accent-hover)"></div><div class="swatch-info"><strong>--accent-hover</strong><span data-token="--accent-hover"></span><small>Hover da ação</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--accentSoft)"></div><div class="swatch-info"><strong>--accentSoft</strong><span data-token="--accentSoft"></span><small>Fundo de seleção</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--good)"></div><div class="swatch-info"><strong>--good</strong><span data-token="--good"></span><small>Sucesso, aberto</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--good-bg)"></div><div class="swatch-info"><strong>--good-bg</strong><span data-token="--good-bg"></span><small>Fundo de sucesso</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--warn)"></div><div class="swatch-info"><strong>--warn</strong><span data-token="--warn"></span><small>Atenção</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--warn-bg)"></div><div class="swatch-info"><strong>--warn-bg</strong><span data-token="--warn-bg"></span><small>Fundo de atenção</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--bad)"></div><div class="swatch-info"><strong>--bad</strong><span data-token="--bad"></span><small>Erro, perigo</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--bad-bg)"></div><div class="swatch-info"><strong>--bad-bg</strong><span data-token="--bad-bg"></span><small>Fundo de erro</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--ink)"></div><div class="swatch-info"><strong>--ink</strong><span data-token="--ink"></span><small>Texto principal</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--muted)"></div><div class="swatch-info"><strong>--muted</strong><span data-token="--muted"></span><small>Texto secundário</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--muted-light)"></div><div class="swatch-info"><strong>--muted-light</strong><span data-token="--muted-light"></span><small>Texto apagado</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--line)"></div><div class="swatch-info"><strong>--line</strong><span data-token="--line"></span><small>Bordas e divisores</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--bg)"></div><div class="swatch-info"><strong>--bg</strong><span data-token="--bg"></span><small>Fundo da página</small></div></div></div>
     </section>
-
-    <!-- 2. Tipografia & Hierarquia -->
+    <section class="component-section" id="sec-medidas">
+      <div class="component-header"><span class="sg-n">02</span><div><h2>Espaço, raio e sombra</h2><p>Grade de 4 e 8 pt, quatro raios e quatro níveis de elevação. Use os tokens; nada de valores soltos.</p></div></div>
+      <div class="sg-tokens"><div class="demo-box"><h3 class="sg-h3">Espaçamento</h3><div class="sg-space"><i style="width:var(--space-2xs)"></i><code>--space-2xs</code><span data-token="--space-2xs"></span></div><div class="sg-space"><i style="width:var(--space-xs)"></i><code>--space-xs</code><span data-token="--space-xs"></span></div><div class="sg-space"><i style="width:var(--space-sm)"></i><code>--space-sm</code><span data-token="--space-sm"></span></div><div class="sg-space"><i style="width:var(--space-md)"></i><code>--space-md</code><span data-token="--space-md"></span></div><div class="sg-space"><i style="width:var(--space-lg)"></i><code>--space-lg</code><span data-token="--space-lg"></span></div><div class="sg-space"><i style="width:var(--space-xl)"></i><code>--space-xl</code><span data-token="--space-xl"></span></div><div class="sg-space"><i style="width:var(--space-2xl)"></i><code>--space-2xl</code><span data-token="--space-2xl"></span></div><div class="sg-space"><i style="width:var(--space-3xl)"></i><code>--space-3xl</code><span data-token="--space-3xl"></span></div></div>
+       <div class="demo-box"><h3 class="sg-h3">Raios</h3><div class="sg-radius-row"><div class="sg-radius" style="border-radius:var(--radius-sm)"><code>--radius-sm</code><span data-token="--radius-sm"></span></div><div class="sg-radius" style="border-radius:var(--radius-md)"><code>--radius-md</code><span data-token="--radius-md"></span></div><div class="sg-radius" style="border-radius:var(--radius-lg)"><code>--radius-lg</code><span data-token="--radius-lg"></span></div><div class="sg-radius" style="border-radius:var(--radius-xl)"><code>--radius-xl</code><span data-token="--radius-xl"></span></div></div><h3 class="sg-h3">Sombras</h3><div class="sg-shadow-row"><div class="sg-shadow" style="box-shadow:var(--shadow-sm)"><code>--shadow-sm</code></div><div class="sg-shadow" style="box-shadow:var(--shadow)"><code>--shadow</code></div><div class="sg-shadow" style="box-shadow:var(--shadow-lg)"><code>--shadow-lg</code></div><div class="sg-shadow" style="box-shadow:var(--shadow-modal)"><code>--shadow-modal</code></div></div></div></div>
+    </section>
     <section class="component-section" id="sec-typography">
-      <div class="component-header">
-        <h2>2. Tipografia & Escala Hierárquica</h2>
-        <p>Família Inter com tracking suíço e proporções matemáticas para leitura veloz.</p>
-      </div>
-      <div class="demo-box" style="display:flex;flex-direction:column;gap:14px;">
-        <div><span class="eyebrow">EYEBROW LABEL (10.5PX · BOLD 800)</span></div>
-        <h1 class="page-title" style="margin:0;">Page Title (28px - 30px · Bold 800)</h1>
-        <p class="page-sub" style="margin:0;">Page Subtitle (13.5px · Muted Regular · Line-height 1.5)</p>
-        <h2 style="font-size:16px;font-weight:750;letter-spacing:-0.3px;margin:0;">Card Heading 2 (16px · Bold 750)</h2>
-        <span class="stat-label">Stat Label (11.5px · Uppercase · Muted)</span>
-        <strong style="font-size:26px;font-weight:850;letter-spacing:-0.8px;color:var(--ink);">R$ 1.250,00 (Stat Strong 26px)</strong>
+      <div class="component-header"><span class="sg-n">03</span><div><h2>Tipografia</h2><p>Inter com tracking negativo nos títulos e pesos altos para leitura rápida no balcão.</p></div></div>
+      <div class="demo-box sg-stack">
+        <span class="eyebrow">Eyebrow · 10,5 px · 800</span>
+        <h1 class="page-title">Título da página · 28–30 px · 800</h1>
+        <p class="page-sub">Subtítulo · 13,5 px · regular · altura de linha 1,5</p>
+        <h2 class="sg-h2">Título de card · 16 px · 750</h2>
+        <span class="stat-label">Rótulo de estatística · 11,5 px · maiúsculas</span>
+        <strong class="sg-num">R$ 1.250,00</strong>
       </div>
     </section>
-
-    <!-- 3. Botões & Ações -->
+    <section class="component-section" id="sec-icones">
+      <div class="component-header"><span class="sg-n">04</span><div><h2>Ícones</h2><p>Conjunto SVG de traço do app (24 × 24, <code>currentColor</code>). Nunca use emoji no lugar de ícone. Clique para copiar o <code>&lt;use&gt;</code>.</p></div></div>
+      <div class="sg-icons" id="sg-icons"></div>
+    </section>
     <section class="component-section" id="sec-buttons">
-      <div class="component-header">
-        <h2>3. Botões & Ações (.btn)</h2>
-        <p>Controles com altura equalizada em 42px, aceleração de GPU e feedback de clique em scale(0.985).</p>
-      </div>
+      <div class="component-header"><span class="sg-n">05</span><div><h2>Botões e ações</h2><p>Altura de 42 px, ícone à esquerda e retorno ao toque com <code>scale(0.985)</code>.</p></div></div>
       <div class="demo-box">
         <div class="demo-row">
-          <button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Primário (.btn)</button>
-          <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Secundário (.btn.ghost)</button>
-          <button class="btn outline" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg> Outline (.btn.outline)</button>
-          <button class="btn danger" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-trash"></use></svg> Perigo (.btn.danger)</button>
-          <button class="btn minor" type="button">Compacto (.btn.minor)</button>
+          <button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Primário</button>
+          <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Secundário</button>
+          <button class="btn outline" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg> Contorno</button>
+          <button class="btn danger" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-trash"></use></svg> Perigo</button>
+          <button class="btn minor" type="button">Compacto</button>
           <button class="btn" type="button" disabled>Desabilitado</button>
         </div>
-        <div style="margin-top:14px;max-width:320px;">
-          <button class="btn block" type="button">Botão em Bloco 100% (.btn.block)</button>
-        </div>
+        <div class="sg-block"><button class="btn block" type="button">Bloco 100% (.btn.block)</button></div>
       </div>
     </section>
-
-    <!-- 4. Badges & Status Pills -->
     <section class="component-section" id="sec-pills">
-      <div class="component-header">
-        <h2>4. Badges de Status (.pill)</h2>
-        <p>Marcadores contextuais para contadores de itens, estados de mesa e alertas.</p>
-      </div>
-      <div class="demo-box">
-        <div class="demo-row">
-          <span class="pill">0 mesas (.pill informativo)</span>
-          <span class="pill good"><svg fill="none" stroke="currentColor" style="width:12px;height:12px;vertical-align:-1px;display:inline-block;"><use href="#i-check"></use></svg> Sessão ativa (.pill.good)</span>
-          <span class="pill warn">Estoque baixo (.pill.warn)</span>
-          <span class="pill">R$ 145,00 pagos</span>
-        </div>
-      </div>
+      <div class="component-header"><span class="sg-n">06</span><div><h2>Badges de status</h2><p>Contadores e estados de mesa, sessão e estoque.</p></div></div>
+      <div class="demo-box"><div class="demo-row">
+        <span class="pill">24 produtos</span>
+        <span class="pill good"><svg fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"></use></svg> Sessão ativa</span>
+        <span class="pill warn">Estoque baixo</span>
+        <span class="pill good">Aberta</span>
+      </div></div>
     </section>
-
-    <!-- 5. Campos de Formulário & Filtros -->
     <section class="component-section" id="sec-forms">
-      <div class="component-header">
-        <h2>5. Controles de Formulário, Busca & Filtros</h2>
-        <p>Inputs e selects com altura padronizada em 42px e anel de foco Aero.</p>
-      </div>
+      <div class="component-header"><span class="sg-n">07</span><div><h2>Campos, busca e filtros</h2><p>Campos de 42 px com anel de foco Aero, abas segmentadas e caixa de seleção.</p></div></div>
       <div class="demo-box">
-        <div class="table-search" style="margin-bottom:14px;">
-          <svg aria-hidden="true" fill="none" stroke="currentColor"><use href="#i-search"></use></svg>
-          <input aria-label="Pesquisar" autocomplete="off" placeholder="Pesquisar mesa, cliente ou produto..." type="search"/>
-        </div>
+        <div class="table-search sg-mb"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-search"></use></svg><input aria-label="Pesquisar" autocomplete="off" placeholder="Pesquisar mesa, cliente ou produto…" type="search"/></div>
         <div class="filter-row">
-          <label>PESQUISA DIRETA<input placeholder="Filtrar por nome..." type="search"/></label>
-          <label>CATEGORIA
-            <select>
-              <option value="">Todas as categorias</option>
-              <option value="1">Bebidas e Cervejas</option>
-              <option value="2">Petiscos e Porções</option>
-            </select>
-          </label>
+          <label>PESQUISA DIRETA<input placeholder="Filtrar por nome…" type="search"/></label>
+          <label>CATEGORIA<select><option>Todas as categorias</option><option>Bebidas</option><option>Petiscos e porções</option></select></label>
         </div>
-        <label class="checkline" style="margin-top:12px;">
-          <input type="checkbox" checked/>
-          <span>Opção selecionada (.checkline com acento gráfico do sistema)</span>
-        </label>
+        <div class="auth-tabs sg-tabs" role="tablist"><button class="active" type="button" role="tab" aria-selected="true">Entrar</button><button type="button" role="tab" aria-selected="false">Recuperar acesso</button></div>
+        <label class="checkline"><input type="checkbox" checked/><span>Opção selecionada (.checkline)</span></label>
       </div>
     </section>
-
-    <!-- 6. Cards de Estatística (Layout Rigoroso) -->
     <section class="component-section" id="sec-stats">
-      <div class="component-header">
-        <h2>6. Cards de Estatística (.stat)</h2>
-        <p>Estrutura padronizada em pilha vertical: [Título] -> [Valor] -> [Descrição], com elevação em hover.</p>
-      </div>
-      <div class="home-stats" style="margin-bottom:0;">
-        <div class="stat">
-          <span class="stat-label">Mesas ocupadas</span>
-          <strong>14</strong>
-          <span class="stat-foot">Comandas em andamento</span>
-          <svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-grid"></use></svg>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Total em aberto</span>
-          <strong>R$ 1.840,50</strong>
-          <span class="stat-foot">Aguardando recebimento</span>
-          <svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-wallet"></use></svg>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Faturamento do dia</span>
-          <strong>R$ 4.290,00</strong>
-          <span class="stat-foot">Receitas liquidadas</span>
-          <svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-spark"></use></svg>
-        </div>
+      <div class="component-header"><span class="sg-n">08</span><div><h2>Cards de estatística</h2><p>Pilha vertical rótulo → valor → descrição, com ícone ao fundo e elevação no hover.</p></div></div>
+      <div class="home-stats sg-m0">
+        <div class="stat"><span class="stat-label">Mesas ocupadas</span><strong>14</strong><span class="stat-foot">Comandas em andamento</span><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-grid"></use></svg></div>
+        <div class="stat"><span class="stat-label">Total em aberto</span><strong>R$ 1.840,50</strong><span class="stat-foot">Aguardando recebimento</span><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-wallet"></use></svg></div>
+        <div class="stat"><span class="stat-label">Faturamento do dia</span><strong>R$ 4.290,00</strong><span class="stat-foot">Receitas liquidadas</span><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-spark"></use></svg></div>
       </div>
     </section>
-
-    <!-- 7. Toolbars & Alinhamento Dimensional -->
     <section class="component-section" id="sec-toolbars">
-      <div class="component-header">
-        <h2>7. Toolbars & Alinhamento Dimensional</h2>
-        <p>Separação estrita entre título/badge à esquerda (.toolbar-title-group) e ações à direita (.toolbar-actions).</p>
+      <div class="component-header"><span class="sg-n">09</span><div><h2>Toolbars e alinhamento</h2><p>Título e badge à esquerda, ações à direita; controles financeiros na mesma linha de base.</p></div></div>
+      <div class="demo-box">
+        <div class="toolbar sg-m0">
+          <div class="toolbar-title-group"><h2 class="sg-m0">Produtos cadastrados</h2><span class="pill">24 produtos</span></div>
+          <div class="toolbar-actions"><button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Novo produto</button><button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Movimentar</button><button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Categorias</button></div>
+        </div>
       </div>
       <div class="demo-box">
-        <div class="toolbar" style="margin-bottom:0;">
-          <div class="toolbar-title-group">
-            <h2 style="margin:0;">Produtos cadastrados</h2>
-            <span class="pill" id="demo-produtos-count">24 produtos</span>
-          </div>
-          <div class="toolbar-actions">
-            <button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Novo produto</button>
-            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Movimentar</button>
-            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Categorias</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Barra de Controle Financeiro Nivelada -->
-      <div class="demo-box" style="margin-top:16px;">
-        <div class="section-intro with-filter" style="margin-bottom:0;">
-          <div>
-            <h1 class="page-title" style="font-size:22px;">Controles Financeiros Nivelados</h1>
-            <p class="page-sub">Demonstração de baseline idêntica via .intro-controls (align-items: flex-end).</p>
-          </div>
+        <div class="section-intro with-filter sg-m0">
+          <div><h1 class="page-title sg-t22">Controles financeiros nivelados</h1><p class="page-sub">Mesma linha de base com .intro-controls (align-items: flex-end).</p></div>
           <div class="intro-controls">
-            <label class="period-select">PERÍODO
-              <select>
-                <option>Hoje</option>
-                <option>Últimos 7 dias</option>
-                <option>Este mês</option>
-              </select>
-            </label>
-            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar relatório</button>
+            <label class="period-select">PERÍODO<select><option>Hoje</option><option>Últimos 7 dias</option><option>Este mês</option></select></label>
+            <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar relatório</button>
             <button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Registrar retirada</button>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- 8. Dropdown Unificado Aero -->
     <section class="component-section" id="sec-dropdown">
-      <div class="component-header">
-        <h2>8. Dropdown Menu Unificado Aero Glassmorphism 2.0</h2>
-        <p>Menu flutuante suspenso com backdrop blur (16px), animação suave e rotação de chevron.</p>
-      </div>
-      <div class="demo-box" style="min-height:160px;">
-        <div class="dropdown-wrap" id="demo-dropdown-wrap">
-          <button class="btn ghost dropdown-trigger" id="demo-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
-            <svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar relatório <svg class="chevron-mini" fill="none" stroke="currentColor"><use href="#i-down"></use></svg>
-          </button>
+      <div class="component-header"><span class="sg-n">10</span><div><h2>Dropdown</h2><p>Menu flutuante com desfoque, abre e fecha pelo botão, por clique fora e pela tecla Esc.</p></div></div>
+      <div class="demo-box sg-drop">
+        <div class="dropdown-wrap">
+          <button class="btn ghost dropdown-trigger" id="demo-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar relatório <svg class="chevron-mini" fill="none" stroke="currentColor"><use href="#i-down"></use></svg></button>
           <div class="dropdown-menu hidden" id="demo-dropdown-menu" role="menu">
-            <button class="dropdown-item" type="button" role="menuitem"><svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar Excel (.xlsx)</button>
-            <button class="dropdown-item" type="button" role="menuitem"><svg fill="none" stroke="currentColor"><use href="#i-download"></use></svg> Exportar PDF</button>
+            <button class="dropdown-item" type="button" role="menuitem"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar Excel (.xlsx)</button>
+            <button class="dropdown-item" type="button" role="menuitem"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar PDF</button>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- 9. Entradas de Lista & Mesas -->
+    <section class="component-section" id="sec-rolagem">
+      <div class="component-header"><span class="sg-n">11</span><div><h2>Rolagem</h2><p>Barra fina e quase invisível em repouso, que ganha a cor de acento ao passar o mouse. <code>.scroll-area</code> e <code>.scroll-x</code> esmaecem as bordas e mostram que há mais conteúdo.</p></div></div>
+      <div class="sg-scroll-grid">
+        <div class="demo-box"><h3 class="sg-h3">.scroll-area <small>vertical · <code>--scroll-max</code></small></h3>
+          <div class="scroll-area sg-scroll" style="--scroll-max:240px"><div class="itemline"><span>Mesa 01 · Ana</span><strong>R$ 42,00</strong></div><div class="itemline"><span>Mesa 02 · Bruno</span><strong>R$ 118,50</strong></div><div class="itemline"><span>Mesa 03 · Balcão</span><strong>R$ 9,00</strong></div><div class="itemline"><span>Mesa 04 · Carlos</span><strong>R$ 84,00</strong></div><div class="itemline"><span>Mesa 05 · Dani</span><strong>R$ 61,90</strong></div><div class="itemline"><span>Mesa 06 · Edu</span><strong>R$ 230,00</strong></div><div class="itemline"><span>Mesa 07 · Fábio</span><strong>R$ 15,00</strong></div><div class="itemline"><span>Mesa 08 · Gabi</span><strong>R$ 77,40</strong></div><div class="itemline"><span>Mesa 09 · Hugo</span><strong>R$ 38,00</strong></div><div class="itemline"><span>Mesa 10 · Iara</span><strong>R$ 142,10</strong></div><div class="itemline"><span>Mesa 11 · João</span><strong>R$ 56,00</strong></div><div class="itemline"><span>Mesa 12 · Kátia</span><strong>R$ 19,90</strong></div></div></div>
+        <div class="demo-box"><h3 class="sg-h3">.scroll-x <small>horizontal · encaixa nos itens</small></h3>
+          <div class="scroll-x sg-scroll-x"><button class="category-chip selected" type="button">Todas</button><button class="category-chip" type="button">Cervejas</button><button class="category-chip" type="button">Drinks</button><button class="category-chip" type="button">Destilados</button><button class="category-chip" type="button">Refrigerantes</button><button class="category-chip" type="button">Sucos</button><button class="category-chip" type="button">Petiscos</button><button class="category-chip" type="button">Porções</button><button class="category-chip" type="button">Sobremesas</button><button class="category-chip" type="button">Cafés</button><button class="category-chip" type="button">Vinhos</button><button class="category-chip" type="button">Sem álcool</button></div>
+          <h3 class="sg-h3">Tokens</h3>
+          <dl class="sg-dl"><dt><code>--scroll-size</code></dt><dd data-token="--scroll-size"></dd><dt><code>--scroll-thumb</code></dt><dd data-token="--scroll-thumb"></dd><dt><code>--scroll-thumb-hover</code></dt><dd data-token="--scroll-thumb-hover"></dd><dt><code>--scroll-fade</code></dt><dd data-token="--scroll-fade"></dd></dl>
+          <p class="sg-note">Rolagem suave nas âncoras (desligada com “reduzir movimento”) e <code>scroll-padding-top</code> para o título não ficar atrás da barra.</p></div>
+      </div>
+    </section>
+    <section class="component-section" id="sec-navegacao">
+      <div class="component-header"><span class="sg-n">12</span><div><h2>Navegação</h2><p>Menu lateral no computador, perfil com avatar e barra inferior no celular.</p></div></div>
+      <div class="sg-nav-grid">
+        <div class="demo-box"><h3 class="sg-h3">Menu lateral (.nav-item)</h3><div class="sg-sidenav"><button class="nav-item active" type="button" aria-current=page><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-home"></use></svg><span>Início</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg><span>Mesas e vendas</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-box"></use></svg><span>Estoque</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-wallet"></use></svg><span>Caixa</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-users"></use></svg><span>Usuários</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-more"></use></svg><span>Mais</span></button></div>
+          <div class="profile sg-profile"><div class="avatar">CA</div><div class="profile-text"><strong>Celso Almeida</strong><span>Gerente</span></div></div></div>
+        <div class="demo-box sg-device"><h3 class="sg-h3">Barra inferior (.mobile-nav)</h3>
+          <nav class="mobile-nav" aria-label="Navegação de exemplo"><button type="button" class=active aria-current=page><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-home"></use></svg><span>Início</span></button><button type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg><span>Mesas</span></button><button type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-box"></use></svg><span>Estoque</span></button><button type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-wallet"></use></svg><span>Caixa</span></button><button type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-more"></use></svg><span>Mais</span></button></nav>
+          <p class="sg-note sg-only-desk">A barra inferior aparece abaixo de 768 px. Abra este catálogo no celular para vê-la.</p></div>
+      </div>
+    </section>
     <section class="component-section" id="sec-lists">
-      <div class="component-header">
-        <h2>9. Entradas de Lista & Mesas (.entry, .mesa-entry)</h2>
-        <p>Cards interativos para representação de comandas e histórico com elevação Aero.</p>
-      </div>
-      <div class="list" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-        <article class="entry mesa-entry">
-          <div class="entry-head">
-            <div class="entry-left">
-              <strong>Mesa 04</strong>
-              <span>Carlos Eduardo</span>
-            </div>
-            <span class="pill good">Aberta</span>
-          </div>
-          <div class="mesa-sub">
-            <span>3 itens lançados</span>
-            <strong style="color:var(--accent);font-size:15px;">R$ 84,00</strong>
-          </div>
-          <div class="actions">
-            <button class="btn" type="button">Lançar pedido</button>
-            <button class="btn ghost" type="button">Fechar mesa</button>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- 10. Painéis & Alertas -->
-    <section class="component-section" id="sec-alerts">
-      <div class="component-header">
-        <h2>10. Painéis v9 & Feedback Contextual</h2>
-        <p>Mensagens de status com contraste e legibilidade balanceados.</p>
-      </div>
-      <div class="demo-box" style="display:flex;flex-direction:column;gap:12px;">
-        <div class="v9-panel" style="margin:0;">
-          <div class="v9-head">
-            <h2 style="margin:0;">Turno da Noite · Caixa Aberto</h2>
-            <span class="v9-pill">Operação Ativa</span>
-          </div>
-          <div style="font-size:13px;color:var(--muted);margin-top:6px;">Aberto por Gerente em 13/10/2026 às 18:00 com fundo de troco de R$ 200,00.</div>
+      <div class="component-header"><span class="sg-n">13</span><div><h2>Mesas e listas</h2><p>Card de mesa aberta, igual ao da aba Mesas: nome e cliente, total, itens lançados e o botão da comanda. O balcão ganha a borda de acento.</p></div></div>
+      <div class="list sg-list">
+        <div class="entry mesa-entry">
+          <div class="entry-head"><div class="entry-left"><strong>Mesa 04</strong><div class="meta">Carlos Eduardo</div></div><strong class="entry-strong">R$ 84,00</strong></div>
+          <div class="itemline"><span>2 × Cerveja Lata 350ml</span><span>R$ 14,00</span></div>
+          <div class="itemline"><span>1 × Porção de fritas</span><span>R$ 32,00</span></div>
+          <div class="itemline"><span>1 × Caipirinha</span><span>R$ 38,00</span></div>
+          <div class="actions"><button class="btn" type="button">Abrir comanda</button></div>
         </div>
-        <div class="notice" style="margin:0;">Mensagem de confirmação (.notice com fundo verde translúcido).</div>
-        <div class="error" style="margin:0;">Mensagem de erro crítico ou validação pendente (.error).</div>
+        <div class="entry mesa-entry counter-entry" style="border-left: 3px solid var(--accent); background: rgba(111,207,151,0.04);">
+          <div class="entry-head"><div class="entry-left"><strong>[Balcão] Balcão 1</strong><div class="meta">Cliente Balcão</div></div><strong class="entry-strong">R$ 9,00</strong></div>
+          <div class="itemline"><span>1 × Água sem gás</span><span>R$ 9,00</span></div>
+          <div class="actions"><button class="btn" type="button">Abrir comanda</button></div>
+        </div>
       </div>
     </section>
-
+    <section class="component-section" id="sec-comanda">
+      <div class="component-header"><span class="sg-n">14</span><div><h2>Comanda</h2><p>Blocos da comanda em tela cheia: chips de categoria, escolha de produto, itens com quantidade e o rodapé de pagamento.</p></div></div>
+      <div class="sg-cmd">
+        <section class="cmd-block card"><div class="cmd-block-head"><h2>Adicionar produtos</h2><small>4 produtos</small></div>
+          <div class="category-chips"><button class="category-chip selected" type="button">Todas</button><button class="category-chip" type="button">Cervejas</button><button class="category-chip" type="button">Drinks</button><button class="category-chip" type="button">Destilados</button><button class="category-chip" type="button">Refrigerantes</button><button class="category-chip" type="button">Sucos</button><button class="category-chip" type="button">Petiscos</button><button class="category-chip" type="button">Porções</button><button class="category-chip" type="button">Sobremesas</button><button class="category-chip" type="button">Cafés</button><button class="category-chip" type="button">Vinhos</button><button class="category-chip" type="button">Sem álcool</button></div>
+          <div class="products-grid cmd-grid"><button class="product-choice" type="button" aria-label="Adicionar Cerveja Lata 350ml"><strong>Cerveja Lata 350ml</strong><small>Estoque: 48 un.</small><span class="price">R$ 7,00</span><span class=cmd-badge>×2</span></button><button class="product-choice" type="button" aria-label="Adicionar Caipirinha"><strong>Caipirinha</strong><small>Estoque livre</small><span class="price">R$ 18,00</span></button><button class="product-choice" type="button" aria-label="Adicionar Porção de fritas"><strong>Porção de fritas</strong><small>Estoque: 12 un.</small><span class="price">R$ 32,00</span><span class=cmd-badge>×1</span></button><button class="product-choice" type="button" disabled aria-label="Adicionar Água sem gás"><strong>Água sem gás</strong><small>Sem estoque</small><span class="price">R$ 4,00</span></button></div></section>
+        <section class="cmd-block card"><div class="cmd-block-head"><h2>Itens da comanda</h2><span class="pill">3 itens</span></div><div class="cmd-itens"><div class="cmd-item"><div class="cmd-item-info"><strong>Cerveja Lata 350ml</strong><span>R$ 7,00 cada • Total: R$ 14,00</span></div><div class="cmd-item-ctrl"><button class="cmd-qty-btn" type="button" aria-label="Diminuir Cerveja Lata 350ml"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-minus"></use></svg></button><span class="cmd-qty">2</span><button class="cmd-qty-btn" type="button" aria-label="Aumentar Cerveja Lata 350ml"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg></button><button class="cmd-qty-btn danger" type="button" aria-label="Cancelar Cerveja Lata 350ml"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-trash"></use></svg></button></div></div><div class="cmd-item"><div class="cmd-item-info"><strong>Porção de fritas</strong><span>R$ 32,00 cada • Total: R$ 32,00</span></div><div class="cmd-item-ctrl"><button class="cmd-qty-btn" type="button" aria-label="Diminuir Porção de fritas"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-minus"></use></svg></button><span class="cmd-qty">1</span><button class="cmd-qty-btn" type="button" aria-label="Aumentar Porção de fritas"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg></button><button class="cmd-qty-btn danger" type="button" aria-label="Cancelar Porção de fritas"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-trash"></use></svg></button></div></div></div></section>
+        <footer class="cmd-foot sg-cmd-foot">
+          <div class="cmd-pay">
+            <label>FORMA DE PAGAMENTO<select><option>Dinheiro</option><option>PIX</option><option>Cartão de débito</option></select></label>
+            <div class="cmd-pay-values"><label>VALOR A COBRAR (R$)<input inputmode="decimal" type="number" value="46.00"/></label><label>VALOR RECEBIDO (R$)<input inputmode="decimal" type="number" value="50.00"/></label></div>
+            <div class="cmd-troco"><strong>Troco: R$ 4,00</strong><span></span></div>
+          </div>
+          <div class="cmd-total-row"><div class="cmd-total"><span>TOTAL</span><strong>R$ 46,00</strong></div><button class="btn" type="button">Receber</button></div>
+        </footer>
+      </div>
+    </section>
+    <section class="component-section" id="sec-grafico">
+      <div class="component-header"><span class="sg-n">15</span><div><h2>Gráfico de vendas</h2><p>Barras dos últimos 7 dias, com o valor em cima e o dia embaixo (mesma marcação do Caixa).</p></div></div>
+      <article class="card"><div aria-label="Gráfico de vendas por dia" class="chart-bars"><div class="chart-col"><span class="chart-value">R$ 820</span><div class="chart-body" title="Qui: R$ 820" style="height:62px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Qui</span></div><div class="chart-col"><span class="chart-value">R$ 1,9 mil</span><div class="chart-body" title="Sex: R$ 1,9 mil" style="height:132px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Sex</span></div><div class="chart-col"><span class="chart-value">R$ 2,1 mil</span><div class="chart-body" title="Sáb: R$ 2,1 mil" style="height:145px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Sáb</span></div><div class="chart-col"><span class="chart-value">R$ 1,2 mil</span><div class="chart-body" title="Dom: R$ 1,2 mil" style="height:88px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Dom</span></div><div class="chart-col"><span class="chart-value">R$ 0</span><div class="chart-body" title="Seg: R$ 0" style="height:6px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Seg</span></div><div class="chart-col"><span class="chart-value">R$ 430</span><div class="chart-body" title="Ter: R$ 430" style="height:34px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Ter</span></div><div class="chart-col"><span class="chart-value">R$ 640</span><div class="chart-body" title="Qua: R$ 640" style="height:49px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Qua</span></div></div></article>
+    </section>
+    <section class="component-section" id="sec-mais">
+      <div class="component-header"><span class="sg-n">16</span><div><h2>Menu Mais e versão</h2><p>Lista de ações agrupadas e o cartão de versão do app.</p></div></div>
+      <div class="sg-two">
+        <div class="more-group card"><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-lock"></use></svg></span><span><strong>Segurança, senha e PIN</strong><small>Bloqueio automático e configurações do aparelho</small></span></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-clock"></use></svg></span><span><strong>Auditoria de operações</strong><small>Histórico de quem fez o quê</small></span></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg></span><span><strong>Exportar JSON criptografado</strong><small>Cópia dos dados protegida por senha</small></span></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-users"></use></svg></span><span><strong>Trocar usuário</strong><small>Entra com outro usuário neste aparelho</small></span></button></div>
+        <div class="card version-card"><div class="version-card-row"><div class="brand-icon version-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-bar"></use></svg></div><div class="version-info-main"><div class="version-title-wrap"><strong>BarGestão Standard</strong><span class="pill good">v3.x</span></div><p class="version-subtitle">Build 2026.10 · Aero Glassmorphism 2.0</p></div></div>
+          <div class="version-details-list"><div class="version-detail-item"><span>Modo de operação</span><strong>PWA offline / WebCrypto</strong></div><div class="version-detail-item"><span>Criptografia do cofre</span><strong>AES-GCM (256 bits)</strong></div></div></div>
+      </div>
+    </section>
+    <section class="component-section" id="sec-feedback">
+      <div class="component-header"><span class="sg-n">17</span><div><h2>Estado vazio e toast</h2><p>O vazio explica o que fazer; o toast confirma uma ação e some em 4 segundos.</p></div></div>
+      <div class="sg-two">
+        <div class="card"><div class="empty"><svg fill="none" stroke="currentColor" stroke-width="1.6"><use href="#i-box"></use></svg>Nenhum produto encontrado.</div></div>
+        <div class="demo-box sg-inline"><div class="toast" role="status">Produto “Cerveja Lata” salvo.</div>
+          <button class="btn ghost" id="sg-toast-btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-spark"></use></svg> Disparar toast real</button></div>
+      </div>
+    </section>
+    <section class="component-section" id="sec-recuperacao">
+      <div class="component-header"><span class="sg-n">18</span><div><h2>Palavras de recuperação</h2><p>12 palavras numeradas, mostradas uma única vez; duas colunas no celular.</p></div></div>
+      <div class="demo-box"><div class="recovery-word-grid"><div class="recovery-word"><small>01</small><strong>abacate</strong></div><div class="recovery-word"><small>02</small><strong>brisa</strong></div><div class="recovery-word"><small>03</small><strong>cadeira</strong></div><div class="recovery-word"><small>04</small><strong>dourado</strong></div><div class="recovery-word"><small>05</small><strong>escola</strong></div><div class="recovery-word"><small>06</small><strong>farol</strong></div><div class="recovery-word"><small>07</small><strong>girafa</strong></div><div class="recovery-word"><small>08</small><strong>horta</strong></div><div class="recovery-word"><small>09</small><strong>ilha</strong></div><div class="recovery-word"><small>10</small><strong>janela</strong></div><div class="recovery-word"><small>11</small><strong>lagoa</strong></div><div class="recovery-word"><small>12</small><strong>marfim</strong></div></div></div>
+    </section>
+    <section class="component-section" id="sec-alerts">
+      <div class="component-header"><span class="sg-n">19</span><div><h2>Painéis e avisos</h2><p>Painel de turno e mensagens de confirmação e de erro.</p></div></div>
+      <div class="demo-box sg-stack">
+        <div class="v9-panel sg-m0"><div class="v9-head"><h2 class="sg-m0">Turno da noite · caixa aberto</h2><span class="v9-pill">Operação ativa</span></div>
+          <div class="sg-muted">Aberto pelo gerente em 13/10/2026 às 18:00 com fundo de troco de R$ 200,00.</div></div>
+        <div class="notice sg-m0">Mensagem de confirmação (.notice).</div>
+        <div class="error sg-m0">Erro ou validação pendente (.error).</div>
+      </div>
+    </section>
+    <section class="component-section" id="sec-modal">
+      <div class="component-header"><span class="sg-n">20</span><div><h2>Modal</h2><p>Elemento nativo &lt;dialog&gt; com fundo escurecido e desfoque; fecha no X, no Esc e nos botões.</p></div></div>
+      <div class="demo-box"><button class="btn" id="open-demo-modal" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-spark"></use></svg> Abrir modal Aero</button></div>
+    </section>
   </div>
 
-  <!-- Modal Aero de Demonstração Interativo -->
-  <dialog class="aero-modal" id="demo-modal" aria-label="Modal de Demonstração">
+  <button class="sg-top" id="sg-top" type="button" aria-label="Voltar ao topo"><svg fill="none" stroke="currentColor" stroke-width="2"><use href="#i-arrow"></use></svg></button>
+  <div class="toast hidden" id="toast" role="status"></div>
+
+  <dialog class="aero-modal" id="demo-modal" aria-label="Modal de demonstração">
     <div class="modal-shell">
-      <div class="modal-bar">
-        <div class="modal-kicker">BarGestão · Demonstração Aero 2.0</div>
-        <button class="modal-close" type="button" id="close-demo-modal" aria-label="Fechar">×</button>
-      </div>
+      <div class="modal-bar"><div class="modal-kicker">BarGestão · Demonstração Aero 2.0</div>
+        <button class="modal-close" type="button" id="close-demo-modal" aria-label="Fechar"><svg fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"></use></svg></button></div>
       <div class="modal-content">
-        <h2>Componente Dialog Aero</h2>
-        <p class="modal-note">Este modal utiliza o elemento nativo &lt;dialog&gt; do HTML5 com backdrop escurecido, desfoque de 28px e animação com aceleração via GPU.</p>
+        <h2>Componente dialog Aero</h2>
+        <p class="modal-note">Elemento nativo &lt;dialog&gt; com fundo escurecido, desfoque de 28 px e animação acelerada pela GPU.</p>
         <div class="form-actions">
-          <button class="btn block" type="button" id="confirm-demo-modal">Confirmar Operação</button>
-          <button class="btn ghost block" type="button" id="cancel-demo-modal">Fechar Janela</button>
+          <button class="btn block" type="button" id="confirm-demo-modal">Confirmar operação</button>
+          <button class="btn ghost block" type="button" id="cancel-demo-modal">Fechar janela</button>
         </div>
       </div>
     </div>
   </dialog>
 
-  <!-- Script Interativo do Living Styleguide -->
   <script type="module">
-    // 1. Interatividade do Dropdown
-    const trigger = document.getElementById('demo-dropdown-trigger');
-    const menu = document.getElementById('demo-dropdown-menu');
+    const $ = id => document.getElementById(id);
+    const css = getComputedStyle(document.documentElement);
 
-    trigger?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-      trigger.setAttribute('aria-expanded', String(!isExpanded));
-      menu.classList.toggle('hidden', isExpanded);
+    // Valores reais dos tokens (lidos do theme.css)
+    document.querySelectorAll('[data-token]').forEach(el => { el.textContent = css.getPropertyValue(el.dataset.token).trim() || '—'; });
+
+    // Galeria de ícones a partir do sprite; clique copia o <use>
+    const galeria = $('sg-icons');
+    document.querySelectorAll('svg symbol[id]').forEach(s => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'sg-icon'; b.title = 'Copiar <use href="#' + s.id + '">';
+      b.innerHTML = '<svg fill="none" stroke="currentColor"><use href="#' + s.id + '"></use></svg><code>' + s.id + '</code>';
+      b.onclick = async () => {
+        try { await navigator.clipboard.writeText('<svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#' + s.id + '"></use></svg>'); } catch {}
+        b.classList.add('copiado'); b.querySelector('code').textContent = 'copiado'; setTimeout(() => { b.classList.remove('copiado'); b.querySelector('code').textContent = s.id; }, 1200);
+      };
+      galeria.append(b);
     });
 
-    document.addEventListener('click', (e) => {
-      if (!trigger?.contains(e.target) && !menu?.contains(e.target)) {
-        trigger?.setAttribute('aria-expanded', 'false');
-        menu?.classList.add('hidden');
-      }
-    });
+    // Progresso de leitura, botão de topo e barra de seções "grudada"
+    const barra = $('sg-progress'), topo = $('sg-top'), nav = $('sg-nav');
+    let pendente = false;
+    const aoRolar = () => {
+      pendente = false;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      barra.style.transform = 'scaleX(' + (max > 0 ? scrollY / max : 0) + ')';
+      topo.classList.toggle('on', scrollY > 600);
+      nav.classList.toggle('stuck', nav.getBoundingClientRect().top <= 0);
+    };
+    addEventListener('scroll', () => { if (!pendente) { pendente = true; requestAnimationFrame(aoRolar); } }, { passive: true });
+    aoRolar();
+    topo.onclick = () => scrollTo({ top: 0 });
 
-    // 2. Interatividade do Modal
-    const modal = document.getElementById('demo-modal');
-    const openBtn = document.getElementById('open-demo-modal');
-    const closeBtn = document.getElementById('close-demo-modal');
-    const cancelBtn = document.getElementById('cancel-demo-modal');
-    const confirmBtn = document.getElementById('confirm-demo-modal');
+    // Seção atual marcada na barra (e trazida para a vista no celular)
+    const links = new Map([...nav.querySelectorAll('a[data-sec]')].map(a => [a.dataset.sec, a]));
+    const visiveis = new Set();
+    const obs = new IntersectionObserver(entradas => {
+      entradas.forEach(e => e.isIntersecting ? visiveis.add(e.target.id) : visiveis.delete(e.target.id));
+      const atual = [...links.keys()].find(id => visiveis.has(id));
+      if (!atual) return;
+      links.forEach((a, id) => { a.classList.toggle('on', id === atual); if (id === atual) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+      const a = links.get(atual), faixa = a.parentElement;
+      faixa.scrollTo({ left: a.offsetLeft - faixa.clientWidth / 2 + a.clientWidth / 2, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }, { rootMargin: '-80px 0px -55% 0px' });
+    document.querySelectorAll('.component-section').forEach(s => obs.observe(s));
 
-    const closeModal = () => modal?.close();
-    openBtn?.addEventListener('click', () => modal?.showModal());
-    closeBtn?.addEventListener('click', closeModal);
-    cancelBtn?.addEventListener('click', closeModal);
-    confirmBtn?.addEventListener('click', closeModal);
+    // Dropdown
+    const trigger = $('demo-dropdown-trigger'), menu = $('demo-dropdown-menu');
+    const fecharMenu = () => { trigger.setAttribute('aria-expanded', 'false'); menu.classList.add('hidden'); };
+    trigger.addEventListener('click', e => { e.stopPropagation(); const aberto = trigger.getAttribute('aria-expanded') === 'true'; trigger.setAttribute('aria-expanded', String(!aberto)); menu.classList.toggle('hidden', aberto); });
+    document.addEventListener('click', e => { if (!menu.contains(e.target)) fecharMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharMenu(); });
+
+    // Chips de categoria: um selecionado por grupo
+    document.querySelectorAll('.category-chips, .scroll-x').forEach(g => g.addEventListener('click', e => {
+      const c = e.target.closest('.category-chip'); if (!c) return;
+      g.querySelectorAll('.category-chip').forEach(x => x.classList.toggle('selected', x === c));
+    }));
+
+    // Abas segmentadas
+    document.querySelectorAll('.sg-tabs').forEach(t => t.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      t.querySelectorAll('button').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-selected', String(x === b)); });
+    }));
+
+    // Toast real (fixo no canto, some em 4 s)
+    let tempo;
+    $('sg-toast-btn').onclick = () => { const t = $('toast'); t.textContent = 'Pedido lançado na Mesa 04.'; t.classList.remove('hidden'); clearTimeout(tempo); tempo = setTimeout(() => t.classList.add('hidden'), 4000); };
+
+    // Modal
+    const modal = $('demo-modal');
+    $('open-demo-modal').onclick = () => modal.showModal();
+    ['close-demo-modal', 'cancel-demo-modal', 'confirm-demo-modal'].forEach(id => { $(id).onclick = () => modal.close(); });
   </script>
 </body>
 </html>
