@@ -166,7 +166,7 @@ O catálogo vivo (`docs/design-system.html`, 26 seções) mostra, com a marcaç�
 - **Caixa:** `.cash-stats`, `.cash-lower-stats`, `.cash-quick`, `.cash-export-notice`, livro caixa, `.audit-record`, `.receipt-preview`, `.chart-bars`.
 - **Menu Mais:** `.more-profile`, `.bio-entry` + `.bio-diagnostic`, `.group-title`, `.more-group`/`.more-link` + `.more-chevron`, `.version-card`, `.version-label`.
 - **Feedback:** `.empty`, `.toast`, `.notice`, `.error`, `.v9-panel` + `.v9-note`, `.recovery-word-grid`.
-- **Kit de segurança** (`PACOTES/stk-pkg-security` + tema `kit-aero.css`): folha de configurações (`.fs-head`, `.fs-body`, `.fs-row`, `.fs-switch`, `.fs-select`, `.fs-seg`, `.fs-badge-*`, `.fs-danger`, `.fs-toast`), painel do perfil (`.vp-*`), senha com olho (`.pw-wrap`), tela de bloqueio (`#vaultGate`, `.vault-keypad`, `.vault-dots`), diálogo de PIN (`.vault-dialog`) e lembrete de backup (`#vaultBackupNudge`). O `kit-aero.css` zera o `min-height` global de botão nos controles de tamanho fixo do kit (`.fs-switch`, `.fs-back`, `.vp-close`, `.fs-seg button`).
+- **Kit de segurança** (`2. PACOTES/stk-pkt-security` + tema `kit-aero.css`): folha de configurações (`.fs-head`, `.fs-body`, `.fs-row`, `.fs-switch`, `.fs-select`, `.fs-seg`, `.fs-badge-*`, `.fs-danger`, `.fs-toast`), painel do perfil (`.vp-*`), senha com olho (`.pw-wrap`), tela de bloqueio (`#vaultGate`, `.vault-keypad`, `.vault-dots`), diálogo de PIN (`.vault-dialog`) e lembrete de backup (`#vaultBackupNudge`). O `kit-aero.css` zera o `min-height` global de botão nos controles de tamanho fixo do kit (`.fs-switch`, `.fs-back`, `.vp-close`, `.fs-seg button`).
 - Ícone dentro de pill: `.pill svg` (12px).
 
 ---
