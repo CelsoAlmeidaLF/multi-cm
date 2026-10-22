@@ -21,6 +21,12 @@ html.vault-locked body {
   color: var(--ink);
 }
 
+/* O theme.css dá min-height: 42px a todo <button>; os controles de tamanho fixo do kit
+   (interruptor, voltar da folha, fechar do perfil, seletor segmentado) esticavam e deformavam. */
+.fs-switch, .fs-back, .vp-close, .fs-seg button {
+  min-height: 0;
+}
+
 /* Tipografia do app em tudo que o kit desenha */
 #vaultGate, #vaultGate *, .vault-dialog, .vault-dialog *, .fs-sheet, .fs-sheet *, .vp-drawer, .vp-drawer * {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;

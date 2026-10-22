@@ -158,7 +158,16 @@ Minimalista, discreta e elegante, sem JavaScript:
 - **Bordas esmaecidas inteligentes:** as duas classes esmaecem só o lado em que ainda há conteúdo, com `animation-timeline: scroll(self)` e as propriedades registradas `--fade-ini`/`--fade-fim`. Sem suporte, fica o esmaecido fixo do lado final.
 
 ### 4.9. Outros componentes catalogados
-O catálogo vivo (`docs/design-system.html`) também mostra, com a marcação real do app: navegação (`.nav-item`, `.profile`/`.avatar`, `.mobile-nav`), comanda (`.category-chips`, `.product-choice` com `.cmd-badge`, `.cmd-item` com `.cmd-qty-btn`, `.cmd-pay`, `.cmd-total-row`), gráfico (`.chart-bars`/`.chart-col`), menu Mais (`.more-group`/`.more-link`), cartão de versão (`.version-card`), estado vazio (`.empty`), toast (`.toast`), palavras de recuperação (`.recovery-word-grid`), abas segmentadas (`.auth-tabs`), ícones do sprite e os tokens de espaço, raio e sombra. Ícone dentro de pill: `.pill svg` (12px).
+O catálogo vivo (`docs/design-system.html`, 26 seções) mostra, com a marcação real do app:
+- **Layout:** esquema `.shell` › `.sidebar` + `.app` › `.topbar` + `.content`, topbar com `.vp-bar`/`.top-title`/`.profile`, `.field-grid` com `.span2`, `.sku-help` e `.form-help`.
+- **Login:** `.auth-box` (sobre `.auth-overlay`), `.auth-tabs`, `.bio-login-help`, `.autofill-note`, `.backup-login`.
+- **Início:** `.home-head` (com `.dot`), `.home-hero` (`.hero-copy`, `.hero-kicker`, `.hero-action`, `.hero-art`, `.art-ring`), `.home-card`, `.home-table-list`/`.home-mini-row`, `.home-empty` (e `.good`).
+- **Mesas, comanda e estoque:** `.mesa-entry` com `.itemline`, `.cmd-head`/`.cmd-icon-btn`, `.cmd-new`, `.category-chips`, `.product-choice` + `.cmd-badge`, `.cmd-item`, `.cmd-pay` + `.cmd-pay-actions`, `.cmd-total-row`; produto com `.item-id` e `.entry-right`, movimentação com `.text-good`/`.text-bad`, `.inline-fields` e `.small-list`.
+- **Caixa:** `.cash-stats`, `.cash-lower-stats`, `.cash-quick`, `.cash-export-notice`, livro caixa, `.audit-record`, `.receipt-preview`, `.chart-bars`.
+- **Menu Mais:** `.more-profile`, `.bio-entry` + `.bio-diagnostic`, `.group-title`, `.more-group`/`.more-link` + `.more-chevron`, `.version-card`, `.version-label`.
+- **Feedback:** `.empty`, `.toast`, `.notice`, `.error`, `.v9-panel` + `.v9-note`, `.recovery-word-grid`.
+- **Kit de segurança** (`PACOTES/stk-pkg-security` + tema `kit-aero.css`): folha de configurações (`.fs-head`, `.fs-body`, `.fs-row`, `.fs-switch`, `.fs-select`, `.fs-seg`, `.fs-badge-*`, `.fs-danger`, `.fs-toast`), painel do perfil (`.vp-*`), senha com olho (`.pw-wrap`), tela de bloqueio (`#vaultGate`, `.vault-keypad`, `.vault-dots`), diálogo de PIN (`.vault-dialog`) e lembrete de backup (`#vaultBackupNudge`). O `kit-aero.css` zera o `min-height` global de botão nos controles de tamanho fixo do kit (`.fs-switch`, `.fs-back`, `.vp-close`, `.fs-seg button`).
+- Ícone dentro de pill: `.pill svg` (12px).
 
 ---
 

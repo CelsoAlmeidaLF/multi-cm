@@ -7,7 +7,11 @@
   <title>BarGestão · Design System Aero 2.0</title>
   <!-- Estilos do app: o catálogo usa exatamente o CSS que vai para produção -->
   <link rel="icon" href="../src/icon-192.png"/>
+  <link rel="stylesheet" href="../src/stk-pkg-secure-ui.css"/>
   <link rel="stylesheet" href="../src/css/main.css"/>
+  <link rel="stylesheet" href="../src/css/kit-aero.css"/>
+  <!-- Só os ícones do kit (sem o cofre: o catálogo não pede PIN) -->
+  <script src="../src/stk-pkg-financ-icons.js"></script>
   <style>
     html { scroll-padding-top: 72px; } /* a barra de seções do catálogo, no lugar da topbar do app */
     /* Só o "chassi" do catálogo. Componente novo vai para src/css, nunca para cá. */
@@ -83,16 +87,30 @@
     @media (max-width: 767px) { .sg-only-desk { display: none; } }
     .sg-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
     .sg-cmd { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-    .sg-cmd-foot { position: static; border-radius: var(--radius-md); }
+    .sg-cmd-foot, .sg-cmd-head { position: static; border-radius: var(--radius-md); }
     .sg-inline { display: grid; gap: 14px; justify-items: start; }
     .sg-inline .toast { position: static; }
+    .sg-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 10px; min-height: 230px; }
+    .sg-l { border: 1.5px dashed #9cbcea; border-radius: var(--radius-sm); background: rgba(229, 239, 255, 0.55); padding: 12px; display: grid; align-content: start; gap: 4px; }
+    .sg-l code { font-size: 12px; font-weight: 700; color: var(--accent); }
+    .sg-l small { font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+    .sg-l-main { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+    .sg-topbar { position: static; border-radius: var(--radius-md); border: 1px solid var(--line); padding: 0 18px; }
+    .sg-auth { display: grid; place-items: center; padding: 28px 12px; border-radius: var(--radius-md); background: radial-gradient(ellipse at 30% 20%, #d0e4ff, transparent 45%), #eaf1fa; }
+    .sg-mt { margin-top: 16px; }
+    .sg-kit { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .vp-drawer.sg-static { position: static; inset: auto; width: 100%; max-width: 340px; height: auto; max-height: none; animation: none; border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow); }
+    .sg-sheet { border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; background: var(--bg); }
+    #vaultGate.sg-gate { margin: 0 auto; }
+    .vault-dialog.sg-static { margin: 0; width: 100%; }
+    #vaultBackupNudge.sg-static { position: static; animation: none; margin: 0; max-width: none; }
     .sg-top { position: fixed; right: 24px; bottom: 24px; z-index: 70; width: 44px; height: 44px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%;
       border: 1px solid var(--line); background: rgba(255, 255, 255, 0.86); color: var(--accent); box-shadow: var(--shadow); backdrop-filter: blur(var(--topbar-blur));
       -webkit-backdrop-filter: blur(var(--topbar-blur)); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .25s, transform .25s; }
     .sg-top.on { opacity: 1; transform: none; pointer-events: auto; }
     .sg-top svg { width: 20px; height: 20px; transform: rotate(-90deg); }
     @media (max-width: 900px) {
-      .sg-tokens, .sg-scroll-grid, .sg-nav-grid, .sg-two { grid-template-columns: minmax(0, 1fr); }
+      .sg-tokens, .sg-scroll-grid, .sg-nav-grid, .sg-two, .sg-kit { grid-template-columns: minmax(0, 1fr); }
       .sg-radius-row, .sg-shadow-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 600px) {
@@ -103,6 +121,7 @@
       .component-header { flex-direction: column; gap: 4px; }
       .sg-space { grid-template-columns: 40px 1fr; } .sg-space span { display: none; }
       .sg-top { bottom: 96px; right: 16px; }
+      .sg-layout { grid-template-columns: minmax(0, 1fr); }
     }
   </style>
 </head>
@@ -127,7 +146,7 @@
       </div>
     </header>
 
-    <nav class="sg-nav" id="sg-nav" aria-label="Seções do catálogo"><div class="scroll-x"><a href="#sec-tokens" data-sec="sec-tokens"><span class="sg-n">01</span>Cores</a><a href="#sec-medidas" data-sec="sec-medidas"><span class="sg-n">02</span>Espaço, raio e sombra</a><a href="#sec-typography" data-sec="sec-typography"><span class="sg-n">03</span>Tipografia</a><a href="#sec-icones" data-sec="sec-icones"><span class="sg-n">04</span>Ícones</a><a href="#sec-buttons" data-sec="sec-buttons"><span class="sg-n">05</span>Botões</a><a href="#sec-pills" data-sec="sec-pills"><span class="sg-n">06</span>Badges</a><a href="#sec-forms" data-sec="sec-forms"><span class="sg-n">07</span>Campos e filtros</a><a href="#sec-stats" data-sec="sec-stats"><span class="sg-n">08</span>Estatísticas</a><a href="#sec-toolbars" data-sec="sec-toolbars"><span class="sg-n">09</span>Toolbars</a><a href="#sec-dropdown" data-sec="sec-dropdown"><span class="sg-n">10</span>Dropdown</a><a href="#sec-rolagem" data-sec="sec-rolagem"><span class="sg-n">11</span>Rolagem</a><a href="#sec-navegacao" data-sec="sec-navegacao"><span class="sg-n">12</span>Navegação</a><a href="#sec-lists" data-sec="sec-lists"><span class="sg-n">13</span>Mesas e listas</a><a href="#sec-comanda" data-sec="sec-comanda"><span class="sg-n">14</span>Comanda</a><a href="#sec-grafico" data-sec="sec-grafico"><span class="sg-n">15</span>Gráfico</a><a href="#sec-mais" data-sec="sec-mais"><span class="sg-n">16</span>Menu Mais e versão</a><a href="#sec-feedback" data-sec="sec-feedback"><span class="sg-n">17</span>Vazio e toast</a><a href="#sec-recuperacao" data-sec="sec-recuperacao"><span class="sg-n">18</span>Palavras de recuperação</a><a href="#sec-alerts" data-sec="sec-alerts"><span class="sg-n">19</span>Painéis e avisos</a><a href="#sec-modal" data-sec="sec-modal"><span class="sg-n">20</span>Modal</a></div></nav>
+    <nav class="sg-nav" id="sg-nav" aria-label="Seções do catálogo"><div class="scroll-x"><a href="#sec-tokens" data-sec="sec-tokens"><span class="sg-n">01</span>Cores</a><a href="#sec-medidas" data-sec="sec-medidas"><span class="sg-n">02</span>Espaço, raio e sombra</a><a href="#sec-typography" data-sec="sec-typography"><span class="sg-n">03</span>Tipografia</a><a href="#sec-icones" data-sec="sec-icones"><span class="sg-n">04</span>Ícones</a><a href="#sec-layout" data-sec="sec-layout"><span class="sg-n">05</span>Layout</a><a href="#sec-buttons" data-sec="sec-buttons"><span class="sg-n">06</span>Botões</a><a href="#sec-pills" data-sec="sec-pills"><span class="sg-n">07</span>Badges</a><a href="#sec-forms" data-sec="sec-forms"><span class="sg-n">08</span>Campos e filtros</a><a href="#sec-stats" data-sec="sec-stats"><span class="sg-n">09</span>Estatísticas</a><a href="#sec-toolbars" data-sec="sec-toolbars"><span class="sg-n">10</span>Toolbars</a><a href="#sec-dropdown" data-sec="sec-dropdown"><span class="sg-n">11</span>Dropdown</a><a href="#sec-rolagem" data-sec="sec-rolagem"><span class="sg-n">12</span>Rolagem</a><a href="#sec-navegacao" data-sec="sec-navegacao"><span class="sg-n">13</span>Navegação</a><a href="#sec-login" data-sec="sec-login"><span class="sg-n">14</span>Login</a><a href="#sec-inicio" data-sec="sec-inicio"><span class="sg-n">15</span>Início</a><a href="#sec-lists" data-sec="sec-lists"><span class="sg-n">16</span>Mesas e listas</a><a href="#sec-comanda" data-sec="sec-comanda"><span class="sg-n">17</span>Comanda</a><a href="#sec-estoque" data-sec="sec-estoque"><span class="sg-n">18</span>Estoque</a><a href="#sec-caixa" data-sec="sec-caixa"><span class="sg-n">19</span>Caixa</a><a href="#sec-grafico" data-sec="sec-grafico"><span class="sg-n">20</span>Gráfico</a><a href="#sec-mais" data-sec="sec-mais"><span class="sg-n">21</span>Menu Mais</a><a href="#sec-feedback" data-sec="sec-feedback"><span class="sg-n">22</span>Vazio e toast</a><a href="#sec-recuperacao" data-sec="sec-recuperacao"><span class="sg-n">23</span>Palavras</a><a href="#sec-alerts" data-sec="sec-alerts"><span class="sg-n">24</span>Avisos</a><a href="#sec-kit" data-sec="sec-kit"><span class="sg-n">25</span>Kit de segurança</a><a href="#sec-modal" data-sec="sec-modal"><span class="sg-n">26</span>Modal</a></div></nav>
 
     <section class="component-section" id="sec-tokens">
       <div class="component-header"><span class="sg-n">01</span><div><h2>Cores</h2><p>Paleta fria do Aero 2.0. O valor de cada token é lido do <code>theme.css</code> ao abrir a página, então o catálogo nunca fica desatualizado.</p></div></div>
@@ -153,8 +172,26 @@
       <div class="component-header"><span class="sg-n">04</span><div><h2>Ícones</h2><p>Conjunto SVG de traço do app (24 × 24, <code>currentColor</code>). Nunca use emoji no lugar de ícone. Clique para copiar o <code>&lt;use&gt;</code>.</p></div></div>
       <div class="sg-icons" id="sg-icons"></div>
     </section>
+    <section class="component-section" id="sec-layout">
+      <div class="component-header"><span class="sg-n">05</span><div><h2>Layout da tela</h2><p>Regiões do app e as grades de página. No computador: menu lateral + topbar + conteúdo; abaixo de 768 px a lateral some e entra a barra inferior.</p></div></div>
+      <div class="sg-layout">
+        <div class="sg-l"><code>.sidebar</code><small>.brand (.brand-icon + .brand-text) · .nav-label · .nav-item · .sidebar-foot</small></div>
+        <div class="sg-l-main">
+          <div class="sg-l"><code>.topbar</code><small>.vp-bar (menu do kit) · .top-title · .profile (.avatar)</small></div>
+          <div class="sg-l"><code>.content › .section</code><small>.section-intro no topo e as grades de página: .home-panels · .grid · .inventory-grid · .consult-grid · .field-grid (com .span2)</small></div>
+        </div>
+      </div>
+      <p class="sg-note">Raiz: <code>.shell</code> › <code>.sidebar</code> + <code>.app</code> › <code>.topbar</code> + <code>.content</code>.</p>
+      <div class="demo-box sg-mt"><h3 class="sg-h3">Topbar (.topbar)</h3>
+        <header class="topbar sg-topbar"><span class="vp-bar"><button id="vaultProfileBtn" type="button" aria-label="Abrir menu"><i data-icon="more-vertical" data-size="20"></i></button></span><div class="top-title"><strong>Bar do Zé</strong> <span>/ Vendas e mesas</span></div>
+          <div class="profile"><div class="profile-text"><strong>Celso</strong><span>Gerente</span></div><div class="avatar">C</div></div></header></div>
+      <div class="demo-box"><h3 class="sg-h3">Grade de formulário (.field-grid + .span2)</h3>
+        <div class="field-grid"><label class="span2">NOME DO PRODUTO<input placeholder="Ex.: Cerveja Lata 350ml"/></label><label class="span2">CÓDIGO DO PRODUTO (SKU)<input placeholder="Automático: P00001"/><small class="sku-help">Opcional. Se ficar em branco, o sistema cria um código único para uso nos pedidos.</small></label>
+          <label class="span2">CATEGORIA<select><option>Cervejas</option><option>Drinks</option></select></label><label>PREÇO DE CUSTO (R$)<input type="number" value="3.20"/></label><label>PREÇO DE VENDA (R$)<input type="number" value="7.00"/></label></div>
+        <p class="form-help">Durante a edição, altere os dados do produto. Para modificar a quantidade, use Reposição/Ajuste.</p></div>
+    </section>
     <section class="component-section" id="sec-buttons">
-      <div class="component-header"><span class="sg-n">05</span><div><h2>Botões e ações</h2><p>Altura de 42 px, ícone à esquerda e retorno ao toque com <code>scale(0.985)</code>.</p></div></div>
+      <div class="component-header"><span class="sg-n">06</span><div><h2>Botões e ações</h2><p>Altura de 42 px, ícone à esquerda e retorno ao toque com <code>scale(0.985)</code>.</p></div></div>
       <div class="demo-box">
         <div class="demo-row">
           <button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Primário</button>
@@ -168,7 +205,7 @@
       </div>
     </section>
     <section class="component-section" id="sec-pills">
-      <div class="component-header"><span class="sg-n">06</span><div><h2>Badges de status</h2><p>Contadores e estados de mesa, sessão e estoque.</p></div></div>
+      <div class="component-header"><span class="sg-n">07</span><div><h2>Badges de status</h2><p>Contadores e estados de mesa, sessão e estoque.</p></div></div>
       <div class="demo-box"><div class="demo-row">
         <span class="pill">24 produtos</span>
         <span class="pill good"><svg fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"></use></svg> Sessão ativa</span>
@@ -177,7 +214,7 @@
       </div></div>
     </section>
     <section class="component-section" id="sec-forms">
-      <div class="component-header"><span class="sg-n">07</span><div><h2>Campos, busca e filtros</h2><p>Campos de 42 px com anel de foco Aero, abas segmentadas e caixa de seleção.</p></div></div>
+      <div class="component-header"><span class="sg-n">08</span><div><h2>Campos, busca e filtros</h2><p>Campos de 42 px com anel de foco Aero, abas segmentadas e caixa de seleção.</p></div></div>
       <div class="demo-box">
         <div class="table-search sg-mb"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-search"></use></svg><input aria-label="Pesquisar" autocomplete="off" placeholder="Pesquisar mesa, cliente ou produto…" type="search"/></div>
         <div class="filter-row">
@@ -189,20 +226,29 @@
       </div>
     </section>
     <section class="component-section" id="sec-stats">
-      <div class="component-header"><span class="sg-n">08</span><div><h2>Cards de estatística</h2><p>Pilha vertical rótulo → valor → descrição, com ícone ao fundo e elevação no hover.</p></div></div>
+      <div class="component-header"><span class="sg-n">09</span><div><h2>Cards de estatística</h2><p>Pilha vertical rótulo → valor → descrição, com ícone ao fundo e elevação no hover.</p></div></div>
       <div class="home-stats sg-m0">
         <div class="stat"><span class="stat-label">Mesas ocupadas</span><strong>14</strong><span class="stat-foot">Comandas em andamento</span><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-grid"></use></svg></div>
         <div class="stat"><span class="stat-label">Total em aberto</span><strong>R$ 1.840,50</strong><span class="stat-foot">Aguardando recebimento</span><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-wallet"></use></svg></div>
         <div class="stat"><span class="stat-label">Faturamento do dia</span><strong>R$ 4.290,00</strong><span class="stat-foot">Receitas liquidadas</span><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-spark"></use></svg></div>
       </div>
+      <h3 class="sg-h3 sg-mt">Grade compacta das telas (.stats)</h3>
+      <div class="stats">
+        <div class="stat"><div><span class="stat-label">Mesas abertas</span><strong>6</strong></div><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-grid"></use></svg></div>
+        <div class="stat"><div><span class="stat-label">Itens em aberto</span><strong>23</strong></div><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-box"></use></svg></div>
+        <div class="stat"><div><span class="stat-label">Valor em aberto</span><strong>R$ 1.840,50</strong></div><svg fill="none" stroke="currentColor" stroke-width="1.7"><use href="#i-wallet"></use></svg></div>
+      </div>
     </section>
     <section class="component-section" id="sec-toolbars">
-      <div class="component-header"><span class="sg-n">09</span><div><h2>Toolbars e alinhamento</h2><p>Título e badge à esquerda, ações à direita; controles financeiros na mesma linha de base.</p></div></div>
+      <div class="component-header"><span class="sg-n">10</span><div><h2>Toolbars e alinhamento</h2><p>Título e badge à esquerda, ações à direita; controles financeiros na mesma linha de base.</p></div></div>
       <div class="demo-box">
         <div class="toolbar sg-m0">
           <div class="toolbar-title-group"><h2 class="sg-m0">Produtos cadastrados</h2><span class="pill">24 produtos</span></div>
           <div class="toolbar-actions"><button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Novo produto</button><button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Movimentar</button><button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg> Categorias</button></div>
         </div>
+      </div>
+      <div class="demo-box">
+        <div class="section-intro intro-actions sg-m0"><div class="intro-copy"><h1 class="page-title sg-t22">Vendas e mesas</h1><p class="page-sub">Título e ação principal na mesma linha (.intro-actions).</p></div><div><button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Abrir mesa</button></div></div>
       </div>
       <div class="demo-box">
         <div class="section-intro with-filter sg-m0">
@@ -216,7 +262,7 @@
       </div>
     </section>
     <section class="component-section" id="sec-dropdown">
-      <div class="component-header"><span class="sg-n">10</span><div><h2>Dropdown</h2><p>Menu flutuante com desfoque, abre e fecha pelo botão, por clique fora e pela tecla Esc.</p></div></div>
+      <div class="component-header"><span class="sg-n">11</span><div><h2>Dropdown</h2><p>Menu flutuante com desfoque, abre e fecha pelo botão, por clique fora e pela tecla Esc.</p></div></div>
       <div class="demo-box sg-drop">
         <div class="dropdown-wrap">
           <button class="btn ghost dropdown-trigger" id="demo-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar relatório <svg class="chevron-mini" fill="none" stroke="currentColor"><use href="#i-down"></use></svg></button>
@@ -228,7 +274,7 @@
       </div>
     </section>
     <section class="component-section" id="sec-rolagem">
-      <div class="component-header"><span class="sg-n">11</span><div><h2>Rolagem</h2><p>Barra fina e quase invisível em repouso, que ganha a cor de acento ao passar o mouse. <code>.scroll-area</code> e <code>.scroll-x</code> esmaecem as bordas e mostram que há mais conteúdo.</p></div></div>
+      <div class="component-header"><span class="sg-n">12</span><div><h2>Rolagem</h2><p>Barra fina e quase invisível em repouso, que ganha a cor de acento ao passar o mouse. <code>.scroll-area</code> e <code>.scroll-x</code> esmaecem as bordas e mostram que há mais conteúdo.</p></div></div>
       <div class="sg-scroll-grid">
         <div class="demo-box"><h3 class="sg-h3">.scroll-area <small>vertical · <code>--scroll-max</code></small></h3>
           <div class="scroll-area sg-scroll" style="--scroll-max:240px"><div class="itemline"><span>Mesa 01 · Ana</span><strong>R$ 42,00</strong></div><div class="itemline"><span>Mesa 02 · Bruno</span><strong>R$ 118,50</strong></div><div class="itemline"><span>Mesa 03 · Balcão</span><strong>R$ 9,00</strong></div><div class="itemline"><span>Mesa 04 · Carlos</span><strong>R$ 84,00</strong></div><div class="itemline"><span>Mesa 05 · Dani</span><strong>R$ 61,90</strong></div><div class="itemline"><span>Mesa 06 · Edu</span><strong>R$ 230,00</strong></div><div class="itemline"><span>Mesa 07 · Fábio</span><strong>R$ 15,00</strong></div><div class="itemline"><span>Mesa 08 · Gabi</span><strong>R$ 77,40</strong></div><div class="itemline"><span>Mesa 09 · Hugo</span><strong>R$ 38,00</strong></div><div class="itemline"><span>Mesa 10 · Iara</span><strong>R$ 142,10</strong></div><div class="itemline"><span>Mesa 11 · João</span><strong>R$ 56,00</strong></div><div class="itemline"><span>Mesa 12 · Kátia</span><strong>R$ 19,90</strong></div></div></div>
@@ -240,7 +286,7 @@
       </div>
     </section>
     <section class="component-section" id="sec-navegacao">
-      <div class="component-header"><span class="sg-n">12</span><div><h2>Navegação</h2><p>Menu lateral no computador, perfil com avatar e barra inferior no celular.</p></div></div>
+      <div class="component-header"><span class="sg-n">13</span><div><h2>Navegação</h2><p>Menu lateral no computador, perfil com avatar e barra inferior no celular.</p></div></div>
       <div class="sg-nav-grid">
         <div class="demo-box"><h3 class="sg-h3">Menu lateral (.nav-item)</h3><div class="sg-sidenav"><button class="nav-item active" type="button" aria-current=page><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-home"></use></svg><span>Início</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-grid"></use></svg><span>Mesas e vendas</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-box"></use></svg><span>Estoque</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-wallet"></use></svg><span>Caixa</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-users"></use></svg><span>Usuários</span></button><button class="nav-item" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-more"></use></svg><span>Mais</span></button></div>
           <div class="profile sg-profile"><div class="avatar">CA</div><div class="profile-text"><strong>Celso Almeida</strong><span>Gerente</span></div></div></div>
@@ -249,8 +295,49 @@
           <p class="sg-note sg-only-desk">A barra inferior aparece abaixo de 768 px. Abra este catálogo no celular para vê-la.</p></div>
       </div>
     </section>
+    <section class="component-section" id="sec-login">
+      <div class="component-header"><span class="sg-n">14</span><div><h2>Login e acesso</h2><p>Caixa de entrada do app: usuário, método (senha ou PIN), manter conectado, ajuda da biometria, aviso do preenchimento automático e restauração de backup. No app ela fica sobre <code>.auth-overlay</code>, que ocupa a tela inteira.</p></div></div>
+      <div class="sg-auth"><div class="auth-box">
+        <div class="brand-icon auth-logo"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-bar"></use></svg></div>
+        <h1>Bem-vindo ao BarGestão</h1>
+        <p>Entre para acessar seu painel com dados protegidos por criptografia AES-GCM.</p>
+        <div class="stack"><form class="stack" onsubmit="return false">
+          <label>USUÁRIO<input autocapitalize="none" autocomplete="off" spellcheck="false" value="gerente"/></label>
+          <div class="auth-tabs sg-tabs"><button class="active" type="button" aria-selected="true">Senha</button><button type="button" aria-selected="false">PIN</button></div>
+          <label>SENHA<input type="password" autocomplete="off" placeholder="Informe a senha" value="cerveja-gelada"/></label>
+          <label class="checkline"><input type="checkbox" checked/> Manter conectado neste aparelho</label>
+          <button class="btn block" type="submit">Entrar</button>
+        </form>
+        <p class="bio-login-help" role="status">Biometria disponível: use a digital para entrar mais rápido.</p>
+        <p class="autofill-note">Você pode salvar a senha no gerenciador de senhas do Google ou no Proton Pass. Com “Manter conectado”, nas próximas vezes basta o PIN do aparelho.</p>
+        <div class="notice">Primeiro acesso: crie o administrador e uma senha forte.</div>
+        <div class="backup-login"><button class="btn ghost block" type="button">Restaurar backup criptografado</button><span>Dados locais cifrados; faça backups externos regulares.</span></div></div>
+      </div></div>
+    </section>
+    <section class="component-section" id="sec-inicio">
+      <div class="component-header"><span class="sg-n">15</span><div><h2>Início</h2><p>Cabeçalho com saudação, banner de operação e os cards de acompanhamento com as minilistas e os estados vazios.</p></div></div>
+      <div class="home-head"><div><span class="eyebrow">PAINEL DE OPERAÇÃO</span><h1 class="page-title">Bom atendimento<span class="dot">.</span></h1><p class="page-sub">Bem-vindo ao BarGestão.</p></div></div>
+      <div class="home-hero sg-mt"><div class="hero-copy"><div class="hero-kicker"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-spark"></use></svg> OPERAÇÃO EM TEMPO REAL</div><h2>Seu bar, sob controle.</h2><p>Acompanhe as comandas, registre pedidos e fique de olho no caixa.</p>
+        <div class="demo-row"><button class="btn hero-action" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-plus"></use></svg> Novo atendimento</button></div></div>
+        <div aria-hidden="true" class="hero-art"><div class="art-ring outer"></div><div class="art-ring middle"></div><div class="art-ring inner"></div><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-bar"></use></svg></div></div>
+      <div class="home-panels sg-mt">
+        <article class="card home-card"><div class="toolbar"><div class="toolbar-title-group"><span class="eyebrow">ACOMPANHAMENTO</span><h2>Mesas em atendimento</h2></div><div class="toolbar-actions"><button class="btn ghost minor" type="button">Ver mesas <svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg></button></div></div>
+          <div class="home-table-list">
+            <div class="home-mini-row" style="cursor:pointer"><div class="home-mini-left"><strong>Mesa 04</strong><small>Carlos Eduardo</small></div><strong class="home-mini-price">R$ 84,00</strong></div>
+            <div class="home-mini-row" style="cursor:pointer"><div class="home-mini-left"><strong>Mesa 07</strong><small>Cliente não informado</small></div><strong class="home-mini-price">R$ 23,50</strong></div>
+          </div></article>
+        <article class="card home-card"><div class="toolbar"><div class="toolbar-title-group"><span class="eyebrow">ATENÇÃO</span><h2>Estoque baixo</h2></div><div class="toolbar-actions"><button class="btn ghost minor" type="button">Ver estoque <svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg></button></div></div>
+          <div class="home-table-list">
+            <div class="home-mini-row" style="cursor:pointer"><div class="home-mini-left"><strong>Água sem gás</strong><small>Mínimo: 12 un.</small></div><span class="pill warn">3 un.</span></div>
+          </div></article>
+      </div>
+      <div class="sg-two sg-mt">
+        <div class="card"><div class="home-empty"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><use href="#i-grid"></use></svg><span>Nenhuma comanda aberta no momento.</span></div></div>
+        <div class="card"><div class="home-empty good"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><use href="#i-check"></use></svg><span>Estoque regular. Nenhum produto em alerta.</span></div></div>
+      </div>
+    </section>
     <section class="component-section" id="sec-lists">
-      <div class="component-header"><span class="sg-n">13</span><div><h2>Mesas e listas</h2><p>Card de mesa aberta, igual ao da aba Mesas: nome e cliente, total, itens lançados e o botão da comanda. O balcão ganha a borda de acento.</p></div></div>
+      <div class="component-header"><span class="sg-n">16</span><div><h2>Mesas e listas</h2><p>Card de mesa aberta, igual ao da aba Mesas: nome e cliente, total, itens lançados e o botão da comanda. O balcão ganha a borda de acento.</p></div></div>
       <div class="list sg-list">
         <div class="entry mesa-entry">
           <div class="entry-head"><div class="entry-left"><strong>Mesa 04</strong><div class="meta">Carlos Eduardo</div></div><strong class="entry-strong">R$ 84,00</strong></div>
@@ -267,8 +354,10 @@
       </div>
     </section>
     <section class="component-section" id="sec-comanda">
-      <div class="component-header"><span class="sg-n">14</span><div><h2>Comanda</h2><p>Blocos da comanda em tela cheia: chips de categoria, escolha de produto, itens com quantidade e o rodapé de pagamento.</p></div></div>
+      <div class="component-header"><span class="sg-n">17</span><div><h2>Comanda</h2><p>Comanda em tela cheia: cabeçalho com voltar e editar cliente, nova mesa, chips de categoria, escolha de produto, itens com quantidade e o rodapé de pagamento.</p></div></div>
       <div class="sg-cmd">
+        <header class="cmd-head sg-cmd-head"><button aria-label="Voltar para a lista de mesas" class="cmd-icon-btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.9"><use href="#i-back"></use></svg></button><div class="cmd-head-text"><h1>Mesa 04</h1><p>Carlos Eduardo · 3 itens</p></div><button aria-label="Alterar cliente da mesa" class="cmd-icon-btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.9"><use href="#i-edit"></use></svg></button></header>
+        <div class="cmd-new card"><label>MESA<input inputmode="numeric" placeholder="Ex.: 04" type="number"/></label><label>CLIENTE<input autocomplete="off" placeholder="Nome do cliente"/></label></div>
         <section class="cmd-block card"><div class="cmd-block-head"><h2>Adicionar produtos</h2><small>4 produtos</small></div>
           <div class="category-chips"><button class="category-chip selected" type="button">Todas</button><button class="category-chip" type="button">Cervejas</button><button class="category-chip" type="button">Drinks</button><button class="category-chip" type="button">Destilados</button><button class="category-chip" type="button">Refrigerantes</button><button class="category-chip" type="button">Sucos</button><button class="category-chip" type="button">Petiscos</button><button class="category-chip" type="button">Porções</button><button class="category-chip" type="button">Sobremesas</button><button class="category-chip" type="button">Cafés</button><button class="category-chip" type="button">Vinhos</button><button class="category-chip" type="button">Sem álcool</button></div>
           <div class="products-grid cmd-grid"><button class="product-choice" type="button" aria-label="Adicionar Cerveja Lata 350ml"><strong>Cerveja Lata 350ml</strong><small>Estoque: 48 un.</small><span class="price">R$ 7,00</span><span class=cmd-badge>×2</span></button><button class="product-choice" type="button" aria-label="Adicionar Caipirinha"><strong>Caipirinha</strong><small>Estoque livre</small><span class="price">R$ 18,00</span></button><button class="product-choice" type="button" aria-label="Adicionar Porção de fritas"><strong>Porção de fritas</strong><small>Estoque: 12 un.</small><span class="price">R$ 32,00</span><span class=cmd-badge>×1</span></button><button class="product-choice" type="button" disabled aria-label="Adicionar Água sem gás"><strong>Água sem gás</strong><small>Sem estoque</small><span class="price">R$ 4,00</span></button></div></section>
@@ -278,25 +367,80 @@
             <label>FORMA DE PAGAMENTO<select><option>Dinheiro</option><option>PIX</option><option>Cartão de débito</option></select></label>
             <div class="cmd-pay-values"><label>VALOR A COBRAR (R$)<input inputmode="decimal" type="number" value="46.00"/></label><label>VALOR RECEBIDO (R$)<input inputmode="decimal" type="number" value="50.00"/></label></div>
             <div class="cmd-troco"><strong>Troco: R$ 4,00</strong><span></span></div>
+            <div class="cmd-pay-actions"><button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Comprovante</button><button class="btn ghost" type="button">Voltar à comanda</button></div>
           </div>
           <div class="cmd-total-row"><div class="cmd-total"><span>TOTAL</span><strong>R$ 46,00</strong></div><button class="btn" type="button">Receber</button></div>
         </footer>
       </div>
     </section>
+    <section class="component-section" id="sec-estoque">
+      <div class="component-header"><span class="sg-n">18</span><div><h2>Estoque e cadastros</h2><p>Produto com código, preço e situação; movimentação com entrada e saída; categorias com formulário em linha.</p></div></div>
+      <div class="list sg-list">
+        <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Cerveja Lata 350ml</strong><div class="item-id">Código: CER-350 · Categoria: Cervejas</div><div class="meta">Custo: R$ 3,20 · Venda: R$ 7,00</div></div>
+          <div class="entry-right"><strong>48 un.</strong><div class="pill good">Disponível</div></div></div><div class="meta">Estoque mínimo: 12 un.</div></div>
+        <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Água sem gás</strong><div class="item-id">Código: AGU-500 · Categoria: Sem álcool</div><div class="meta">Custo: R$ 1,10 · Venda: R$ 4,00</div></div>
+          <div class="entry-right"><strong>3 un.</strong><div class="pill warn">Estoque baixo</div></div></div><div class="meta">Estoque mínimo: 12 un.</div></div>
+        <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Reposição · Cerveja Lata 350ml</strong><div class="item-id">ID: 3f2a91c0</div></div><strong class="text-good">+24 un.</strong></div></div>
+        <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Ajuste · Porção de fritas</strong><div class="item-id">ID: 9b77e012</div></div><strong class="text-bad">-2 un.</strong></div></div>
+      </div>
+      <div class="demo-box sg-mt"><h3 class="sg-h3">Categorias (.inline-fields + .small-list)</h3>
+        <form class="inline-fields" onsubmit="return false"><label style="flex:1">NOME DA CATEGORIA<input maxlength="70" placeholder="Ex.: Bebidas"/></label><button class="btn" type="submit">Salvar</button></form>
+        <div class="list small-list">
+          <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Cervejas</strong><div class="meta">8 produto(s) ativo(s)</div></div><div class="entry-right"><button class="btn outline" type="button">Editar</button><button class="btn danger" type="button">Remover</button></div></div></div>
+          <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Petiscos</strong><div class="meta">5 produto(s) ativo(s)</div></div><div class="entry-right"><button class="btn outline" type="button">Editar</button><button class="btn danger" type="button">Remover</button></div></div></div>
+        </div></div>
+    </section>
+    <section class="component-section" id="sec-caixa">
+      <div class="component-header"><span class="sg-n">19</span><div><h2>Caixa</h2><p>Indicadores do período, exportação rápida, livro caixa com entradas e retiradas, auditoria e a prévia do cancelamento.</p></div></div>
+      <div class="cash-stats">
+        <div class="stat"><div><span class="stat-label">Total de vendas</span><strong>37</strong><small>Mesas fechadas no período</small></div></div>
+        <div class="stat"><div><span class="stat-label">Valor vendido</span><strong>R$ 4.290,00</strong><small>Receita de vendas</small></div></div>
+        <div class="stat"><div><span class="stat-label">Valor em aberto</span><strong>R$ 1.840,50</strong><small>Mesas ainda não recebidas</small></div></div>
+        <div class="stat"><div><span class="stat-label">Ticket médio</span><strong>R$ 115,95</strong><small>Por mesa fechada</small></div></div>
+      </div>
+      <div class="cash-lower-stats"><span class="pill">6 mesas abertas</span><span class="pill">142 itens vendidos</span><span class="pill warn">2 produtos em estoque baixo</span></div>
+      <div class="sg-two sg-mt">
+        <section class="card cash-quick"><div class="cash-quick-heading"><span class="cash-quick-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-wallet"></use></svg></span><div><h2>Exportar caixa</h2><p>Baixe o relatório financeiro sem sair desta tela.</p></div></div>
+          <label class="cash-quick-label" for="sg-cash-period">PERÍODO DO RELATÓRIO</label><select class="cash-quick-select" id="sg-cash-period"><option>Hoje</option><option>Últimos 7 dias</option><option>Este mês</option></select>
+          <div class="cash-quick-actions"><button class="btn" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar PDF</button><button class="btn ghost" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg> Exportar Excel</button></div>
+          <p class="cash-quick-notice">Confirme a senha da sua conta antes de exportar. Os arquivos PDF e Excel não são criptografados.</p></section>
+        <article class="card"><div class="toolbar"><div class="toolbar-title-group"><h2 class="sg-m0">Livro caixa</h2><span class="pill">3 registros</span></div></div>
+          <div class="list">
+            <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Fundo de troco</strong><div class="meta">22/10 · 18:00</div></div><strong class="text-good">+ R$ 200,00</strong></div></div>
+            <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Mesa 04 · PIX</strong><div class="meta">22/10 · 21:14</div></div><strong class="text-good">+ R$ 84,00</strong></div></div>
+            <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Retirada · gelo</strong><div class="meta">22/10 · 21:40</div></div><strong class="text-bad">− R$ 35,00</strong></div></div>
+          </div></article>
+      </div>
+      <p class="cash-export-notice">Qualquer usuário autenticado pode exportar mediante confirmação da senha da própria conta. A exportação não encerra o turno.</p>
+      <div class="sg-two sg-mt">
+        <div class="card"><h2 class="sg-h2 sg-mb">Auditoria (.audit-record)</h2><div class="stack">
+          <div class="audit-record"><strong>Cancelamento de item</strong><small>joao · 22/10 21:52 · a81c03f2</small></div>
+          <div class="audit-record"><strong>Fechamento de mesa</strong><small>gerente · 22/10 21:14 · 5d0e9b17</small></div>
+          <div class="audit-record"><strong>Usuário removido</strong><small>gerente · 21/10 10:03 · c4f2e6aa</small></div></div></div>
+        <div class="card"><h2 class="sg-h2 sg-mb">Prévia do cancelamento (.receipt-preview)</h2>
+          <div class="receipt-preview"><span>1 × Porção de fritas · Mesa 04</span><strong>R$ 32,00</strong><p>A quantidade será devolvida ao estoque e o cancelamento ficará registrado com funcionário, data e justificativa.</p></div></div>
+      </div>
+    </section>
     <section class="component-section" id="sec-grafico">
-      <div class="component-header"><span class="sg-n">15</span><div><h2>Gráfico de vendas</h2><p>Barras dos últimos 7 dias, com o valor em cima e o dia embaixo (mesma marcação do Caixa).</p></div></div>
+      <div class="component-header"><span class="sg-n">20</span><div><h2>Gráfico de vendas</h2><p>Barras dos últimos 7 dias, com o valor em cima e o dia embaixo (mesma marcação do Caixa).</p></div></div>
       <article class="card"><div aria-label="Gráfico de vendas por dia" class="chart-bars"><div class="chart-col"><span class="chart-value">R$ 820</span><div class="chart-body" title="Qui: R$ 820" style="height:62px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Qui</span></div><div class="chart-col"><span class="chart-value">R$ 1,9 mil</span><div class="chart-body" title="Sex: R$ 1,9 mil" style="height:132px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Sex</span></div><div class="chart-col"><span class="chart-value">R$ 2,1 mil</span><div class="chart-body" title="Sáb: R$ 2,1 mil" style="height:145px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Sáb</span></div><div class="chart-col"><span class="chart-value">R$ 1,2 mil</span><div class="chart-body" title="Dom: R$ 1,2 mil" style="height:88px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Dom</span></div><div class="chart-col"><span class="chart-value">R$ 0</span><div class="chart-body" title="Seg: R$ 0" style="height:6px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Seg</span></div><div class="chart-col"><span class="chart-value">R$ 430</span><div class="chart-body" title="Ter: R$ 430" style="height:34px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Ter</span></div><div class="chart-col"><span class="chart-value">R$ 640</span><div class="chart-body" title="Qua: R$ 640" style="height:49px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Qua</span></div></div></article>
     </section>
     <section class="component-section" id="sec-mais">
-      <div class="component-header"><span class="sg-n">16</span><div><h2>Menu Mais e versão</h2><p>Lista de ações agrupadas e o cartão de versão do app.</p></div></div>
+      <div class="component-header"><span class="sg-n">21</span><div><h2>Menu Mais e versão</h2><p>Cartão do perfil, biometria do aparelho, ações agrupadas por título e o cartão de versão do app.</p></div></div>
+      <div class="more-profile card"><div class="avatar more-avatar">C</div><div><strong>Celso</strong><span>Gerente</span></div><div class="more-profile-badges"><span class="pill good">Sessão ativa</span><span class="pill">v3.x</span></div></div>
+      <div class="card bio-entry sg-mt" role="group" aria-label="Biometria do aparelho"><div class="bio-entry-header"><span class="bio-entry-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-lock"></use></svg></span><div><strong>Biometria do aparelho</strong><small>Ative ou desative o desbloqueio neste dispositivo.</small></div></div>
+        <button class="btn block" type="button">Ativar / desativar biometria</button><p class="bio-entry-note">Requer HTTPS e suporte do navegador ao autenticador do aparelho.</p>
+        <div class="bio-diagnostic" role="status">Autenticador do aparelho disponível. Biometria pronta para uso.</div></div>
+      <h2 class="group-title">Gestão do bar</h2>
       <div class="sg-two">
-        <div class="more-group card"><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-lock"></use></svg></span><span><strong>Segurança, senha e PIN</strong><small>Bloqueio automático e configurações do aparelho</small></span></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-clock"></use></svg></span><span><strong>Auditoria de operações</strong><small>Histórico de quem fez o quê</small></span></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg></span><span><strong>Exportar JSON criptografado</strong><small>Cópia dos dados protegida por senha</small></span></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-users"></use></svg></span><span><strong>Trocar usuário</strong><small>Entra com outro usuário neste aparelho</small></span></button></div>
+        <div class="more-group card"><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-lock"></use></svg></span><span><strong>Segurança, senha e PIN</strong><small>Bloqueio automático e configurações do aparelho</small></span><svg class="more-chevron" fill="none" stroke="currentColor"><use href="#i-arrow"></use></svg></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-clock"></use></svg></span><span><strong>Auditoria de operações</strong><small>Histórico de quem fez o quê</small></span><svg class="more-chevron" fill="none" stroke="currentColor"><use href="#i-arrow"></use></svg></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-download"></use></svg></span><span><strong>Exportar JSON criptografado</strong><small>Cópia dos dados protegida por senha</small></span><svg class="more-chevron" fill="none" stroke="currentColor"><use href="#i-arrow"></use></svg></button><button class="more-link" type="button"><span class="more-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-users"></use></svg></span><span><strong>Trocar usuário</strong><small>Entra com outro usuário neste aparelho</small></span><svg class="more-chevron" fill="none" stroke="currentColor"><use href="#i-arrow"></use></svg></button></div>
         <div class="card version-card"><div class="version-card-row"><div class="brand-icon version-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-bar"></use></svg></div><div class="version-info-main"><div class="version-title-wrap"><strong>BarGestão Standard</strong><span class="pill good">v3.x</span></div><p class="version-subtitle">Build 2026.10 · Aero Glassmorphism 2.0</p></div></div>
           <div class="version-details-list"><div class="version-detail-item"><span>Modo de operação</span><strong>PWA offline / WebCrypto</strong></div><div class="version-detail-item"><span>Criptografia do cofre</span><strong>AES-GCM (256 bits)</strong></div></div></div>
       </div>
+      <p class="version-label">BarGestão Standard v3.x · Design System Aero 2.0 · Dados locais criptografados</p>
     </section>
     <section class="component-section" id="sec-feedback">
-      <div class="component-header"><span class="sg-n">17</span><div><h2>Estado vazio e toast</h2><p>O vazio explica o que fazer; o toast confirma uma ação e some em 4 segundos.</p></div></div>
+      <div class="component-header"><span class="sg-n">22</span><div><h2>Estado vazio e toast</h2><p>O vazio explica o que fazer; o toast confirma uma ação e some em 4 segundos.</p></div></div>
       <div class="sg-two">
         <div class="card"><div class="empty"><svg fill="none" stroke="currentColor" stroke-width="1.6"><use href="#i-box"></use></svg>Nenhum produto encontrado.</div></div>
         <div class="demo-box sg-inline"><div class="toast" role="status">Produto “Cerveja Lata” salvo.</div>
@@ -304,20 +448,73 @@
       </div>
     </section>
     <section class="component-section" id="sec-recuperacao">
-      <div class="component-header"><span class="sg-n">18</span><div><h2>Palavras de recuperação</h2><p>12 palavras numeradas, mostradas uma única vez; duas colunas no celular.</p></div></div>
+      <div class="component-header"><span class="sg-n">23</span><div><h2>Palavras de recuperação</h2><p>12 palavras numeradas, mostradas uma única vez; duas colunas no celular.</p></div></div>
       <div class="demo-box"><div class="recovery-word-grid"><div class="recovery-word"><small>01</small><strong>abacate</strong></div><div class="recovery-word"><small>02</small><strong>brisa</strong></div><div class="recovery-word"><small>03</small><strong>cadeira</strong></div><div class="recovery-word"><small>04</small><strong>dourado</strong></div><div class="recovery-word"><small>05</small><strong>escola</strong></div><div class="recovery-word"><small>06</small><strong>farol</strong></div><div class="recovery-word"><small>07</small><strong>girafa</strong></div><div class="recovery-word"><small>08</small><strong>horta</strong></div><div class="recovery-word"><small>09</small><strong>ilha</strong></div><div class="recovery-word"><small>10</small><strong>janela</strong></div><div class="recovery-word"><small>11</small><strong>lagoa</strong></div><div class="recovery-word"><small>12</small><strong>marfim</strong></div></div></div>
     </section>
     <section class="component-section" id="sec-alerts">
-      <div class="component-header"><span class="sg-n">19</span><div><h2>Painéis e avisos</h2><p>Painel de turno e mensagens de confirmação e de erro.</p></div></div>
+      <div class="component-header"><span class="sg-n">24</span><div><h2>Painéis e avisos</h2><p>Painel de turno e mensagens de confirmação e de erro.</p></div></div>
       <div class="demo-box sg-stack">
         <div class="v9-panel sg-m0"><div class="v9-head"><h2 class="sg-m0">Turno da noite · caixa aberto</h2><span class="v9-pill">Operação ativa</span></div>
           <div class="sg-muted">Aberto pelo gerente em 13/10/2026 às 18:00 com fundo de troco de R$ 200,00.</div></div>
+        <p class="v9-note sg-m0">Nota de painel (.v9-note): explica a operação antes do formulário.</p>
         <div class="notice sg-m0">Mensagem de confirmação (.notice).</div>
         <div class="error sg-m0">Erro ou validação pendente (.error).</div>
       </div>
     </section>
+    <section class="component-section" id="sec-kit">
+      <div class="component-header"><span class="sg-n">25</span><div><h2>Kit de segurança</h2><p>Tela de bloqueio, diálogos, configurações e menu do perfil do pacote compartilhado <code>PACOTES/stk-pkg-security</code> (iguais em todos os apps), com o tema do BarGestão em <code>kit-aero.css</code>. Edite no pacote, nunca aqui.</p></div></div>
+      <div class="sg-kit">
+        <div class="demo-box"><h3 class="sg-h3">Folha de configurações (.fs-sheet › .fs-head + .fs-body)</h3>
+          <div class="sg-sheet"><header class="fs-head"><button type="button" class="fs-back" aria-label="Voltar"><i data-icon="arrow-left" data-size="20"></i></button><div><h2>Configurações</h2><span>BarGestão</span></div></header><div class="fs-body">
+          <div class="fs">
+            <section class="fs-group"><h3 class="fs-title">Segurança</h3><div class="fs-list">
+              <button type="button" class="fs-row fs-action"><span class="fs-ic"><i data-icon="key" data-size="18"></i></span><span class="fs-text"><b>Alterar PIN</b><span>Vale para todos os apps deste aparelho.</span></span><i data-icon="chevron-right" data-size="16"></i></button>
+              <div class="fs-row"><span class="fs-ic"><i data-icon="fingerprint" data-size="18"></i></span><div class="fs-text"><b>Biometria</b><span>Ativada: digital, rosto ou bloqueio de tela.</span></div><button type="button" role="switch" class="fs-switch" aria-checked="true" aria-label="Biometria"><span></span></button></div>
+              <div class="fs-row"><span class="fs-ic"><i data-icon="clock" data-size="18"></i></span><div class="fs-text"><b>Bloqueio automático</b><span>Sem uso por este tempo, o app bloqueia.</span></div><select class="fs-select" aria-label="Bloqueio automático"><option>2 min</option><option selected>5 min</option><option>15 min</option></select></div>
+              <div class="fs-row" data-wide><span class="fs-ic"><i data-icon="monitor" data-size="18"></i></span><div class="fs-text"><b>Aparência</b><span>Segue o aparelho ou escolha.</span></div><div class="fs-seg" role="group" aria-label="Aparência"><button type="button" aria-pressed="false"><i data-icon="sun" data-size="14"></i> Claro</button><button type="button" aria-pressed="true"><i data-icon="monitor" data-size="14"></i> Sistema</button><button type="button" aria-pressed="false"><i data-icon="moon" data-size="14"></i> Escuro</button></div></div>
+              <button type="button" class="fs-row fs-action fs-accent"><span class="fs-ic"><i data-icon="lock" data-size="18"></i></span><span class="fs-text"><b>Bloquear agora</b></span><i data-icon="chevron-right" data-size="16"></i></button>
+            </div></section>
+            <section class="fs-group"><h3 class="fs-title">Seus dados</h3><div class="fs-list">
+              <div class="fs-row"><span class="fs-ic"><i data-icon="shield-check" data-size="18"></i></span><div class="fs-text"><b>Proteção contra limpeza</b><span>Ligada: o navegador não apaga os dados sozinho.</span></div><span class="fs-badge fs-badge-pos">ligada</span></div>
+              <div class="fs-row"><span class="fs-ic"><i data-icon="history" data-size="18"></i></span><div class="fs-text"><b>Última cópia de segurança</b><span>Há 9 dias, com mudanças depois.</span></div><span class="fs-badge fs-badge-warn">pendente</span></div>
+              <div class="fs-row"><span class="fs-ic"><i data-icon="database" data-size="18"></i></span><div class="fs-text"><b>Badges</b><span>Os outros tons do kit.</span></div><span class="fs-badge fs-badge-neg">erro</span><span class="fs-badge fs-badge-info">novo</span><span class="fs-badge fs-badge-neutral">opcional</span></div>
+            </div></section>
+            <section class="fs-group"><h3 class="fs-title">Zona de perigo</h3><div class="fs-list">
+              <button type="button" class="fs-row fs-action fs-danger"><span class="fs-ic"><i data-icon="trash" data-size="18"></i></span><span class="fs-text"><b>Apagar todos os dados deste app</b><span>Não pode ser desfeito.</span></span><i data-icon="chevron-right" data-size="16"></i></button>
+            </div></section>
+            <p class="fs-toast" role="status">Configuração salva.</p>
+          </div></div></div></div>
+        <div>
+          <div class="demo-box"><h3 class="sg-h3">Painel do perfil (.vp-drawer)</h3>
+            <div class="vp-drawer sg-static"><div class="vp-panel">
+              <header class="vp-head"><button type="button" class="vp-close" aria-label="Fechar menu"><i data-icon="x" data-size="20"></i></button><span class="vp-avatar vp-avatar-lg"><span class="vp-initials">BG</span></span><h2>BarGestão</h2><p class="vp-sub"><i data-icon="shield-check" data-size="13"></i>Cofre local protegido</p></header>
+              <div class="vp-stats"><div><span><i data-icon="clock" data-size="14"></i>Bloqueio automático</span><b>5 min</b></div><div><span><i data-icon="fingerprint" data-size="14"></i>Biometria</span><b>Ativada</b></div></div>
+              <nav class="vp-menu" aria-label="Menu do perfil"><p class="vp-section">Conta</p>
+                <button type="button" class="vp-item"><span class="vp-item-ic"><i data-icon="settings" data-size="18"></i></span><span class="vp-item-text"><b>Configurações</b><span>PIN, biometria e bloqueio</span></span><i data-icon="chevron-right" data-size="16"></i></button>
+                <button type="button" class="vp-item vp-danger"><span class="vp-item-ic"><i data-icon="trash" data-size="18"></i></span><span class="vp-item-text"><b>Apagar dados</b><span>Ação destrutiva</span></span><i data-icon="chevron-right" data-size="16"></i></button></nav>
+              <footer class="vp-foot"><button type="button" class="vp-item vp-lock"><span class="vp-item-ic"><i data-icon="lock" data-size="18"></i></span><span class="vp-item-text"><b>Bloquear agora</b><span>Salva e pede o PIN para voltar</span></span></button><p class="vp-version">BarGestão · Kit de segurança</p></footer>
+            </div></div></div>
+          <div class="demo-box"><h3 class="sg-h3">Senha com olho (.pw-wrap)</h3><label>SENHA DA CONTA<input type="password" autocomplete="off" value="cerveja-gelada"/></label>
+            <p class="sg-note">Todo campo de senha recebe o botão de mostrar e ocultar (olho e olho cortado).</p></div>
+          <div class="demo-box"><h3 class="sg-h3">Tela de bloqueio (#vaultGate)</h3>
+            <section id="vaultGate" class="sg-gate" aria-label="Exemplo da tela de bloqueio"><div class="vault-brand"><div><div class="vault-app-name">BarGestão</div><div class="vault-eyebrow"><i data-icon="shield-check" data-size="12"></i>SEGURANÇA LOCAL</div></div></div>
+              <div class="vault-badge"><i data-icon="lock" data-size="22"></i></div><h1>Dados protegidos</h1><p>Digite o PIN de 6 números.</p>
+              <div class="vault-pin-wrap"><div class="vault-dots" aria-hidden="true"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div></div>
+              <div class="vault-keypad"><button type="button" tabindex="-1" data-key="1">1</button><button type="button" tabindex="-1" data-key="2">2</button><button type="button" tabindex="-1" data-key="3">3</button><button type="button" tabindex="-1" data-key="4">4</button><button type="button" tabindex="-1" data-key="5">5</button><button type="button" tabindex="-1" data-key="6">6</button><button type="button" tabindex="-1" data-key="7">7</button><button type="button" tabindex="-1" data-key="8">8</button><button type="button" tabindex="-1" data-key="9">9</button><button type="button" tabindex="-1" data-key="bio" class="vault-key-bio" aria-label="Desbloquear com biometria"><i data-icon="fingerprint" data-size="26"></i></button><button type="button" tabindex="-1" data-key="0">0</button><button type="button" tabindex="-1" data-key="del" aria-label="Apagar"><i data-icon="delete" data-size="22"></i></button></div>
+              <button class="vault-primary" type="button">Desbloquear</button>
+              <div class="vault-footer"><button class="vault-link" type="button"><i data-icon="key" data-size="16"></i>Esqueci o PIN</button></div>
+              <small class="vault-version">3.x</small></section></div>
+          <div class="demo-box"><h3 class="sg-h3">Diálogo de PIN (.vault-dialog)</h3>
+            <div class="vault-dialog sg-static"><form onsubmit="return false"><div class="vault-dialog-head"><span class="vault-badge"><i data-icon="shield" data-size="18"></i></span><p>Crie o PIN deste aparelho</p></div>
+              <input class="vault-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" aria-label="PIN" autocomplete="off"/><input class="vault-pin" type="password" inputmode="numeric" maxlength="6" placeholder="Repita o PIN" aria-label="Repita o PIN" autocomplete="off"/>
+              <div class="vault-dialog-actions"><button type="button">Cancelar</button><button type="submit">Confirmar</button></div></form></div></div>
+          <div class="demo-box"><h3 class="sg-h3">Lembrete de backup (#vaultBackupNudge)</h3>
+            <aside id="vaultBackupNudge" class="sg-static" role="status"><span class="vbn-ic"><i data-icon="shield-check" data-size="18"></i></span><p>Seu último backup foi há 9 dias e houve mudanças desde então.</p><div class="vbn-actions"><button type="button" class="vbn-primary">Fazer backup</button><button type="button">Depois</button></div></aside></div>
+        </div>
+      </div>
+    </section>
     <section class="component-section" id="sec-modal">
-      <div class="component-header"><span class="sg-n">20</span><div><h2>Modal</h2><p>Elemento nativo &lt;dialog&gt; com fundo escurecido e desfoque; fecha no X, no Esc e nos botões.</p></div></div>
+      <div class="component-header"><span class="sg-n">26</span><div><h2>Modal</h2><p>Elemento nativo &lt;dialog&gt; com fundo escurecido e desfoque; fecha no X, no Esc e nos botões.</p></div></div>
       <div class="demo-box"><button class="btn" id="open-demo-modal" type="button"><svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-spark"></use></svg> Abrir modal Aero</button></div>
     </section>
   </div>
@@ -386,6 +583,21 @@
       faixa.scrollTo({ left: a.offsetLeft - faixa.clientWidth / 2 + a.clientWidth / 2, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     }, { rootMargin: '-80px 0px -55% 0px' });
     document.querySelectorAll('.component-section').forEach(s => obs.observe(s));
+
+    // Olho nas senhas, igual ao kit: mostra e oculta sem tirar o foco do campo
+    document.querySelectorAll('input[type="password"]').forEach(input => {
+      const wrap = document.createElement('span'); wrap.className = 'pw-wrap';
+      input.parentNode.insertBefore(wrap, input); wrap.append(input);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pw-toggle';
+      const show = v => { input.type = v ? 'text' : 'password'; b.setAttribute('aria-pressed', String(v)); b.setAttribute('aria-label', v ? 'Ocultar senha' : 'Mostrar senha'); b.title = b.getAttribute('aria-label'); b.innerHTML = window.FinancIcons ? FinancIcons.svg(v ? 'eye-off' : 'eye', { size: 18 }) : ''; };
+      b.addEventListener('pointerdown', e => e.preventDefault());
+      b.addEventListener('click', () => { show(input.type === 'password'); input.focus({ preventScroll: true }); });
+      wrap.append(b); show(false);
+    });
+
+    // Interruptores e seletor segmentado do kit
+    document.querySelectorAll('.fs-switch').forEach(s => s.addEventListener('click', () => s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true'))));
+    document.querySelectorAll('.fs-seg').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
 
     // Dropdown
     const trigger = $('demo-dropdown-trigger'), menu = $('demo-dropdown-menu');

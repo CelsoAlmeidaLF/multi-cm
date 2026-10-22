@@ -55,7 +55,13 @@ const requiredSections = [
   'id="sec-mais"',
   'id="sec-feedback"',
   'id="sec-recuperacao"',
-  'id="sec-modal"'
+  'id="sec-modal"',
+  'id="sec-layout"',
+  'id="sec-login"',
+  'id="sec-inicio"',
+  'id="sec-estoque"',
+  'id="sec-caixa"',
+  'id="sec-kit"'
 ];
 
 for (const sec of requiredSections) {
@@ -85,6 +91,13 @@ for (const marca of ['--scroll-thumb:', '--scroll-thumb-hover:', 'scrollbar-widt
   assert.ok(themeCss.includes(marca), `[CSS_ERR] Rolagem Aero incompleta no theme.css: ${marca}`);
 }
 console.log('✅ [PASS] Rolagem Aero definida no theme.css (tokens, barra fina, .scroll-area e .scroll-x)');
+
+// 3c. Kit de segurança no catálogo usa o CSS real do pacote e o tema do app
+assert.ok(htmlContent.includes('href="../src/stk-pkg-secure-ui.css"'), '[HTML_ERR] CSS do kit de segurança ausente no catálogo');
+assert.ok(htmlContent.includes('href="../src/css/kit-aero.css"'), '[HTML_ERR] Tema kit-aero.css ausente no catálogo');
+const kitAero = fs.readFileSync(path.resolve(rootDir, 'src/css/kit-aero.css'), 'utf-8');
+assert.ok(/\.fs-switch[^{]*\{[^}]*min-height:\s*0/.test(kitAero), '[CSS_ERR] .fs-switch sem min-height: 0 (o button global de 42px deforma o interruptor)');
+console.log('✅ [PASS] Kit de segurança catalogado com o CSS do pacote e o tema kit-aero');
 
 // 4. Verificação de Integridade Sintática
 assert.ok(htmlContent.includes('<!DOCTYPE html>'), '[SYNTAX_ERR] Doctype HTML5 ausente');
