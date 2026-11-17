@@ -1,4 +1,4 @@
-// stk-pkg-governanca: contrato, cliente e canal REST. Roda no pacote e na cópia de cada app.
+// stk-pkt-governanca: contrato, cliente e canal REST. Roda no pacote e na cópia de cada app.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -6,11 +6,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
-// No pacote os arquivos ficam em ../; num app, em ../src/stk-pkg-governanca/
-const base = [join(aqui, '..'), join(aqui, '..', 'src', 'stk-pkg-governanca')].find(p => existsSync(join(p, 'stk-pkg-governanca-contrato.js')));
-const contrato = await import(join(base, 'stk-pkg-governanca-contrato.js'));
-const { GovernancaCliente, MAX_DIAS_OFFLINE } = await import(join(base, 'stk-pkg-governanca-cliente.js'));
-const { FirestoreRestGovernanca, codificarCampos, decodificarCampos, METODOS_PORTA } = await import(join(base, 'stk-pkg-governanca-firestore.js'));
+// No pacote os arquivos ficam em ../; num app, em ../src/stk-pkt-governanca/
+const base = [join(aqui, '..'), join(aqui, '..', 'src', 'stk-pkt-governanca')].find(p => existsSync(join(p, 'stk-pkt-governanca-contrato.js')));
+const contrato = await import(join(base, 'stk-pkt-governanca-contrato.js'));
+const { GovernancaCliente, MAX_DIAS_OFFLINE } = await import(join(base, 'stk-pkt-governanca-cliente.js'));
+const { FirestoreRestGovernanca, codificarCampos, decodificarCampos, METODOS_PORTA } = await import(join(base, 'stk-pkt-governanca-firestore.js'));
 const { ESTADOS, avaliar, formatarUid, isUidGovernanca, criarUid, normalizarCadastro, modulosDoPlano, PLANOS, MODULOS, CAMPOS_SOLICITACAO_APP, higienizar } = contrato;
 
 const UID = 'a'.repeat(32);
@@ -100,7 +100,7 @@ test('Planos: tabela única para aprovar e trocar de plano', () => {
 });
 
 test('Regras do Firestore: campos que o app grava = hasOnly da coleção de solicitações', () => {
-  const regras = [join(aqui, '..', '..', 'stk-pkg-doacao', 'firestore.rules'), join(aqui, '..', 'firestore.rules')].find(existsSync);
+  const regras = [join(aqui, '..', '..', 'stk-pkt-doacao', 'firestore.rules'), join(aqui, '..', 'firestore.rules')].find(existsSync);
   if (!regras) return; // cópia num app sem as regras
   const trecho = readFileSync(regras, 'utf8').split('match /solicitacoes_governanca/')[1];
   const hasOnly = JSON.parse(/hasOnly\((\[[^\]]+\])\)/.exec(trecho)[1].replace(/'/g, '"'));

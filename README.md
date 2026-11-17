@@ -21,13 +21,13 @@ src/js/
     ├── adapters/               # DomRenderer, DomEventHandler, TypedSecrets (senhas só digitadas)
     └── controllers/            # Sales, Stock, Cash, Security, Governance (telas extraídas do App.js)
 src/css/kit-aero.css            # ponte entre os tokens do kit de segurança e o visual Aero
-src/stk-pkg-*                   # cópias de PACOTES/stk-pkg-security (cofre, Configurações, ícones, BIP39-pt); não editar aqui
-src/stk-pkg-governanca/         # cópias de PACOTES/stk-pkg-governanca (contrato, cliente, Firestore REST, config); não editar aqui
+src/stk-pkt-*                   # cópias de PACOTES/stk-pkt-security (cofre, Configurações, ícones, BIP39-pt); não editar aqui
+src/stk-pkt-governanca/         # cópias de PACOTES/stk-pkt-governanca (contrato, cliente, Firestore REST, config); não editar aqui
 ```
 
 ## Integração com a Governança Systekna
 
-O processo de permissão vem do pacote `PACOTES/stk-pkg-governanca` (fonte única, também usada pelo painel Governança). O teste `tests/stk-pkg-governanca.test.mjs` confere se a cópia em `src/stk-pkg-governanca/` é idêntica ao pacote.
+O processo de permissão vem do pacote `PACOTES/stk-pkt-governanca` (fonte única, também usada pelo painel Governança). O teste `tests/stk-pkt-governanca.test.mjs` confere se a cópia em `src/stk-pkt-governanca/` é idêntica ao pacote.
 
 Fluxo: **usuário se cadastra no app → é gerada a impressão digital (UID) → a solicitação vai ao Firebase com esse UID → a Governança aprova ou não** e libera/bloqueia funcionalidades no tenant de mesmo UID. As permissões vêm sempre do Firebase.
 
@@ -40,13 +40,13 @@ Fluxo: **usuário se cadastra no app → é gerada a impressão digital (UID) �
 - **Telemetria e feedback:** erros e feedbacks vão sanitizados para `telemetria_erros` e `feedbacks_usuarios`, com o UID do cadastro.
 - **App Check:** o projeto `systekna-feedback` exige App Check; o token (reCAPTCHA Enterprise, SDK oficial da gstatic) vai no cabeçalho `X-Firebase-AppCheck` de cada chamada REST.
 
-O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas regras em `PACOTES/stk-pkg-doacao/firestore.rules`. O enforcement no aparelho impede o uso normal, mas quem controla o próprio navegador consegue contorná-lo — a autoridade final é o Firestore e o contrato.
+O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas regras em `PACOTES/stk-pkt-doacao/firestore.rules`. O enforcement no aparelho impede o uso normal, mas quem controla o próprio navegador consegue contorná-lo — a autoridade final é o Firestore e o contrato.
 
 ## Segurança local
 
 Duas camadas desde a v2.6.0, no padrão Systekna:
 
-1. **Cofre do aparelho (kit `stk-pkg-security`, por fora):** abre antes do app com o PIN FINANC, biometria, 12 palavras (BIP39-pt) ou certificado. `data-vault-app="multi-cm"` usa o FINANC ID compartilhado da mesma origem, e `App.init` espera `window.vaultReady`. O kit registra o `sw.js`. O menu ⋮ do kit fica na barra de título (`data-vault-profile-slot`); no celular o cadeado sai da barra e fica em Mais → Bloquear o aplicativo.
+1. **Cofre do aparelho (kit `stk-pkt-security`, por fora):** abre antes do app com o PIN FINANC, biometria, 12 palavras (BIP39-pt) ou certificado. `data-vault-app="multi-cm"` usa o FINANC ID compartilhado da mesma origem, e `App.init` espera `window.vaultReady`. O kit registra o `sw.js`. O menu ⋮ do kit fica na barra de título (`data-vault-profile-slot`); no celular o cadeado sai da barra e fica em Mais → Bloquear o aplicativo.
 2. **Equipe (por dentro):** gerente e funcionários entram com usuário e senha, **só digitados** (`FinancTyped` do kit): sem colar nem autofill de gerenciador de senhas.
 3. **Login salvo (v2.7.0) — um PIN só:** com "Manter conectado neste aparelho" (marcado por padrão), o 1º login com usuário e senha guarda a **chave que a senha libera** (nunca a senha) no cofre do kit (`window.secureStorage`, chave `bg-login-salvo-v1`), que só abre com o PIN do aparelho, a biometria ou as 12 palavras. Nas próximas vezes: PIN do aparelho → aprovação da Governança → entra direto como o último usuário.
    - **Bloquear** (cadeado, inatividade) volta ao PIN do aparelho e entra de novo sem senha.
@@ -67,7 +67,7 @@ O kit usa `--surface`, `--surface-2` e `--ink-dim`; `src/css/kit-aero.css` liga 
 | --- | --- |
 | 2.4.0 | Versão do app e especificações do sistema em Configurações |
 | 2.5.0 | Integração com a Governança: acesso e funcionalidades por UID vindos do Firebase, telemetria e feedback |
-| 2.6.0 | Padrão de segurança Systekna (cofre do kit por fora + equipe por dentro), senhas só digitadas, BG12 em BIP39-pt, `stk-pkg-governanca`, service worker v6 |
+| 2.6.0 | Padrão de segurança Systekna (cofre do kit por fora + equipe por dentro), senhas só digitadas, BG12 em BIP39-pt, `stk-pkt-governanca`, service worker v6 |
 | 2.6.1 | Cofre do kit legível no visual Aero (`kit-aero.css`) |
 | 2.6.2 | Menu do kit dentro da barra de título; nome do estabelecimento no título |
 | 2.7.0 | Login salvo: um PIN só (o do aparelho); depois do 1º login com usuário e senha, entra direto; Trocar usuário e Sair deste dispositivo; service worker v9 |

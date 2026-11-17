@@ -4,7 +4,7 @@ import { BG12_LEGACY_WORDS } from '../../domain/values/Bg12LegacyWords.js';
  * Serviço de Aplicação: Protocolo de Recuperação de Emergência (BG12-v1)
  *
  * Padrão Systekna: as 12 palavras usam a lista BIP39 em português do kit de segurança
- * (FinancVault.seed, PACOTES/stk-pkg-security). O token só depende da entropia, então frases
+ * (FinancVault.seed, PACOTES/stk-pkt-security). O token só depende da entropia, então frases
  * antigas em inglês (lista BG12 legada) continuam abrindo o mesmo registro de recuperação.
  */
 const TOKEN_PREFIX = 'BarGestao:Recovery-BG12:v1:';

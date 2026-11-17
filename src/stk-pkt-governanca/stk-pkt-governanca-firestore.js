@@ -1,11 +1,11 @@
 /**
- * stk-pkg-governanca — canal do APP com a governança pelo REST do Firestore (fetch nativo, sem build).
+ * stk-pkt-governanca — canal do APP com a governança pelo REST do Firestore (fetch nativo, sem build).
  * O app não autentica no Firebase: as regras só permitem criar documentos com esquema validado e ler
  * um documento pelo id (o UID gerado no aparelho). Cada chamada leva o token do App Check, exigido
  * pelo projeto (sem ele o Firestore responde 403).
  */
-import { COLECOES, isUidGovernanca } from './stk-pkg-governanca-contrato.js';
-import { GOVERNANCA_FIREBASE } from './stk-pkg-governanca-config.js';
+import { COLECOES, isUidGovernanca } from './stk-pkt-governanca-contrato.js';
+import { GOVERNANCA_FIREBASE } from './stk-pkt-governanca-config.js';
 
 /** Porta de saída implementada por este adaptador (o cliente só depende destes métodos). */
 export const METODOS_PORTA = Object.freeze(['enviarSolicitacao', 'buscarSolicitacao', 'buscarTenant', 'enviarErro', 'enviarFeedback']);

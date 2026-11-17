@@ -7,7 +7,7 @@ import { protectTypedSecrets, typedValue, clearTyped, TYPED_SECRET_FIELDS, NOT_T
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = p => readFileSync(join(root, 'src', p), 'utf8');
-const KIT_FILES = ['stk-pkg-secure-vault.js', 'stk-pkg-secure-ui.js', 'stk-pkg-secure-ui.css', 'stk-pkg-bip39-pt.js', 'stk-pkg-financ-icons.js'];
+const KIT_FILES = ['stk-pkt-secure-vault.js', 'stk-pkt-secure-ui.js', 'stk-pkt-secure-ui.css', 'stk-pkt-bip39-pt.js', 'stk-pkt-financ-icons.js'];
 
 const results = [];
 async function testCase(id, name, fn) {
@@ -22,7 +22,7 @@ async function testCase(id, name, fn) {
 }
 
 console.log('='.repeat(70));
-console.log('🧪 PADRÃO DE SEGURANÇA SYSTEKNA (KIT stk-pkg-security)');
+console.log('🧪 PADRÃO DE SEGURANÇA SYSTEKNA (KIT stk-pkt-security)');
 console.log('='.repeat(70));
 
 const html = src('index.html');
@@ -32,11 +32,11 @@ await testCase('SEG-01', 'index.html abre pelo cofre do kit: html travado, app i
   assert.match(html, /data-vault-app="multi-cm"/);
   assert.match(html, /data-vault-name="BarGestão"/);
   const app = html.indexOf('src="js/App.js"');
-  for (const f of ['stk-pkg-financ-icons.js', 'stk-pkg-bip39-pt.js', 'stk-pkg-secure-vault.js', 'stk-pkg-secure-ui.js']) {
+  for (const f of ['stk-pkt-financ-icons.js', 'stk-pkt-bip39-pt.js', 'stk-pkt-secure-vault.js', 'stk-pkt-secure-ui.js']) {
     const at = html.indexOf(`<script src="${f}"></script>`);
     assert.ok(at > 0 && at < app, `${f} deve carregar antes do App.js`);
   }
-  assert.ok(html.includes('href="stk-pkg-secure-ui.css"'));
+  assert.ok(html.includes('href="stk-pkt-secure-ui.css"'));
 });
 
 await testCase('SEG-02', 'Versão do cofre = versão do app (App.VERSION)', async () => {
@@ -52,8 +52,8 @@ await testCase('SEG-03', 'App só inicia depois do cofre e não registra service
   assert.ok(!app.includes('serviceWorker.register'));
 });
 
-await testCase('SEG-04', 'Cópia do kit idêntica a PACOTES/stk-pkg-security (quando a pasta existe)', async () => {
-  const pkg = join(root, '..', '..', 'PACOTES', 'stk-pkg-security');
+await testCase('SEG-04', 'Cópia do kit idêntica a PACOTES/stk-pkt-security (quando a pasta existe)', async () => {
+  const pkg = join(root, '..', '..', 'PACOTES', 'stk-pkt-security');
   for (const f of KIT_FILES) assert.ok(existsSync(join(root, 'src', f)), `${f} ausente em src/`);
   if (!existsSync(pkg)) return; // CI: só o repositório do app
   for (const f of KIT_FILES) assert.equal(src(f), readFileSync(join(pkg, f), 'utf8'), `${f} difere do pacote`);
@@ -101,31 +101,31 @@ await testCase('SEG-09', 'Recuperação não carrega mais a lista em inglês no 
   assert.ok(rec.includes('FinancVault?.seed'));
 });
 
-const PKG_GOVERNANCA = ['stk-pkg-governanca-contrato.js', 'stk-pkg-governanca-config.js', 'stk-pkg-governanca-cliente.js', 'stk-pkg-governanca-firestore.js'];
+const PKG_GOVERNANCA = ['stk-pkt-governanca-contrato.js', 'stk-pkt-governanca-config.js', 'stk-pkt-governanca-cliente.js', 'stk-pkt-governanca-firestore.js'];
 
-await testCase('SEG-10', 'pkg-governanca: cópia idêntica a PACOTES/stk-pkg-governanca (quando a pasta existe)', async () => {
-  for (const f of PKG_GOVERNANCA) assert.ok(existsSync(join(root, 'src', 'stk-pkg-governanca', f)), `${f} ausente`);
-  const pkg = join(root, '..', '..', 'PACOTES', 'stk-pkg-governanca');
+await testCase('SEG-10', 'pkg-governanca: cópia idêntica a PACOTES/stk-pkt-governanca (quando a pasta existe)', async () => {
+  for (const f of PKG_GOVERNANCA) assert.ok(existsSync(join(root, 'src', 'stk-pkt-governanca', f)), `${f} ausente`);
+  const pkg = join(root, '..', '..', 'PACOTES', 'stk-pkt-governanca');
   if (!existsSync(pkg)) return;
-  for (const f of PKG_GOVERNANCA) assert.equal(src('stk-pkg-governanca/' + f), readFileSync(join(pkg, f), 'utf8'), `${f} difere do pacote`);
-  assert.equal(readFileSync(join(root, 'tests', 'stk-pkg-governanca.test.mjs'), 'utf8'), readFileSync(join(pkg, 'test', 'governanca.test.mjs'), 'utf8'));
+  for (const f of PKG_GOVERNANCA) assert.equal(src('stk-pkt-governanca/' + f), readFileSync(join(pkg, f), 'utf8'), `${f} difere do pacote`);
+  assert.equal(readFileSync(join(root, 'tests', 'stk-pkt-governanca.test.mjs'), 'utf8'), readFileSync(join(pkg, 'test', 'governanca.test.mjs'), 'utf8'));
 });
 
 await testCase('SEG-11', 'Service worker guarda todos os módulos JS (o app abre offline)', async () => {
   const sw = src('sw.js');
   const { readdirSync, statSync } = await import('node:fs');
   const walk = d => readdirSync(join(root, 'src', d)).flatMap(f => statSync(join(root, 'src', d, f)).isDirectory() ? walk(`${d}/${f}`) : [`${d}/${f}`]);
-  for (const f of [...walk('js'), ...walk('stk-pkg-governanca')].filter(f => f.endsWith('.js'))) {
+  for (const f of [...walk('js'), ...walk('stk-pkt-governanca')].filter(f => f.endsWith('.js'))) {
     assert.ok(sw.includes(`'./${f}'`), `${f} fora do cache`);
   }
 });
 
 await testCase('SEG-12', 'Cofre no visual Aero: todo token de cor do kit é definido pelo app (sem cair no tema escuro)', async () => {
-  const kit = src('stk-pkg-secure-ui.css');
+  const kit = src('stk-pkt-secure-ui.css');
   const usados = [...new Set([...kit.matchAll(/var\(--([a-z0-9-]+)/g)].map(m => m[1]))];
   const app = ['css/theme.css', 'css/kit-aero.css'].map(src).join('\n');
   for (const token of usados) assert.match(app, new RegExp(`--${token}\\s*:`), `--${token} sem valor no app`);
-  const linkKit = html.indexOf('href="stk-pkg-secure-ui.css"');
+  const linkKit = html.indexOf('href="stk-pkt-secure-ui.css"');
   const linkPonte = html.indexOf('href="css/kit-aero.css"');
   assert.ok(linkKit > 0 && linkPonte > linkKit, 'kit-aero.css carrega depois do CSS do kit');
   assert.ok(src('sw.js').includes("'./css/kit-aero.css'"));

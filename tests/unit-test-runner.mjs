@@ -18,8 +18,8 @@ import { WebCryptoAdapter } from '../src/js/infrastructure/adapters/WebCryptoAda
 import { BG12_LEGACY_WORDS } from '../src/js/domain/values/Bg12LegacyWords.js';
 
 // Kit de segurança Systekna (cópia em src/), carregado como no navegador: registra-se em globalThis
-await import('../src/stk-pkg-bip39-pt.js');
-await import('../src/stk-pkg-secure-vault.js');
+await import('../src/stk-pkt-bip39-pt.js');
+await import('../src/stk-pkt-secure-vault.js');
 const kitSeed = globalThis.FinancVault.seed;
 const BIP39_PT = globalThis.FINANC_BIP39_PT;
 

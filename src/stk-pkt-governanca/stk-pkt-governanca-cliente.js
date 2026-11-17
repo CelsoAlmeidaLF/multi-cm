@@ -1,5 +1,5 @@
 /**
- * stk-pkg-governanca — CLIENTE do processo de permissão, usado por qualquer app Systekna.
+ * stk-pkt-governanca — CLIENTE do processo de permissão, usado por qualquer app Systekna.
  *
  * Fluxo: cadastro no app → impressão digital (UID) → solicitação no Firebase → a governança aprova ou não
  * e libera/bloqueia módulos no tenant de mesmo UID. Sem aprovação confirmada, o app não abre.
@@ -14,7 +14,7 @@
 import {
   ESTADOS, MODULOS, UID_DIGITAL, TIPOS_COMERCIO,
   avaliar, criarUid, formatarUid, higienizar, isUidGovernanca, normalizarCadastro
-} from './stk-pkg-governanca-contrato.js';
+} from './stk-pkt-governanca-contrato.js';
 
 /** Prazo máximo sem confirmar a licença no servidor; depois disso o acesso fica suspenso. */
 export const MAX_DIAS_OFFLINE = 14;

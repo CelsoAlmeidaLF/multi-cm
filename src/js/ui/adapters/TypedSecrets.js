@@ -1,5 +1,5 @@
 /**
- * Adaptador de UI: senhas e PINs da equipe só digitados (padrão Systekna, kit stk-pkg-security).
+ * Adaptador de UI: senhas e PINs da equipe só digitados (padrão Systekna, kit stk-pkt-security).
  * Sem colar, arrastar nem preenchimento automático (Proton Pass, Google); o navegador não oferece salvar.
  * A proteção vem do kit (window.FinancTyped.only); aqui ficam a lista de campos e a leitura conferida.
  */
