@@ -1,7 +1,7 @@
 /* ==========================================================================
    BarGestão Standard — ponte entre o kit de segurança Systekna e o Aero 2.0
    Arquivo: kit-aero.css (carregado depois de main.css)
-   O kit (stk-pkg-secure-ui.css) usa --surface, --surface-2, --ink-dim, --up, --down e --info;
+   O kit (stk-pkt-secure-ui.css) usa --surface, --surface-2, --ink-dim, --up, --down e --info;
    sem eles caía no tema escuro padrão, com o --ink escuro do Aero por cima (texto ilegível).
    Não edite a cópia do kit: ajuste aqui.
    ========================================================================== */

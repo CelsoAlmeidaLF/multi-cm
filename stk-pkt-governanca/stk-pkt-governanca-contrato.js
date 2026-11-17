@@ -1,5 +1,5 @@
 /**
- * stk-pkg-governanca — CONTRATO do processo de permissão da Governança Systekna.
+ * stk-pkt-governanca — CONTRATO do processo de permissão da Governança Systekna.
  * Fonte única para os apps (que pedem e obedecem) e para o painel (que decide):
  *
  *   app: cadastro → impressão digital (UID) → solicitação no Firebase (pendente)
@@ -11,7 +11,7 @@
 
 export const CONTRATO_VERSAO = '1.0.0';
 
-/** Coleções do Firestore (projeto systekna-feedback). As regras ficam em PACOTES/stk-pkg-doacao/firestore.rules. */
+/** Coleções do Firestore (projeto systekna-feedback). As regras ficam em PACOTES/stk-pkt-doacao/firestore.rules. */
 export const COLECOES = Object.freeze({
   SOLICITACOES: 'solicitacoes_governanca',
   TENANTS: 'tenants_governanca',

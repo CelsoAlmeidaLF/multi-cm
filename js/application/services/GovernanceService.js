@@ -1,10 +1,10 @@
-import { GovernancaCliente, MAX_DIAS_OFFLINE } from '../../../stk-pkg-governanca/stk-pkg-governanca-cliente.js';
-import { ESTADOS, avaliar, formatarUid, higienizar, normalizarCadastro, cnpjValido, criarUid } from '../../../stk-pkg-governanca/stk-pkg-governanca-contrato.js';
+import { GovernancaCliente, MAX_DIAS_OFFLINE } from '../../../stk-pkt-governanca/stk-pkt-governanca-cliente.js';
+import { ESTADOS, avaliar, formatarUid, higienizar, normalizarCadastro, cnpjValido, criarUid } from '../../../stk-pkt-governanca/stk-pkt-governanca-contrato.js';
 
 /**
  * Serviço de Aplicação: Governança Systekna no BarGestão.
  * O processo de permissão (cadastro → UID → solicitação → aprovação → módulos) é o do pacote
- * PACOTES/stk-pkg-governanca (cópia em src/stk-pkg-governanca); aqui ficam só as regras do bar:
+ * PACOTES/stk-pkt-governanca (cópia em src/stk-pkt-governanca); aqui ficam só as regras do bar:
  * mesas sugeridas para tipo "bar", exportação Excel e limite de produtos.
  */
 export const GOVERNANCE_STATES = Object.freeze({

@@ -1,5 +1,5 @@
 /**
- * stk-pkg-governanca — configuração pública do projeto Firebase da Governança (systekna-feedback).
+ * stk-pkt-governanca — configuração pública do projeto Firebase da Governança (systekna-feedback).
  * apiKey, appId e a chave do reCAPTCHA Enterprise são identificadores públicos de projeto, não segredos:
  * quem protege os dados são as regras do Firestore e o App Check.
  */
