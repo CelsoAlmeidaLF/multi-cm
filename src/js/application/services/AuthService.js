@@ -399,6 +399,23 @@ export class AuthService {
     return true;
   }
 
+  /**
+   * Renova o login salvo depois de uma troca de chave do cofre (ex.: remoção de usuário). Só renova se o login salvo
+   * for do próprio usuário da sessão; se for de outro (ex.: um operador no aparelho e o gerente removendo alguém),
+   * regravar com a sessão atual daria ao PIN desse aparelho o perfil do gerente. Então é apagado e volta a pedir a senha.
+   * Sem login salvo, não faz nada. Retorna 'renovado' | 'apagado' | 'nenhum'.
+   */
+  async renewSavedLogin(store) {
+    let texto;
+    try { texto = store?.getItem(AuthService.LOGIN_SALVO); } catch { return 'nenhum'; }
+    if (!texto) return 'nenhum';
+    let salvo = null;
+    try { salvo = JSON.parse(texto); } catch { /* ilegível: tratado como de outro usuário */ }
+    if (salvo && this._session && salvo.usuario === this._session.usuario && await this.rememberLogin(store)) return 'renovado';
+    this.forgetLogin(store);
+    return 'apagado';
+  }
+
   forgetLogin(store) {
     try { store?.removeItem(AuthService.LOGIN_SALVO); } catch { /* cofre do kit bloqueado: nada a esquecer agora */ }
   }

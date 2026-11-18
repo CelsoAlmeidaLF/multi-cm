@@ -434,6 +434,45 @@ await teste('GRF.2', 'CashController._renderChart usa o rótulo compacto e guard
   assert.match(col.attrs['aria-label'], /R\$ 28\.50/);
 });
 
+// ----- A1 (revisão de segurança PR #13): renovar o login salvo após troca de chave não pode promover o PIN do aparelho
+const cofreKit = () => { const m = new Map(); return { m, getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: k => { m.delete(k); } }; };
+
+await teste('A1.1', 'Login salvo de OPERADOR no aparelho + gerente remove outro usuário: login salvo é apagado, nunca vira gerente', async () => {
+  const env = await montar();
+  await env.auth.addUser({ usuario: 'ana', senha: 'Senha@Ana123', perfil: 'operador' });
+  await env.auth.addUser({ usuario: 'bia', senha: 'Senha@Bia123', perfil: 'operador' });
+  const kit = cofreKit();
+  const ana = await comoOutro(env, 'ana', 'Senha@Ana123');
+  await ana.rememberLogin(kit); // o aparelho guardou o login da ana (operador)
+  assert.equal(JSON.parse(kit.getItem(AuthService.LOGIN_SALVO)).usuario, 'ana');
+  await env.auth.removeUserAndRotateKey('bia', { managerPassword: SENHA, newPasswords: { ana: 'NovaAna@456' }, writeData: async () => {} });
+  assert.equal(await env.auth.renewSavedLogin(kit), 'apagado');
+  assert.equal(kit.getItem(AuthService.LOGIN_SALVO), null, 'não pode sobrar login salvo (nem como gerente)');
+});
+
+await teste('A1.2', 'Login salvo do próprio gerente continua renovado, com a chave nova e o mesmo usuário', async () => {
+  const env = await montar();
+  await env.auth.addUser({ usuario: 'ana', senha: 'Senha@Ana123', perfil: 'operador' });
+  const kit = cofreKit();
+  await env.auth.rememberLogin(kit);
+  await env.auth.removeUserAndRotateKey('ana', { managerPassword: SENHA, newPasswords: {}, writeData: async () => {} });
+  assert.equal(await env.auth.renewSavedLogin(kit), 'renovado');
+  const salvo = JSON.parse(kit.getItem(AuthService.LOGIN_SALVO));
+  assert.equal(salvo.usuario, 'celso');
+  assert.equal(salvo.chave, hex(env.auth.getVaultRaw()));
+  assert.notEqual(salvo.chave, hex(env.raw), 'chave nova, não a antiga');
+});
+
+await teste('A1.3', 'Sem login salvo: nada é criado; JSON ilegível é apagado', async () => {
+  const env = await montar();
+  const kit = cofreKit();
+  assert.equal(await env.auth.renewSavedLogin(kit), 'nenhum');
+  assert.equal(kit.m.size, 0, 'não cria login salvo que o aparelho não tinha');
+  kit.setItem(AuthService.LOGIN_SALVO, '{lixo');
+  assert.equal(await env.auth.renewSavedLogin(kit), 'apagado');
+  assert.equal(kit.getItem(AuthService.LOGIN_SALVO), null);
+});
+
 await teste('KIT.1', 'Kit: cópia com a guarda do elemento de mensagem (detachedMessage) e idêntica à fonte em PACOTES', () => {
   const copia = fs.readFileSync('src/stk-pkg-secure-ui.js', 'utf-8');
   assert.match(copia, /const detachedMessage = document\.createElement\('p'\);/);

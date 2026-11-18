@@ -509,7 +509,7 @@ export class App {
       this._governanceCtl.report(e, 'storage');
       this._renderer.toast('Usuário removido e chave trocada, mas a limpeza de cópias antigas falhou. Ela se completa na próxima alteração.');
     }
-    if (this._auth.hasSavedLogin(window.secureStorage)) await this._auth.rememberLogin(window.secureStorage);
+    await this._auth.renewSavedLogin(window.secureStorage); // só renova se o login salvo for do gerente da sessão (A1)
     await this._commit(() => {}, `Remoção de usuário da equipe: ${usuario} (chave do cofre trocada)`);
     return result.recovery;
   }
