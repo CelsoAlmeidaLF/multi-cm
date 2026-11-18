@@ -85,7 +85,16 @@ Os tokens estão centralizados em `multi-cm/src/css/theme.css` e utilizam CSS Cu
 | `--space-2xl` | `32px` | Respiro vertical de títulos e seções |
 | `--space-3xl` | `40px` | Margens de topo de layouts desktop |
 
-### 3.4. Tipografia & Escala Hierárquica
+### 3.4. Rolagem (Scroll)
+
+| Token | Valor | Uso |
+| :--- | :--- | :--- |
+| `--scroll-size` | `10px` | Largura/altura da barra no Safari (`::-webkit-scrollbar`) |
+| `--scroll-thumb` | `rgba(103, 123, 150, 0.26)` | Barra em repouso: fina e quase invisível |
+| `--scroll-thumb-hover` | `rgba(38, 109, 224, 0.5)` | Barra ao passar o mouse sobre a área (cor de acento) |
+| `--scroll-fade` | `28px` | Comprimento do esmaecido nas bordas de `.scroll-area` e `.scroll-x` |
+
+### 3.5. Tipografia & Escala Hierárquica
 
 - **Família Tipográfica:** `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
 - **Títulos:**
@@ -139,6 +148,26 @@ Resolve o alinhamento entre campos com rótulo (`.period-select`) e botões puro
 
 ### 4.7. Modais Aero (`.aero-modal`)
 Diálogos construídos sobre a tag nativa `<dialog>`, com animação de escala, backdrop escurecido com desfoque de 28px e cabeçalho com barra de kicker.
+
+### 4.8. Rolagem Aero (`theme.css`)
+Minimalista, discreta e elegante, sem JavaScript:
+- **Global:** `scrollbar-width: thin` + `scrollbar-color` (Firefox e Chrome 121+) e `::-webkit-scrollbar` (Safari). Trilho transparente; a barra fica quase invisível em repouso e ganha a cor de acento no hover. Listas que escondem a barra (`.category-chips`, menu lateral) continuam com `scrollbar-width: none`.
+- **Âncoras:** `scroll-behavior: smooth` (desligado com `prefers-reduced-motion`) e `scroll-padding-top` igual à topbar, para o título não ficar atrás dela.
+- **`.scroll-area`:** rolagem vertical própria com altura máxima em `--scroll-max` (padrão 320px), `overscroll-behavior: contain` e `scrollbar-gutter: stable`.
+- **`.scroll-x`:** faixa horizontal para chips e cards, com `scroll-snap` nos itens e barra escondida.
+- **Bordas esmaecidas inteligentes:** as duas classes esmaecem só o lado em que ainda há conteúdo, com `animation-timeline: scroll(self)` e as propriedades registradas `--fade-ini`/`--fade-fim`. Sem suporte, fica o esmaecido fixo do lado final.
+
+### 4.9. Outros componentes catalogados
+O catálogo vivo (`docs/design-system.html`, 26 seções) mostra, com a marcação real do app:
+- **Layout:** esquema `.shell` › `.sidebar` + `.app` › `.topbar` + `.content`, topbar com `.vp-bar`/`.top-title`/`.profile`, `.field-grid` com `.span2`, `.sku-help` e `.form-help`.
+- **Login:** `.auth-box` (sobre `.auth-overlay`), `.auth-tabs`, `.bio-login-help`, `.autofill-note`, `.backup-login`.
+- **Início:** `.home-head` (com `.dot`), `.home-hero` (`.hero-copy`, `.hero-kicker`, `.hero-action`, `.hero-art`, `.art-ring`), `.home-card`, `.home-table-list`/`.home-mini-row`, `.home-empty` (e `.good`).
+- **Mesas, comanda e estoque:** `.mesa-entry` com `.itemline`, `.cmd-head`/`.cmd-icon-btn`, `.cmd-new`, `.category-chips`, `.product-choice` + `.cmd-badge`, `.cmd-item`, `.cmd-pay` + `.cmd-pay-actions`, `.cmd-total-row`; produto com `.item-id` e `.entry-right`, movimentação com `.text-good`/`.text-bad`, `.inline-fields` e `.small-list`.
+- **Caixa:** `.cash-stats`, `.cash-lower-stats`, `.cash-quick`, `.cash-export-notice`, livro caixa, `.audit-record`, `.receipt-preview`, `.chart-bars`.
+- **Menu Mais:** `.more-profile`, `.bio-entry` + `.bio-diagnostic`, `.group-title`, `.more-group`/`.more-link` + `.more-chevron`, `.version-card`, `.version-label`.
+- **Feedback:** `.empty`, `.toast`, `.notice`, `.error`, `.v9-panel` + `.v9-note`, `.recovery-word-grid`.
+- **Kit de segurança** (`2. PACOTES/stk-pkt-security` + tema `kit-aero.css`): folha de configurações (`.fs-head`, `.fs-body`, `.fs-row`, `.fs-switch`, `.fs-select`, `.fs-seg`, `.fs-badge-*`, `.fs-danger`, `.fs-toast`), painel do perfil (`.vp-*`), senha com olho (`.pw-wrap`), tela de bloqueio (`#vaultGate`, `.vault-keypad`, `.vault-dots`), diálogo de PIN (`.vault-dialog`) e lembrete de backup (`#vaultBackupNudge`). O `kit-aero.css` zera o `min-height` global de botão nos controles de tamanho fixo do kit (`.fs-switch`, `.fs-back`, `.vp-close`, `.fs-seg button`).
+- Ícone dentro de pill: `.pill svg` (12px).
 
 ---
 
