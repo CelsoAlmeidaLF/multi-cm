@@ -85,6 +85,33 @@ export class StorageAdapter extends IStoragePort {
       .sort((a, b) => b.seq - a.seq);
   }
 
+  /**
+   * Apaga cópias que não passam em `keep(packet)` (ex.: pacotes cifrados com a chave antiga depois da troca de chave).
+   * Só mexe em cópias auxiliares (localStorage e backup-candidates); os slots A/B do OPFS são reescritos pelo chamador.
+   * @returns {Promise<number>} quantas cópias foram apagadas
+   */
+  async purgeCandidates(keep) {
+    let removed = 0;
+    for (let i = 0; i < 2; i++) {
+      const k = 'bargestao_json_v7_' + i;
+      try {
+        const raw = localStorage.getItem(k);
+        if (!raw) continue;
+        if (!(await keep(JSON.parse(raw)))) { localStorage.removeItem(k); removed++; }
+      } catch { try { localStorage.removeItem(k); removed++; } catch {} }
+    }
+    try {
+      const list = await this.dbRead('private', 'backup-candidates');
+      if (Array.isArray(list) && list.length) {
+        const kept = [];
+        for (const packet of list) { if (await keep(packet).catch(() => false)) kept.push(packet); else removed++; }
+        if (kept.length) await this.dbWrite('private', 'backup-candidates', kept);
+        else await this.dbDelete('private', 'backup-candidates');
+      }
+    } catch {}
+    return removed;
+  }
+
   async writeSlot(slot, packet) {
     try {
       await this.writeOpfsSlot(slot, packet);

@@ -97,8 +97,8 @@ export class OrderService {
     return this.receiveTable(database, tablename, formapagamento, username, shiftid, options);
   }
 
-  /** Decisão do Celso (v3.1.0): gerente e vendedor (funcionário) cancelam item; outro perfil é negado. */
-  static CANCEL_ROLES = ['gerente', 'vendedor'];
+  /** Decisão do Celso (v3.1.0): gerente e funcionário (perfil "operador") cancelam item; outro perfil é negado. */
+  static CANCEL_ROLES = ['gerente', 'operador'];
 
   cancelOrderItemWithRole(database, tablename, itemid, reason, username, role = 'gerente') {
     if (!OrderService.CANCEL_ROLES.includes(role)) {

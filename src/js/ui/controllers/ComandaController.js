@@ -50,6 +50,11 @@ export class ComandaController {
 
   /** Nova comanda: pede número da mesa e cliente na própria tela. */
   openNew() {
+    // Mesas desabilitadas pela Governança: o atendimento vira venda no balcão
+    if (this._app._governanceCtl?.allowsTables?.() === false) {
+      this.openCounter();
+      return;
+    }
     this._table = null;
     const num = document.getElementById('cmd-numero');
     const cli = document.getElementById('cmd-cliente');

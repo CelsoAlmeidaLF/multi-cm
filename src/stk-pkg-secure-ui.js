@@ -90,7 +90,10 @@
   if (VERSION) panel.querySelector('.vault-version').textContent = VERSION;
   if (logoLink) { const logo = panel.querySelector('.vault-logo'); logo.src = logoLink.getAttribute('href'); logo.hidden = false; }
   document.body.append(panel);
-  const get = id => document.getElementById(id);
+  // Se a tela de desbloqueio já saiu do DOM (biometria/desbloqueio que termina depois do finish()), a mensagem de
+  // status vai para um elemento solto em vez de estourar "Cannot set properties of null (setting 'textContent')".
+  const detachedMessage = document.createElement('p');
+  const get = id => document.getElementById(id) || (id === 'vaultMessage' ? detachedMessage : null);
   const status = document.createElement('div'); status.id = 'vaultSaveError'; status.setAttribute('role', 'alert'); document.body.append(status);
   let resolveReady, locking = false, lastActivity = Date.now(), failedAttempts = 0, blocked = false, busy = false;
   let step = 'unlock', firstPin = '', recoveryInput = '', countdown = null, bioAvailable = false;

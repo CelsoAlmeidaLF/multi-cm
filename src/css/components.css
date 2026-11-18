@@ -1344,13 +1344,13 @@ body:has(.aero-modal[open]) {
 }
 
 .chart-col .chart-value {
-  font-size: 9.5px;
+  font-size: 10px;
+  font-weight: 700;
   color: #617796;
   text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  letter-spacing: -0.2px;
 }
 
 .chart-col .chart-body {

@@ -155,7 +155,7 @@ await teste('CMD.6', '+ e − ajustam a quantidade; − na quantidade 1 pede o c
   assert.equal(app._data.mesas['Mesa 02'][0].qtd, 1, 'nada foi removido ainda');
 });
 
-for (const perfil of ['gerente', 'vendedor']) {
+for (const perfil of ['gerente', 'operador']) {
   await teste(`CMD.7-${perfil}`, `Perfil ${perfil} cancela item com motivo: estoque devolvido e cancelamento auditado`, async () => {
     instalarAmbiente(); const { app, ctl } = criarApp({ perfil });
     ctl.openNew(); fillNew(3, 'Ana');
