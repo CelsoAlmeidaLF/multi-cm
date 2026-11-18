@@ -21,13 +21,13 @@ src/js/
     ├── adapters/               # DomRenderer, DomEventHandler, TypedSecrets (senhas só digitadas)
     └── controllers/            # Sales, Stock, Cash, Security, Governance (telas extraídas do App.js)
 src/css/kit-aero.css            # ponte entre os tokens do kit de segurança e o visual Aero
-src/stk-pkg-*                   # cópias de PACOTES/stk-pkg-security (cofre, Configurações, ícones, BIP39-pt); não editar aqui
-src/stk-pkg-governanca/         # cópias de PACOTES/stk-pkg-governanca (contrato, cliente, Firestore REST, config); não editar aqui
+src/stk-pkg-*                   # cópias de 2. PACOTES/stk-pkt-security (cofre, Configurações, ícones, BIP39-pt); não editar aqui
+src/stk-pkg-governanca/         # cópias de 2. PACOTES/stk-pkt-governanca (contrato, cliente, Firestore REST, config); não editar aqui
 ```
 
 ## Integração com a Governança Systekna
 
-O processo de permissão vem do pacote `PACOTES/stk-pkg-governanca` (fonte única, também usada pelo painel Governança). O teste `tests/stk-pkg-governanca.test.mjs` confere se a cópia em `src/stk-pkg-governanca/` é idêntica ao pacote.
+O processo de permissão vem do pacote `2. PACOTES/stk-pkt-governanca` (fonte única, também usada pelo painel Governança). O teste `tests/stk-pkg-governanca.test.mjs` confere se a cópia em `src/stk-pkg-governanca/` é idêntica ao pacote.
 
 Fluxo: **usuário se cadastra no app → é gerada a impressão digital (UID) → a solicitação vai ao Firebase com esse UID → a Governança aprova ou não** e libera/bloqueia funcionalidades no tenant de mesmo UID. As permissões vêm sempre do Firebase.
 
@@ -40,7 +40,7 @@ Fluxo: **usuário se cadastra no app → é gerada a impressão digital (UID) �
 - **Telemetria e feedback:** erros e feedbacks vão sanitizados para `telemetria_erros` e `feedbacks_usuarios`, com o UID do cadastro.
 - **App Check:** o projeto `systekna-feedback` exige App Check; o token (reCAPTCHA Enterprise, SDK oficial da gstatic) vai no cabeçalho `X-Firebase-AppCheck` de cada chamada REST.
 
-O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas regras em `PACOTES/stk-pkg-doacao/firestore.rules`. O enforcement no aparelho impede o uso normal, mas quem controla o próprio navegador consegue contorná-lo — a autoridade final é o Firestore e o contrato.
+O app não autentica no Firebase: o que ele pode gravar e ler é definido pelas regras em `2. PACOTES/stk-pkt-doacao/firestore.rules`. O enforcement no aparelho impede o uso normal, mas quem controla o próprio navegador consegue contorná-lo — a autoridade final é o Firestore e o contrato.
 
 ## Segurança local
 

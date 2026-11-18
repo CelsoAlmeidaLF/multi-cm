@@ -1,6 +1,6 @@
 // Padrão de segurança Systekna: cofre do kit por fora (PIN FINANC, biometria, 12 palavras) e equipe por dentro.
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { protectTypedSecrets, typedValue, clearTyped, TYPED_SECRET_FIELDS, NOT_TYPED_MESSAGE } from '../src/js/ui/adapters/TypedSecrets.js';
@@ -52,10 +52,21 @@ await testCase('SEG-03', 'App só inicia depois do cofre e não registra service
   assert.ok(!app.includes('serviceWorker.register'));
 });
 
+// Pasta de um pacote no FINANC. Aceita "PACOTES" ou "2. PACOTES" e "stk-pkg-*" ou "stk-pkt-*"
+// (renomeados em 22/10/2026). null = fora do FINANC (CI só com o repositório do app).
+function achaPacote(nome) {
+  const financ = join(root, '..', '..');
+  if (!existsSync(financ)) return null;
+  const pacotes = readdirSync(financ).find(d => /^(\d+\.\s*)?PACOTES$/.test(d));
+  if (!pacotes) return null;
+  const pasta = readdirSync(join(financ, pacotes)).find(d => d === `stk-pkg-${nome}` || d === `stk-pkt-${nome}`);
+  return pasta ? join(financ, pacotes, pasta) : null;
+}
+
 await testCase('SEG-04', 'Cópia do kit idêntica a PACOTES/stk-pkg-security (quando a pasta existe)', async () => {
-  const pkg = join(root, '..', '..', 'PACOTES', 'stk-pkg-security');
+  const pkg = achaPacote('security');
   for (const f of KIT_FILES) assert.ok(existsSync(join(root, 'src', f)), `${f} ausente em src/`);
-  if (!existsSync(pkg)) return; // CI: só o repositório do app
+  if (!pkg) return; // CI: só o repositório do app
   for (const f of KIT_FILES) assert.equal(src(f), readFileSync(join(pkg, f), 'utf8'), `${f} difere do pacote`);
 });
 
@@ -105,8 +116,8 @@ const PKG_GOVERNANCA = ['stk-pkg-governanca-contrato.js', 'stk-pkg-governanca-co
 
 await testCase('SEG-10', 'pkg-governanca: cópia idêntica a PACOTES/stk-pkg-governanca (quando a pasta existe)', async () => {
   for (const f of PKG_GOVERNANCA) assert.ok(existsSync(join(root, 'src', 'stk-pkg-governanca', f)), `${f} ausente`);
-  const pkg = join(root, '..', '..', 'PACOTES', 'stk-pkg-governanca');
-  if (!existsSync(pkg)) return;
+  const pkg = achaPacote('governanca');
+  if (!pkg) return;
   for (const f of PKG_GOVERNANCA) assert.equal(src('stk-pkg-governanca/' + f), readFileSync(join(pkg, f), 'utf8'), `${f} difere do pacote`);
   assert.equal(readFileSync(join(root, 'tests', 'stk-pkg-governanca.test.mjs'), 'utf8'), readFileSync(join(pkg, 'test', 'governanca.test.mjs'), 'utf8'));
 });
