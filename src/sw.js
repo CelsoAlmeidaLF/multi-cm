@@ -97,7 +97,12 @@ const ASSETS = [
   './js/ui/controllers/StockController.js',
   './js/ui/controllers/CashController.js',
   './js/ui/controllers/SecurityController.js',
-  './js/ui/controllers/GovernanceController.js'
+  './js/ui/controllers/GovernanceController.js',
+  './apoio/apoio.css',
+  './apoio/stk-pkt-doacao.js',
+  './apoio/stk-pkt-feedback.js',
+  './apoio/stk-pkt-qrcode.js',
+  './apoio/stk-pkt-ponte.js'
 ];
 
 self.addEventListener('install', e => {

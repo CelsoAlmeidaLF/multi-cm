@@ -2,12 +2,13 @@
 
 <html class="vault-locked" data-edition="standard" lang="pt-BR" data-vault-version="3.1.0" data-vault-app="multi-cm" data-vault-name="BarGestão">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'self'; object-src 'none'; script-src 'self' https://www.gstatic.com https://www.google.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://firestore.googleapis.com/v1/projects/systekna-feedback/ https://content-firebaseappcheck.googleapis.com https://www.google.com; frame-src https://www.google.com; manifest-src 'self'; worker-src 'self'"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'self'; object-src 'none'; script-src 'self' https://www.gstatic.com https://www.google.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://firestore.googleapis.com/v1/projects/systekna-feedback/ https://content-firebaseappcheck.googleapis.com https://www.google.com; frame-src https://www.google.com https://systekna-ponte.web.app; manifest-src 'self'; worker-src 'self'"/>
 <meta charset="utf-8"/><meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/><meta content="#e9f1fa" name="theme-color"/><title>BarGestão</title>
 <link rel="stylesheet" href="fonts/fonts.css"/>
 <link rel="stylesheet" href="stk-pkt-secure-ui.css"/>
 <link rel="stylesheet" href="css/main.css"/>
 <link rel="stylesheet" href="css/kit-aero.css"/>
+<link rel="stylesheet" href="apoio/apoio.css" id="dz-style"/>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -152,5 +153,8 @@
 <script src="stk-pkt-bip39-pt.js"></script>
 <script src="stk-pkt-secure-vault.js"></script>
 <script src="stk-pkt-secure-ui.js"></script>
+<script src="apoio/stk-pkt-ponte.js"></script>
+<script src="apoio/stk-pkt-feedback.js"></script>
+<script src="apoio/stk-pkt-doacao.js" data-app="MULTICM" data-flutuante="false"></script>
 <script type="module" src="js/program.js"></script>
 </body></html>
