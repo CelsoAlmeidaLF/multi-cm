@@ -607,8 +607,7 @@ export class App {
         for (const [name, items] of entries.slice(0, 4)) {
           const sum = this._order.calculateOrderTotal(items);
           const cliente = this._data.mesaClientes?.[name] || 'Cliente não informado';
-          const row = this._renderer.make('div', 'home-mini-row');
-          row.style.cursor = 'pointer';
+          const row = this._renderer.make('div', 'home-mini-row is-clickable');
           row.onclick = () => {
             this._changeTab('vendas');
             this._comandaCtl.open(name);
@@ -639,8 +638,7 @@ export class App {
         stockListEl.append(empty);
       } else {
         for (const p of lowStock.slice(0, 4)) {
-          const row = this._renderer.make('div', 'home-mini-row');
-          row.style.cursor = 'pointer';
+          const row = this._renderer.make('div', 'home-mini-row is-clickable');
           row.onclick = () => {
             this._changeTab('estoque');
             const search = document.getElementById('estoque-busca');

@@ -19,23 +19,23 @@ assert.ok(htmlContent.includes('class="intro-controls"'), '[HTML_ERR] Container 
 
 // Verificar toolbars específicas com toolbar-title-group
 assert.ok(
-  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2 style="margin:0">Comandas em atendimento</h2>'),
+  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2>Comandas em atendimento</h2>'),
   '[HTML_ERR] Toolbar de comandas sem alinhamento agrupado'
 );
 assert.ok(
-  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2 style="margin:0">Produtos cadastrados</h2>'),
+  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2>Produtos cadastrados</h2>'),
   '[HTML_ERR] Toolbar de produtos sem alinhamento agrupado'
 );
 assert.ok(
-  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2 style="margin:0">Histórico de movimentações</h2>'),
+  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2>Histórico de movimentações</h2>'),
   '[HTML_ERR] Toolbar de movimentações sem alinhamento agrupado'
 );
 assert.ok(
-  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2 style="margin:0">Livro caixa</h2>'),
+  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2>Livro caixa</h2>'),
   '[HTML_ERR] Toolbar de livro caixa sem alinhamento agrupado'
 );
 assert.ok(
-  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2 style="margin:0">Usuários cadastrados</h2>'),
+  htmlContent.includes('<div class="toolbar"><div class="toolbar-title-group"><h2>Usuários cadastrados</h2>'),
   '[HTML_ERR] Toolbar de usuários sem alinhamento agrupado'
 );
 console.log('✅ [PASS] Padronização semântica de toolbars (.toolbar-title-group e .toolbar-actions) validada no HTML');

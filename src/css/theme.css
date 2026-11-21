@@ -68,6 +68,18 @@
   --scroll-thumb: rgba(103, 123, 150, 0.26);
   --scroll-thumb-hover: rgba(38, 109, 224, 0.5);
   --scroll-fade: 28px;
+
+  /* Matizes de superfície (painéis de conferência de caixa/turno e destaque do balcão) */
+  --tint-soft: rgba(255, 255, 255, 0.02);
+  --tint-shade: rgba(0, 0, 0, 0.15);
+  --ok-bg: rgba(111, 207, 151, 0.04);
+  --ok-line: rgba(111, 207, 151, 0.25);
+  --ok-bg-soft: rgba(111, 207, 151, 0.03);
+  --ok-line-soft: rgba(111, 207, 151, 0.2);
+
+  /* Gráfico de barras (vendas por dia) */
+  --chart-bar-from: #599af5;
+  --chart-bar-to: #246ee2;
 }
 
 *, *::before, *::after {

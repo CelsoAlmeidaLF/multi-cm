@@ -10,7 +10,9 @@ import { readAppSource } from './app-source.mjs';
 const ROOT = process.cwd();
 const rootDir = fs.existsSync(path.join(ROOT, 'multi-cm/src')) ? 'multi-cm' : '.';
 const HTML_FILE = path.join(ROOT, rootDir, 'src/index.html');
-const APP_FILE = path.join(ROOT, rootDir, 'src/js/App.js');
+const APP_FILE = fs.existsSync(path.join(ROOT, rootDir, 'src/js/Program.js'))
+  ? path.join(ROOT, rootDir, 'src/js/Program.js')
+  : path.join(ROOT, rootDir, 'src/js/App.js');
 const CSS_COMPONENTS = path.join(ROOT, rootDir, 'src/css/components.css');
 
 console.log('======================================================================');

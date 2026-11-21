@@ -41,7 +41,8 @@ await teste('RLD.6', 'Sessão encerrada entre esconder e voltar não tenta bloqu
   assert.equal(p.onReturn({ hasSession: false }), false);
 });
 await teste('RLD.7', 'Fiação: App usa a política; DomEventHandler chama o retorno; sw.js faz precache', () => {
-  const app = fs.readFileSync('src/js/App.js', 'utf-8');
+  const appFile = fs.existsSync('src/js/Program.js') ? 'src/js/Program.js' : 'src/js/App.js';
+  const app = fs.readFileSync(appFile, 'utf-8');
   assert.match(app, /new BackgroundLockPolicy\(\)/);
   assert.match(app, /handleBackgroundReturn\(\)/);
   assert.doesNotMatch(app, /handleBackgroundHide\(\) \{\s*if \(this\._auth\.getSession\(\) && this\._settings\.lockOnHide !== false\) \{\s*this\._discardSession/);

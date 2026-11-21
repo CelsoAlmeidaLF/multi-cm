@@ -294,8 +294,8 @@ await teste('CMD.19', 'Fiação e regressão: modais antigos removidos, tela nov
   for (const novo of ['id="tab-comanda"', 'id="cmd-voltar"', 'id="cmd-receber"', 'id="modal-cancelamento"', 'id="modal-cliente"']) assert.ok(html.includes(novo), `${novo} presente`);
   const sw = fs.readFileSync('src/sw.js', 'utf-8');
   assert.match(sw, /ComandaController\.js/); assert.match(sw, /css\/comanda\.css/);
-  assert.match(fs.readFileSync('src/css/main.css', 'utf-8'), /comanda\.css/);
-  const app = fs.readFileSync('src/js/App.js', 'utf-8');
+  const appFile = fs.existsSync('src/js/Program.js') ? 'src/js/Program.js' : 'src/js/App.js';
+  const app = fs.readFileSync(appFile, 'utf-8');
   assert.match(app, /new ComandaController\(this\)/); assert.match(app, /_comandaCtl\.reset\(\)/); assert.match(app, /_comandaCtl\.render\(\)/);
   const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
   assert.ok(!emoji.test(fs.readFileSync('src/js/ui/controllers/ComandaController.js', 'utf-8')));

@@ -31,22 +31,24 @@ await testCase('SEG-01', 'index.html abre pelo cofre do kit: html travado, app i
   assert.match(html, /<html[^>]*class="vault-locked"/);
   assert.match(html, /data-vault-app="multi-cm"/);
   assert.match(html, /data-vault-name="BarGestão"/);
-  const app = html.indexOf('src="js/App.js"');
+  const app = ['src="js/program.js"', 'src="js/Program.js"', 'src="js/App.js"'].map(s => html.indexOf(s)).find(i => i !== -1) ?? -1;
   for (const f of ['stk-pkt-financ-icons.js', 'stk-pkt-bip39-pt.js', 'stk-pkt-secure-vault.js', 'stk-pkt-secure-ui.js']) {
     const at = html.indexOf(`<script src="${f}"></script>`);
-    assert.ok(at > 0 && at < app, `${f} deve carregar antes do App.js`);
+    assert.ok(at > 0 && at < app, `${f} deve carregar antes do program.js`);
   }
   assert.ok(html.includes('href="stk-pkt-secure-ui.css"'));
 });
 
-await testCase('SEG-02', 'Versão do cofre = versão do app (App.VERSION)', async () => {
-  const version = /static VERSION = '([\d.]+)'/.exec(src('js/App.js'))[1];
+await testCase('SEG-02', 'Versão do cofre = versão do app (Program.VERSION)', async () => {
+  const mainFile = existsSync(join(root, 'src/js/program.js')) ? 'js/program.js' : existsSync(join(root, 'src/js/Program.js')) ? 'js/Program.js' : 'js/App.js';
+  const version = /static VERSION = '([\d.]+)'/.exec(src(mainFile))[1];
   assert.equal(/data-vault-version="([\d.]+)"/.exec(html)[1], version);
   assert.equal(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version, version);
 });
 
 await testCase('SEG-03', 'App só inicia depois do cofre e não registra service worker próprio (o kit registra)', async () => {
-  const app = src('js/App.js');
+  const mainFile = existsSync(join(root, 'src/js/Program.js')) ? 'js/Program.js' : 'js/App.js';
+  const app = src(mainFile);
   assert.ok(app.indexOf('await window.vaultReady') > 0);
   assert.ok(app.indexOf('await window.vaultReady') < app.indexOf('await this._storage.init()'));
   assert.ok(!app.includes('serviceWorker.register'));
@@ -135,7 +137,8 @@ await testCase('SEG-13', 'Barra de título: [menu do kit] [nome do estabelecimen
   const bar = /<header class="topbar">([\s\S]*?)<\/header>/.exec(html)[1];
   const slot = bar.indexOf('data-vault-profile-slot'), nome = bar.indexOf('id="header-estabelecimento"'), avatar = bar.indexOf('id="user-avatar"');
   assert.ok(slot >= 0 && slot < nome && nome < avatar, 'ordem da barra');
-  assert.match(src('js/App.js'), /nomeEstabelecimento\?\.trim\(\) \|\| 'BarGestão'/);
+  const mainFile = existsSync(join(root, 'src/js/Program.js')) ? 'js/Program.js' : 'js/App.js';
+  assert.match(src(mainFile), /nomeEstabelecimento\?\.trim\(\) \|\| 'BarGestão'/);
   assert.match(src('css/kit-aero.css'), /#vaultProfileBtn \{[^}]*min-height: 0/);
 });
 

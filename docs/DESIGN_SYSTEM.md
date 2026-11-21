@@ -193,3 +193,11 @@ O catálogo vivo (`docs/design-system.html`, 26 seções) mostra, com a marcaç�
 - [x] Áreas de toque mínimas de 42px / 44px para conformidade com telas sensíveis.
 - [x] Aceleração gráfica por GPU ativada através de `transform: translateZ(0)` nos painéis Aero.
 - [x] Suporte a `prefers-reduced-motion: reduce` desativando animações pesadas.
+
+---
+
+## 7. Regra de ouro: CSS só nos arquivos `.css`
+- Nada de `style=""`, `<style>`, `style.cssText` nem `setAttribute('style')` no HTML, nos controllers ou no catálogo (`design-system.html`). O teste `no-inline-style-test-runner.mjs` barra a volta.
+- Estilo novo vira classe em `src/css/components.css` (ou `docs/design-system.css`, só para o chassi do catálogo), sempre com tokens do `theme.css`. Matizes de superfície: `--tint-soft`, `--tint-shade`, `--ok-bg`, `--ok-line` (e as variantes `-soft`); gráfico: `--chart-bar-from`, `--chart-bar-to`.
+- Valor calculado em execução (ex.: altura da barra do gráfico) entra por custom property: `el.style.setProperty('--h', '88px')`, com a regra no `.css` usando `var(--h)`. Isso é CSSOM e não depende de `'unsafe-inline'`.
+- Utilitários: `.mt-8`, `.mb-8`, `.mb-12`, `.ml-8`, `.grow`, `.label-block`, `.is-clickable`, `.scroll-y-200`.

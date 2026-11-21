@@ -12,121 +12,10 @@
   <link rel="stylesheet" href="../src/css/kit-aero.css"/>
   <!-- Só os ícones do kit (sem o cofre: o catálogo não pede PIN) -->
   <script src="../src/stk-pkt-financ-icons.js"></script>
-  <style>
-    html { scroll-padding-top: 72px; } /* a barra de seções do catálogo, no lugar da topbar do app */
-    /* Só o "chassi" do catálogo. Componente novo vai para src/css, nunca para cá. */
-    .styleguide-shell { max-width: 1400px; margin: 0 auto; padding: 32px 24px 96px; }
-    .sg-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 80; pointer-events: none; }
-    .sg-progress span { display: block; height: 100%; background: linear-gradient(90deg, #599af5, var(--accent)); transform-origin: 0 50%; transform: scaleX(0); }
-    .styleguide-header { background: var(--panel); backdrop-filter: blur(var(--panel-blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
-      border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 32px; margin-bottom: 16px; box-shadow: var(--shadow); }
-    .styleguide-header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-    .sg-brand { display: flex; align-items: center; gap: 14px; }
-    .sg-head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .sg-nav { position: sticky; top: 0; z-index: 30; margin: 0 -24px 24px; padding: 10px 24px; background: rgba(234, 241, 250, 0.82);
-      backdrop-filter: blur(var(--topbar-blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--topbar-blur)) saturate(180%); border-bottom: 1px solid transparent; transition: border-color .2s, box-shadow .2s; }
-    .sg-nav.stuck { border-bottom-color: var(--line); box-shadow: 0 8px 24px rgba(32, 59, 95, 0.06); }
-    .sg-nav a { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--muted);
-      text-decoration: none; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, 0.7); transition: color .15s, background .15s, border-color .15s; }
-    .sg-nav a:hover { color: var(--accent); border-color: #bad3f8; }
-    .sg-nav a.on { color: #fff; background: var(--accent); border-color: var(--accent); }
-    .sg-nav a.on .sg-n { color: rgba(255, 255, 255, 0.75); }
-    .sg-n { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted-light); }
-    .component-section { background: var(--panel); backdrop-filter: blur(var(--panel-blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(180%);
-      border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
-    .component-header { display: flex; gap: 14px; align-items: baseline; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-    .component-header .sg-n { font-size: 13px; }
-    .component-header h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; color: var(--ink); margin-bottom: 4px; }
-    .component-header p { font-size: 13px; color: var(--muted); margin: 0; max-width: 80ch; }
-    .component-header code, .sg-note code, .sg-h3 code { font-size: 12px; color: var(--accent); background: var(--accentSoft); padding: 1px 6px; border-radius: 6px; }
-    .swatches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
-    .swatch-card { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--panel-solid); box-shadow: var(--shadow-sm); }
-    .swatch-color { height: 56px; border-bottom: 1px solid var(--line); }
-    .swatch-info { padding: 10px 12px; display: grid; gap: 2px; }
-    .swatch-info strong { font-size: 12px; color: var(--ink); }
-    .swatch-info span, .sg-space span, .sg-radius span, .sg-dl dd { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
-    .swatch-info small { font-size: 11px; color: var(--muted-light); }
-    .demo-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .demo-box { border: 1px dashed rgba(111, 140, 179, 0.35); border-radius: var(--radius-md); padding: 20px; background: var(--panel-subtle); margin-bottom: 16px; min-width: 0; }
-    .demo-box:last-child { margin-bottom: 0; }
-    .sg-h2 { font-size: 16px; font-weight: 750; letter-spacing: -0.3px; }
-    .sg-h3 { font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-    .sg-h3 small { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--muted-light); }
-    .sg-h3:not(:first-child) { margin-top: 18px; }
-    .sg-num { font-size: 26px; font-weight: 850; letter-spacing: -0.8px; }
-    .sg-stack { display: flex; flex-direction: column; gap: 14px; }
-    .sg-m0 { margin: 0 !important; } .sg-mb { margin-bottom: 14px; } .sg-t22 { font-size: 22px; }
-    .sg-muted { font-size: 13px; color: var(--muted); margin-top: 6px; }
-    .sg-block { margin-top: 14px; max-width: 320px; }
-    .sg-note { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; }
-    .sg-tabs { max-width: 360px; margin-top: 14px; }
-    .checkline { margin-top: 12px; }
-    .sg-tokens { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; }
-    .sg-space { display: grid; grid-template-columns: 48px 120px auto; align-items: center; gap: 10px; padding: 4px 0; }
-    .sg-space i { display: block; height: 12px; border-radius: 4px; background: linear-gradient(90deg, #599af5, var(--accent)); }
-    .sg-space code, .sg-radius code, .sg-shadow code { font-size: 11.5px; color: var(--ink); }
-    .sg-radius-row, .sg-shadow-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-    .sg-radius { height: 72px; border: 2px solid #bad3f8; background: var(--accentSoft); display: grid; place-content: center; text-align: center; gap: 2px; }
-    .sg-shadow { height: 72px; border-radius: var(--radius-md); background: var(--panel-solid); display: grid; place-items: center; }
-    .sg-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
-    .sg-icon { display: grid; justify-items: center; gap: 8px; padding: 14px 8px 10px; min-height: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-solid); color: var(--ink); }
-    .sg-icon:hover { border-color: #bad3f8; color: var(--accent); box-shadow: var(--shadow-sm); }
-    .sg-icon svg { width: 24px; height: 24px; stroke-width: 1.8; }
-    .sg-icon code { font-size: 11px; color: var(--muted); }
-    .sg-icon.copiado code { color: var(--good); }
-    .sg-drop { min-height: 170px; }
-    .sg-scroll-grid, .sg-nav-grid, .sg-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
-    .sg-scroll { border-radius: var(--radius-sm); background: var(--panel-solid); border: 1px solid var(--line); padding: 4px 14px; }
-    .sg-scroll-x { padding-inline: 4px; }
-    .sg-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
-    .sg-dl dt code { font-size: 11.5px; } .sg-dl dd { margin: 0; }
-    .sg-sidenav { display: grid; gap: 4px; max-width: 260px; }
-    .sg-profile { margin-top: 16px; max-width: 260px; }
-    .sg-device .mobile-nav { position: static; border-radius: var(--radius-md); border: 1px solid var(--line); box-shadow: var(--shadow-sm); padding-bottom: 8px; }
-    @media (min-width: 768px) { .sg-device .mobile-nav { display: none; } }
-    @media (max-width: 767px) { .sg-only-desk { display: none; } }
-    .sg-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-    .sg-cmd { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-    .sg-cmd-foot, .sg-cmd-head { position: static; border-radius: var(--radius-md); }
-    .sg-inline { display: grid; gap: 14px; justify-items: start; }
-    .sg-inline .toast { position: static; }
-    .sg-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 10px; min-height: 230px; }
-    .sg-l { border: 1.5px dashed #9cbcea; border-radius: var(--radius-sm); background: rgba(229, 239, 255, 0.55); padding: 12px; display: grid; align-content: start; gap: 4px; }
-    .sg-l code { font-size: 12px; font-weight: 700; color: var(--accent); }
-    .sg-l small { font-size: 11.5px; color: var(--muted); line-height: 1.45; }
-    .sg-l-main { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
-    .sg-topbar { position: static; border-radius: var(--radius-md); border: 1px solid var(--line); padding: 0 18px; }
-    .sg-auth { display: grid; place-items: center; padding: 28px 12px; border-radius: var(--radius-md); background: radial-gradient(ellipse at 30% 20%, #d0e4ff, transparent 45%), #eaf1fa; }
-    .sg-mt { margin-top: 16px; }
-    .sg-kit { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-    .vp-drawer.sg-static { position: static; inset: auto; width: 100%; max-width: 340px; height: auto; max-height: none; animation: none; border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow); }
-    .sg-sheet { border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; background: var(--bg); }
-    #vaultGate.sg-gate { margin: 0 auto; }
-    .vault-dialog.sg-static { margin: 0; width: 100%; }
-    #vaultBackupNudge.sg-static { position: static; animation: none; margin: 0; max-width: none; }
-    .sg-top { position: fixed; right: 24px; bottom: 24px; z-index: 70; width: 44px; height: 44px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%;
-      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.86); color: var(--accent); box-shadow: var(--shadow); backdrop-filter: blur(var(--topbar-blur));
-      -webkit-backdrop-filter: blur(var(--topbar-blur)); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .25s, transform .25s; }
-    .sg-top.on { opacity: 1; transform: none; pointer-events: auto; }
-    .sg-top svg { width: 20px; height: 20px; transform: rotate(-90deg); }
-    @media (max-width: 900px) {
-      .sg-tokens, .sg-scroll-grid, .sg-nav-grid, .sg-two, .sg-kit { grid-template-columns: minmax(0, 1fr); }
-      .sg-radius-row, .sg-shadow-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 600px) {
-      .styleguide-shell { padding: 16px 16px 120px; }
-      .styleguide-header { padding: 20px; }
-      .sg-nav { margin: 0 -16px 16px; padding: 8px 16px; }
-      .component-section { padding: 18px 16px; }
-      .component-header { flex-direction: column; gap: 4px; }
-      .sg-space { grid-template-columns: 40px 1fr; } .sg-space span { display: none; }
-      .sg-top { bottom: 96px; right: 16px; }
-      .sg-layout { grid-template-columns: minmax(0, 1fr); }
-    }
-  </style>
+  <link rel="stylesheet" href="design-system.css"/>
 </head>
 <body>
-  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg"><symbol id="i-back" viewbox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol><symbol id="i-edit" viewbox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></symbol><symbol id="i-bar" viewbox="0 0 24 24"><path d="M5 3h14l-2 6-5 4-5-4-2-6ZM12 13v7m-5 1h10M8 7h8"></path></symbol><symbol id="i-grid" viewbox="0 0 24 24"><rect height="7" rx="2" width="7" x="3" y="3"></rect><rect height="7" rx="2" width="7" x="14" y="3"></rect><rect height="7" rx="2" width="7" x="3" y="14"></rect><rect height="7" rx="2" width="7" x="14" y="14"></rect></symbol><symbol id="i-box" viewbox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4m-9 4v10"></path></symbol><symbol id="i-wallet" viewbox="0 0 24 24"><rect height="15" rx="3" width="18" x="3" y="5"></rect><path d="M3 9h18m-5 5h2M6 5V3h12"></path></symbol><symbol id="i-users" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"></path></symbol><symbol id="i-plus" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol><symbol id="i-lock" viewbox="0 0 24 24"><rect height="11" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol><symbol id="i-log" viewbox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"></path></symbol><symbol id="i-check" viewbox="0 0 24 24"><path d="m4 12 5 5L20 6"></path></symbol><symbol id="i-x" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol><symbol id="i-home" viewbox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z"></path></symbol><symbol id="i-more" viewbox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol><symbol id="i-search" viewbox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></symbol><symbol id="i-arrow" viewbox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol><symbol id="i-down" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol><symbol id="i-minus" viewbox="0 0 24 24"><path d="M5 12h14"></path></symbol><symbol id="i-download" viewbox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"></path></symbol><symbol id="i-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol><symbol id="i-spark" viewbox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Zm7 14 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z"></path></symbol><symbol id="i-trash" viewbox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></symbol></svg>
+  <svg aria-hidden="true" class="svg-sprite" xmlns="http://www.w3.org/2000/svg"><symbol id="i-back" viewbox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol><symbol id="i-edit" viewbox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></symbol><symbol id="i-bar" viewbox="0 0 24 24"><path d="M5 3h14l-2 6-5 4-5-4-2-6ZM12 13v7m-5 1h10M8 7h8"></path></symbol><symbol id="i-grid" viewbox="0 0 24 24"><rect height="7" rx="2" width="7" x="3" y="3"></rect><rect height="7" rx="2" width="7" x="14" y="3"></rect><rect height="7" rx="2" width="7" x="3" y="14"></rect><rect height="7" rx="2" width="7" x="14" y="14"></rect></symbol><symbol id="i-box" viewbox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4m-9 4v10"></path></symbol><symbol id="i-wallet" viewbox="0 0 24 24"><rect height="15" rx="3" width="18" x="3" y="5"></rect><path d="M3 9h18m-5 5h2M6 5V3h12"></path></symbol><symbol id="i-users" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"></path></symbol><symbol id="i-plus" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol><symbol id="i-lock" viewbox="0 0 24 24"><rect height="11" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol><symbol id="i-log" viewbox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"></path></symbol><symbol id="i-check" viewbox="0 0 24 24"><path d="m4 12 5 5L20 6"></path></symbol><symbol id="i-x" viewbox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol><symbol id="i-home" viewbox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z"></path></symbol><symbol id="i-more" viewbox="0 0 24 24"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></symbol><symbol id="i-search" viewbox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></symbol><symbol id="i-arrow" viewbox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol><symbol id="i-down" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol><symbol id="i-minus" viewbox="0 0 24 24"><path d="M5 12h14"></path></symbol><symbol id="i-download" viewbox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"></path></symbol><symbol id="i-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol><symbol id="i-spark" viewbox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Zm7 14 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z"></path></symbol><symbol id="i-trash" viewbox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></symbol></svg>
   <div class="sg-progress" aria-hidden="true"><span id="sg-progress"></span></div>
 
   <div class="styleguide-shell">
@@ -150,12 +39,12 @@
 
     <section class="component-section" id="sec-tokens">
       <div class="component-header"><span class="sg-n">01</span><div><h2>Cores</h2><p>Paleta fria do Aero 2.0. O valor de cada token é lido do <code>theme.css</code> ao abrir a página, então o catálogo nunca fica desatualizado.</p></div></div>
-      <div class="swatches-grid"><div class="swatch-card"><div class="swatch-color" style="background:var(--accent)"></div><div class="swatch-info"><strong>--accent</strong><span data-token="--accent"></span><small>Ação principal, links</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--accent-hover)"></div><div class="swatch-info"><strong>--accent-hover</strong><span data-token="--accent-hover"></span><small>Hover da ação</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--accentSoft)"></div><div class="swatch-info"><strong>--accentSoft</strong><span data-token="--accentSoft"></span><small>Fundo de seleção</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--good)"></div><div class="swatch-info"><strong>--good</strong><span data-token="--good"></span><small>Sucesso, aberto</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--good-bg)"></div><div class="swatch-info"><strong>--good-bg</strong><span data-token="--good-bg"></span><small>Fundo de sucesso</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--warn)"></div><div class="swatch-info"><strong>--warn</strong><span data-token="--warn"></span><small>Atenção</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--warn-bg)"></div><div class="swatch-info"><strong>--warn-bg</strong><span data-token="--warn-bg"></span><small>Fundo de atenção</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--bad)"></div><div class="swatch-info"><strong>--bad</strong><span data-token="--bad"></span><small>Erro, perigo</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--bad-bg)"></div><div class="swatch-info"><strong>--bad-bg</strong><span data-token="--bad-bg"></span><small>Fundo de erro</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--ink)"></div><div class="swatch-info"><strong>--ink</strong><span data-token="--ink"></span><small>Texto principal</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--muted)"></div><div class="swatch-info"><strong>--muted</strong><span data-token="--muted"></span><small>Texto secundário</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--muted-light)"></div><div class="swatch-info"><strong>--muted-light</strong><span data-token="--muted-light"></span><small>Texto apagado</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--line)"></div><div class="swatch-info"><strong>--line</strong><span data-token="--line"></span><small>Bordas e divisores</small></div></div><div class="swatch-card"><div class="swatch-color" style="background:var(--bg)"></div><div class="swatch-info"><strong>--bg</strong><span data-token="--bg"></span><small>Fundo da página</small></div></div></div>
+      <div class="swatches-grid"><div class="swatch-card"><div class="swatch-color sw-accent"></div><div class="swatch-info"><strong>--accent</strong><span data-token="--accent"></span><small>Ação principal, links</small></div></div><div class="swatch-card"><div class="swatch-color sw-accent-hover"></div><div class="swatch-info"><strong>--accent-hover</strong><span data-token="--accent-hover"></span><small>Hover da ação</small></div></div><div class="swatch-card"><div class="swatch-color sw-accent-soft"></div><div class="swatch-info"><strong>--accentSoft</strong><span data-token="--accentSoft"></span><small>Fundo de seleção</small></div></div><div class="swatch-card"><div class="swatch-color sw-good"></div><div class="swatch-info"><strong>--good</strong><span data-token="--good"></span><small>Sucesso, aberto</small></div></div><div class="swatch-card"><div class="swatch-color sw-good-bg"></div><div class="swatch-info"><strong>--good-bg</strong><span data-token="--good-bg"></span><small>Fundo de sucesso</small></div></div><div class="swatch-card"><div class="swatch-color sw-warn"></div><div class="swatch-info"><strong>--warn</strong><span data-token="--warn"></span><small>Atenção</small></div></div><div class="swatch-card"><div class="swatch-color sw-warn-bg"></div><div class="swatch-info"><strong>--warn-bg</strong><span data-token="--warn-bg"></span><small>Fundo de atenção</small></div></div><div class="swatch-card"><div class="swatch-color sw-bad"></div><div class="swatch-info"><strong>--bad</strong><span data-token="--bad"></span><small>Erro, perigo</small></div></div><div class="swatch-card"><div class="swatch-color sw-bad-bg"></div><div class="swatch-info"><strong>--bad-bg</strong><span data-token="--bad-bg"></span><small>Fundo de erro</small></div></div><div class="swatch-card"><div class="swatch-color sw-ink"></div><div class="swatch-info"><strong>--ink</strong><span data-token="--ink"></span><small>Texto principal</small></div></div><div class="swatch-card"><div class="swatch-color sw-muted"></div><div class="swatch-info"><strong>--muted</strong><span data-token="--muted"></span><small>Texto secundário</small></div></div><div class="swatch-card"><div class="swatch-color sw-muted-light"></div><div class="swatch-info"><strong>--muted-light</strong><span data-token="--muted-light"></span><small>Texto apagado</small></div></div><div class="swatch-card"><div class="swatch-color sw-line"></div><div class="swatch-info"><strong>--line</strong><span data-token="--line"></span><small>Bordas e divisores</small></div></div><div class="swatch-card"><div class="swatch-color sw-bg"></div><div class="swatch-info"><strong>--bg</strong><span data-token="--bg"></span><small>Fundo da página</small></div></div></div>
     </section>
     <section class="component-section" id="sec-medidas">
       <div class="component-header"><span class="sg-n">02</span><div><h2>Espaço, raio e sombra</h2><p>Grade de 4 e 8 pt, quatro raios e quatro níveis de elevação. Use os tokens; nada de valores soltos.</p></div></div>
-      <div class="sg-tokens"><div class="demo-box"><h3 class="sg-h3">Espaçamento</h3><div class="sg-space"><i style="width:var(--space-2xs)"></i><code>--space-2xs</code><span data-token="--space-2xs"></span></div><div class="sg-space"><i style="width:var(--space-xs)"></i><code>--space-xs</code><span data-token="--space-xs"></span></div><div class="sg-space"><i style="width:var(--space-sm)"></i><code>--space-sm</code><span data-token="--space-sm"></span></div><div class="sg-space"><i style="width:var(--space-md)"></i><code>--space-md</code><span data-token="--space-md"></span></div><div class="sg-space"><i style="width:var(--space-lg)"></i><code>--space-lg</code><span data-token="--space-lg"></span></div><div class="sg-space"><i style="width:var(--space-xl)"></i><code>--space-xl</code><span data-token="--space-xl"></span></div><div class="sg-space"><i style="width:var(--space-2xl)"></i><code>--space-2xl</code><span data-token="--space-2xl"></span></div><div class="sg-space"><i style="width:var(--space-3xl)"></i><code>--space-3xl</code><span data-token="--space-3xl"></span></div></div>
-       <div class="demo-box"><h3 class="sg-h3">Raios</h3><div class="sg-radius-row"><div class="sg-radius" style="border-radius:var(--radius-sm)"><code>--radius-sm</code><span data-token="--radius-sm"></span></div><div class="sg-radius" style="border-radius:var(--radius-md)"><code>--radius-md</code><span data-token="--radius-md"></span></div><div class="sg-radius" style="border-radius:var(--radius-lg)"><code>--radius-lg</code><span data-token="--radius-lg"></span></div><div class="sg-radius" style="border-radius:var(--radius-xl)"><code>--radius-xl</code><span data-token="--radius-xl"></span></div></div><h3 class="sg-h3">Sombras</h3><div class="sg-shadow-row"><div class="sg-shadow" style="box-shadow:var(--shadow-sm)"><code>--shadow-sm</code></div><div class="sg-shadow" style="box-shadow:var(--shadow)"><code>--shadow</code></div><div class="sg-shadow" style="box-shadow:var(--shadow-lg)"><code>--shadow-lg</code></div><div class="sg-shadow" style="box-shadow:var(--shadow-modal)"><code>--shadow-modal</code></div></div></div></div>
+      <div class="sg-tokens"><div class="demo-box"><h3 class="sg-h3">Espaçamento</h3><div class="sg-space"><i class="sp-2xs"></i><code>--space-2xs</code><span data-token="--space-2xs"></span></div><div class="sg-space"><i class="sp-xs"></i><code>--space-xs</code><span data-token="--space-xs"></span></div><div class="sg-space"><i class="sp-sm"></i><code>--space-sm</code><span data-token="--space-sm"></span></div><div class="sg-space"><i class="sp-md"></i><code>--space-md</code><span data-token="--space-md"></span></div><div class="sg-space"><i class="sp-lg"></i><code>--space-lg</code><span data-token="--space-lg"></span></div><div class="sg-space"><i class="sp-xl"></i><code>--space-xl</code><span data-token="--space-xl"></span></div><div class="sg-space"><i class="sp-2xl"></i><code>--space-2xl</code><span data-token="--space-2xl"></span></div><div class="sg-space"><i class="sp-3xl"></i><code>--space-3xl</code><span data-token="--space-3xl"></span></div></div>
+       <div class="demo-box"><h3 class="sg-h3">Raios</h3><div class="sg-radius-row"><div class="sg-radius rd-sm"><code>--radius-sm</code><span data-token="--radius-sm"></span></div><div class="sg-radius rd-md"><code>--radius-md</code><span data-token="--radius-md"></span></div><div class="sg-radius rd-lg"><code>--radius-lg</code><span data-token="--radius-lg"></span></div><div class="sg-radius rd-xl"><code>--radius-xl</code><span data-token="--radius-xl"></span></div></div><h3 class="sg-h3">Sombras</h3><div class="sg-shadow-row"><div class="sg-shadow sh-sm"><code>--shadow-sm</code></div><div class="sg-shadow sh-md"><code>--shadow</code></div><div class="sg-shadow sh-lg"><code>--shadow-lg</code></div><div class="sg-shadow sh-modal"><code>--shadow-modal</code></div></div></div></div>
     </section>
     <section class="component-section" id="sec-typography">
       <div class="component-header"><span class="sg-n">03</span><div><h2>Tipografia</h2><p>Inter com tracking negativo nos títulos e pesos altos para leitura rápida no balcão.</p></div></div>
@@ -277,7 +166,7 @@
       <div class="component-header"><span class="sg-n">12</span><div><h2>Rolagem</h2><p>Barra fina e quase invisível em repouso, que ganha a cor de acento ao passar o mouse. <code>.scroll-area</code> e <code>.scroll-x</code> esmaecem as bordas e mostram que há mais conteúdo.</p></div></div>
       <div class="sg-scroll-grid">
         <div class="demo-box"><h3 class="sg-h3">.scroll-area <small>vertical · <code>--scroll-max</code></small></h3>
-          <div class="scroll-area sg-scroll" style="--scroll-max:240px"><div class="itemline"><span>Mesa 01 · Ana</span><strong>R$ 42,00</strong></div><div class="itemline"><span>Mesa 02 · Bruno</span><strong>R$ 118,50</strong></div><div class="itemline"><span>Mesa 03 · Balcão</span><strong>R$ 9,00</strong></div><div class="itemline"><span>Mesa 04 · Carlos</span><strong>R$ 84,00</strong></div><div class="itemline"><span>Mesa 05 · Dani</span><strong>R$ 61,90</strong></div><div class="itemline"><span>Mesa 06 · Edu</span><strong>R$ 230,00</strong></div><div class="itemline"><span>Mesa 07 · Fábio</span><strong>R$ 15,00</strong></div><div class="itemline"><span>Mesa 08 · Gabi</span><strong>R$ 77,40</strong></div><div class="itemline"><span>Mesa 09 · Hugo</span><strong>R$ 38,00</strong></div><div class="itemline"><span>Mesa 10 · Iara</span><strong>R$ 142,10</strong></div><div class="itemline"><span>Mesa 11 · João</span><strong>R$ 56,00</strong></div><div class="itemline"><span>Mesa 12 · Kátia</span><strong>R$ 19,90</strong></div></div></div>
+          <div class="scroll-area sg-scroll sg-scroll-240"><div class="itemline"><span>Mesa 01 · Ana</span><strong>R$ 42,00</strong></div><div class="itemline"><span>Mesa 02 · Bruno</span><strong>R$ 118,50</strong></div><div class="itemline"><span>Mesa 03 · Balcão</span><strong>R$ 9,00</strong></div><div class="itemline"><span>Mesa 04 · Carlos</span><strong>R$ 84,00</strong></div><div class="itemline"><span>Mesa 05 · Dani</span><strong>R$ 61,90</strong></div><div class="itemline"><span>Mesa 06 · Edu</span><strong>R$ 230,00</strong></div><div class="itemline"><span>Mesa 07 · Fábio</span><strong>R$ 15,00</strong></div><div class="itemline"><span>Mesa 08 · Gabi</span><strong>R$ 77,40</strong></div><div class="itemline"><span>Mesa 09 · Hugo</span><strong>R$ 38,00</strong></div><div class="itemline"><span>Mesa 10 · Iara</span><strong>R$ 142,10</strong></div><div class="itemline"><span>Mesa 11 · João</span><strong>R$ 56,00</strong></div><div class="itemline"><span>Mesa 12 · Kátia</span><strong>R$ 19,90</strong></div></div></div>
         <div class="demo-box"><h3 class="sg-h3">.scroll-x <small>horizontal · encaixa nos itens</small></h3>
           <div class="scroll-x sg-scroll-x"><button class="category-chip selected" type="button">Todas</button><button class="category-chip" type="button">Cervejas</button><button class="category-chip" type="button">Drinks</button><button class="category-chip" type="button">Destilados</button><button class="category-chip" type="button">Refrigerantes</button><button class="category-chip" type="button">Sucos</button><button class="category-chip" type="button">Petiscos</button><button class="category-chip" type="button">Porções</button><button class="category-chip" type="button">Sobremesas</button><button class="category-chip" type="button">Cafés</button><button class="category-chip" type="button">Vinhos</button><button class="category-chip" type="button">Sem álcool</button></div>
           <h3 class="sg-h3">Tokens</h3>
@@ -323,12 +212,12 @@
       <div class="home-panels sg-mt">
         <article class="card home-card"><div class="toolbar"><div class="toolbar-title-group"><span class="eyebrow">ACOMPANHAMENTO</span><h2>Mesas em atendimento</h2></div><div class="toolbar-actions"><button class="btn ghost minor" type="button">Ver mesas <svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg></button></div></div>
           <div class="home-table-list">
-            <div class="home-mini-row" style="cursor:pointer"><div class="home-mini-left"><strong>Mesa 04</strong><small>Carlos Eduardo</small></div><strong class="home-mini-price">R$ 84,00</strong></div>
-            <div class="home-mini-row" style="cursor:pointer"><div class="home-mini-left"><strong>Mesa 07</strong><small>Cliente não informado</small></div><strong class="home-mini-price">R$ 23,50</strong></div>
+            <div class="home-mini-row is-clickable"><div class="home-mini-left"><strong>Mesa 04</strong><small>Carlos Eduardo</small></div><strong class="home-mini-price">R$ 84,00</strong></div>
+            <div class="home-mini-row is-clickable"><div class="home-mini-left"><strong>Mesa 07</strong><small>Cliente não informado</small></div><strong class="home-mini-price">R$ 23,50</strong></div>
           </div></article>
         <article class="card home-card"><div class="toolbar"><div class="toolbar-title-group"><span class="eyebrow">ATENÇÃO</span><h2>Estoque baixo</h2></div><div class="toolbar-actions"><button class="btn ghost minor" type="button">Ver estoque <svg fill="none" stroke="currentColor" stroke-width="1.8"><use href="#i-arrow"></use></svg></button></div></div>
           <div class="home-table-list">
-            <div class="home-mini-row" style="cursor:pointer"><div class="home-mini-left"><strong>Água sem gás</strong><small>Mínimo: 12 un.</small></div><span class="pill warn">3 un.</span></div>
+            <div class="home-mini-row is-clickable"><div class="home-mini-left"><strong>Água sem gás</strong><small>Mínimo: 12 un.</small></div><span class="pill warn">3 un.</span></div>
           </div></article>
       </div>
       <div class="sg-two sg-mt">
@@ -346,7 +235,7 @@
           <div class="itemline"><span>1 × Caipirinha</span><span>R$ 38,00</span></div>
           <div class="actions"><button class="btn" type="button">Abrir comanda</button></div>
         </div>
-        <div class="entry mesa-entry counter-entry" style="border-left: 3px solid var(--accent); background: rgba(111,207,151,0.04);">
+        <div class="entry mesa-entry counter-entry">
           <div class="entry-head"><div class="entry-left"><strong>[Balcão] Balcão 1</strong><div class="meta">Cliente Balcão</div></div><strong class="entry-strong">R$ 9,00</strong></div>
           <div class="itemline"><span>1 × Água sem gás</span><span>R$ 9,00</span></div>
           <div class="actions"><button class="btn" type="button">Abrir comanda</button></div>
@@ -384,7 +273,7 @@
         <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Ajuste · Porção de fritas</strong><div class="item-id">ID: 9b77e012</div></div><strong class="text-bad">-2 un.</strong></div></div>
       </div>
       <div class="demo-box sg-mt"><h3 class="sg-h3">Categorias (.inline-fields + .small-list)</h3>
-        <form class="inline-fields" onsubmit="return false"><label style="flex:1">NOME DA CATEGORIA<input maxlength="70" placeholder="Ex.: Bebidas"/></label><button class="btn" type="submit">Salvar</button></form>
+        <form class="inline-fields" onsubmit="return false"><label class="grow">NOME DA CATEGORIA<input maxlength="70" placeholder="Ex.: Bebidas"/></label><button class="btn" type="submit">Salvar</button></form>
         <div class="list small-list">
           <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Cervejas</strong><div class="meta">8 produto(s) ativo(s)</div></div><div class="entry-right"><button class="btn outline" type="button">Editar</button><button class="btn danger" type="button">Remover</button></div></div></div>
           <div class="entry"><div class="entry-head"><div class="entry-left"><strong>Petiscos</strong><div class="meta">5 produto(s) ativo(s)</div></div><div class="entry-right"><button class="btn outline" type="button">Editar</button><button class="btn danger" type="button">Remover</button></div></div></div>
@@ -423,7 +312,7 @@
     </section>
     <section class="component-section" id="sec-grafico">
       <div class="component-header"><span class="sg-n">20</span><div><h2>Gráfico de vendas</h2><p>Barras dos últimos 7 dias, com o valor em cima e o dia embaixo (mesma marcação do Caixa).</p></div></div>
-      <article class="card"><div aria-label="Gráfico de vendas por dia" class="chart-bars"><div class="chart-col"><span class="chart-value">R$ 820</span><div class="chart-body" title="Qui: R$ 820" style="height:62px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Qui</span></div><div class="chart-col"><span class="chart-value">R$ 1,9 mil</span><div class="chart-body" title="Sex: R$ 1,9 mil" style="height:132px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Sex</span></div><div class="chart-col"><span class="chart-value">R$ 2,1 mil</span><div class="chart-body" title="Sáb: R$ 2,1 mil" style="height:145px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Sáb</span></div><div class="chart-col"><span class="chart-value">R$ 1,2 mil</span><div class="chart-body" title="Dom: R$ 1,2 mil" style="height:88px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Dom</span></div><div class="chart-col"><span class="chart-value">R$ 0</span><div class="chart-body" title="Seg: R$ 0" style="height:6px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Seg</span></div><div class="chart-col"><span class="chart-value">R$ 430</span><div class="chart-body" title="Ter: R$ 430" style="height:34px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Ter</span></div><div class="chart-col"><span class="chart-value">R$ 640</span><div class="chart-body" title="Qua: R$ 640" style="height:49px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);"></div><span class="chart-label">Qua</span></div></div></article>
+      <article class="card"><div aria-label="Gráfico de vendas por dia" class="chart-bars"><div class="chart-col"><span class="chart-value">R$ 820</span><div class="chart-body bar-h-62" title="Qui: R$ 820"></div><span class="chart-label">Qui</span></div><div class="chart-col"><span class="chart-value">R$ 1,9 mil</span><div class="chart-body bar-h-132" title="Sex: R$ 1,9 mil"></div><span class="chart-label">Sex</span></div><div class="chart-col"><span class="chart-value">R$ 2,1 mil</span><div class="chart-body bar-h-145" title="Sáb: R$ 2,1 mil"></div><span class="chart-label">Sáb</span></div><div class="chart-col"><span class="chart-value">R$ 1,2 mil</span><div class="chart-body bar-h-88" title="Dom: R$ 1,2 mil"></div><span class="chart-label">Dom</span></div><div class="chart-col"><span class="chart-value">R$ 0</span><div class="chart-body bar-h-6" title="Seg: R$ 0"></div><span class="chart-label">Seg</span></div><div class="chart-col"><span class="chart-value">R$ 430</span><div class="chart-body bar-h-34" title="Ter: R$ 430"></div><span class="chart-label">Ter</span></div><div class="chart-col"><span class="chart-value">R$ 640</span><div class="chart-body bar-h-49" title="Qua: R$ 640"></div><span class="chart-label">Qua</span></div></div></article>
     </section>
     <section class="component-section" id="sec-mais">
       <div class="component-header"><span class="sg-n">21</span><div><h2>Menu Mais e versão</h2><p>Cartão do perfil, biometria do aparelho, ações agrupadas por título e o cartão de versão do app.</p></div></div>
@@ -563,7 +452,7 @@
     const aoRolar = () => {
       pendente = false;
       const max = document.documentElement.scrollHeight - innerHeight;
-      barra.style.transform = 'scaleX(' + (max > 0 ? scrollY / max : 0) + ')';
+      barra.style.setProperty('--progress', max > 0 ? scrollY / max : 0);
       topo.classList.toggle('on', scrollY > 600);
       nav.classList.toggle('stuck', nav.getBoundingClientRect().top <= 0);
     };

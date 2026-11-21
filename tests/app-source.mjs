@@ -6,7 +6,8 @@ import path from 'node:path';
 export function readAppSource(rootDir) {
   const jsDir = path.resolve(rootDir, 'src/js');
   const ctrlDir = path.join(jsDir, 'ui/controllers');
-  const files = [path.join(jsDir, 'App.js')];
+  const mainFile = fs.existsSync(path.join(jsDir, 'Program.js')) ? path.join(jsDir, 'Program.js') : path.join(jsDir, 'App.js');
+  const files = [mainFile];
   if (fs.existsSync(ctrlDir)) {
     for (const f of fs.readdirSync(ctrlDir).sort()) {
       if (f.endsWith('.js')) files.push(path.join(ctrlDir, f));

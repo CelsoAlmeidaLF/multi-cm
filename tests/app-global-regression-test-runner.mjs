@@ -10,6 +10,8 @@ import { OrderService } from '../src/js/application/services/OrderService.js';
 import { CashService } from '../src/js/application/services/CashService.js';
 import { ShiftService } from '../src/js/application/services/ShiftService.js';
 
+import { fileURLToPath } from 'node:url';
+
 const resultados = [];
 async function teste(id, nome, fn) {
   try {
@@ -22,7 +24,7 @@ async function teste(id, nome, fn) {
   }
 }
 
-const raiz = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const jsDir = path.join(raiz, 'src/js');
 function arquivosJs(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(d =>
@@ -36,7 +38,7 @@ function elemento(id) {
   if (!els.has(id)) {
     const filhos = [];
     els.set(id, {
-      id, value: '', textContent: '', style: {}, filhos,
+      id, value: '', textContent: '', style: { setProperty() {} }, filhos,
       replaceChildren() { filhos.length = 0; },
       append(...n) { filhos.push(...n); },
       addEventListener() {}, classList: { add() {}, remove() {}, toggle() {} },
@@ -50,7 +52,7 @@ function instalarDom() {
 }
 function stubApp() {
   const textos = {};
-  const make = (tag, cls, txt) => ({ tag, cls, textContent: txt ?? '', style: {}, append() {}, appendChild() {} });
+  const make = (tag, cls, txt) => ({ tag, cls, textContent: txt ?? '', style: { setProperty() {} }, append() {}, appendChild() {} });
   const dados = {
     mesas: { 'Mesa 05': [{ id: 'i1', nome: 'Cerveja', qtd: 2, total: 19 }] },
     mesaClientes: { 'Mesa 05': 'Joao' },
@@ -75,10 +77,10 @@ await teste('APP-GLB.1', 'Nenhum global `App` existe no ambiente de teste (premi
   assert.equal(typeof globalThis.App, 'undefined');
 });
 
-await teste('APP-GLB.2', 'Controllers/adapters/serviços não referenciam o símbolo `App` fora de App.js', () => {
+await teste('APP-GLB.2', 'Controllers/adapters/serviços não referenciam o símbolo `App` fora de App.js/Program.js', () => {
   const ofensores = [];
   for (const f of arquivosJs(jsDir)) {
-    if (path.basename(f) === 'App.js') continue;
+    if (path.basename(f) === 'App.js' || path.basename(f) === 'Program.js' || path.basename(f) === 'program.js') continue;
     const src = semComentarios(fs.readFileSync(f, 'utf-8'));
     // `App.` ou `App(` como identificador livre (não parte de FirebaseAppCheck, this._app, etc.) e sem import
     if (/(?<![\w$.'"/-])App\s*[.(]/.test(src) && !/import[^;]*\bApp\b/.test(src)) ofensores.push(path.relative(raiz, f));
@@ -86,9 +88,10 @@ await teste('APP-GLB.2', 'Controllers/adapters/serviços não referenciam o sím
   assert.deepEqual(ofensores, []);
 });
 
-await teste('APP-GLB.3', 'App.js expõe setText (instância) delegando a safeSetText', () => {
-  const src = fs.readFileSync(path.join(jsDir, 'App.js'), 'utf-8');
-  assert.match(src, /\n\s+setText\(idOrEl, value\) \{\s*App\.safeSetText\(idOrEl, value\);/);
+await teste('APP-GLB.3', 'Program.js/App.js expõe setText (instância) delegando a safeSetText', () => {
+  const mainFile = fs.existsSync(path.join(jsDir, 'Program.js')) ? 'Program.js' : 'App.js';
+  const src = fs.readFileSync(path.join(jsDir, mainFile), 'utf-8');
+  assert.match(src, /\n\s+setText\(idOrEl, value\) \{\s*(?:App|Program)\.safeSetText\(idOrEl, value\);/);
   assert.match(src, /static safeSetText\(/);
 });
 
