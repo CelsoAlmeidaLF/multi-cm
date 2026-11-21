@@ -1,20 +1,22 @@
 import { Shift } from '../../domain/entities/Shift.js';
+import { from } from '../../stk-pkt-linq.js';
 
 /**
  * Serviço de Aplicação: Gestão e Conferência de Turnos de Caixa
  */
 export class ShiftService {
   getActiveShift(database) {
-    return (database.turnosCaixa || []).find(t => t.status === 'aberto') || null;
+    return from(database.turnosCaixa).firstOrDefault(t => t.status === 'aberto', null);
   }
 
   calculateShiftTotals(database, shift) {
     if (!shift) return null;
-    const movements = (database.caixa || []).filter(c => c.turnoId === shift.id);
-    const entradas = Math.round((movements.filter(c => c.tipo === 'entrada').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const saidas = Math.round((movements.filter(c => c.tipo === 'saida').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const cashIn = Math.round((movements.filter(c => c.tipo === 'entrada' && c.formaPagamento === 'dinheiro').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const cashOut = Math.round((movements.filter(c => c.tipo === 'saida').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const qMovements = from(database.caixa).where(c => c.turnoId === shift.id);
+
+    const entradas = Math.round((qMovements.where(c => c.tipo === 'entrada').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const saidas = Math.round((qMovements.where(c => c.tipo === 'saida').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const cashIn = Math.round((qMovements.where(c => c.tipo === 'entrada' && c.formaPagamento === 'dinheiro').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const cashOut = Math.round((qMovements.where(c => c.tipo === 'saida').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
     const esperado = Math.round((shift.fundoInicial + cashIn - cashOut + Number.EPSILON) * 100) / 100;
 
     return {
@@ -76,27 +78,28 @@ export class ShiftService {
       return Number.isNaN(dt.getTime()) ? '' : `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
     };
 
-    const movements = (database.caixa || []).filter(c => {
+    const qMovements = from(database.caixa).where(c => {
       if (!c.data) return false;
       if (c.data.startsWith(prefix)) return true;
       if (tipo === 'mensal') return localMonth(c.data) === prefix;
       return localDay(c.data) === prefix;
     });
-    const entradas = movements.filter(c => c.tipo === 'entrada');
-    const saidas = movements.filter(c => c.tipo === 'saida');
 
-    const totalVendas = Math.round((entradas.reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const totalSaidas = Math.round((saidas.reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const qEntradas = qMovements.where(c => c.tipo === 'entrada');
+    const qSaidas = qMovements.where(c => c.tipo === 'saida');
 
-    const dinheiro = Math.round((entradas.filter(c => c.formaPagamento === 'dinheiro').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const pix = Math.round((entradas.filter(c => c.formaPagamento === 'pix').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const debito = Math.round((entradas.filter(c => c.formaPagamento === 'debito').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const credito = Math.round((entradas.filter(c => c.formaPagamento === 'credito').reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
-    const outros = Math.round((entradas.filter(c => !['dinheiro', 'pix', 'debito', 'credito'].includes(c.formaPagamento)).reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const totalVendas = Math.round((qEntradas.sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const totalSaidas = Math.round((qSaidas.sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+
+    const dinheiro = Math.round((qEntradas.where(c => c.formaPagamento === 'dinheiro').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const pix = Math.round((qEntradas.where(c => c.formaPagamento === 'pix').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const debito = Math.round((qEntradas.where(c => c.formaPagamento === 'debito').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const credito = Math.round((qEntradas.where(c => c.formaPagamento === 'credito').sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
+    const outros = Math.round((qEntradas.where(c => !['dinheiro', 'pix', 'debito', 'credito'].includes(c.formaPagamento)).sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
 
     const activeShift = this.getActiveShift(database);
     const fundoInicial = activeShift ? Number(activeShift.fundoInicial || 0) : 0;
-    const saidasDinheiro = Math.round((saidas.reduce((s, c) => s + Number(c.valor || 0), 0) + Number.EPSILON) * 100) / 100;
+    const saidasDinheiro = Math.round((qSaidas.sum(c => Number(c.valor || 0)) + Number.EPSILON) * 100) / 100;
     const dinheiroEsperado = Math.round((fundoInicial + dinheiro - saidasDinheiro + Number.EPSILON) * 100) / 100;
 
     return {
@@ -105,8 +108,8 @@ export class ShiftService {
       totalVendas,
       totalSaidas,
       saldoLiquido: Math.round((totalVendas - totalSaidas + Number.EPSILON) * 100) / 100,
-      quantidadeVendas: entradas.length,
-      quantidadeSaidas: saidas.length,
+      quantidadeVendas: qEntradas.count(),
+      quantidadeSaidas: qSaidas.count(),
       pagamentos: { dinheiro, pix, debito, credito, outros },
       fundoInicial,
       dinheiroEsperado,

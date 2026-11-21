@@ -354,11 +354,11 @@
 .home-empty.good {
   background: rgba(230, 248, 239, 0.65);
   border-color: rgba(15, 134, 100, 0.3);
-  color: #0f8664;
+  color: var(--good);
 }
 
 .home-empty.good svg {
-  color: #0f8664;
+  color: var(--good);
 }
 
 /* --------------------------------------------------------------------------
@@ -1366,9 +1366,10 @@ body:has(.aero-modal[open]) {
   width: 100%;
   max-width: 44px;
   height: var(--h);
-  min-height: 4px;
+  flex-shrink: 0;
+  min-height: 6px;
   border-radius: 9px 9px 3px 3px;
-  background: linear-gradient(180deg, #599af5, #246ee2);
+  background: linear-gradient(180deg, var(--chart-bar-from), var(--chart-bar-to));
   transition: height 0.25s ease;
 }
 
@@ -1994,7 +1995,7 @@ hr.soft {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: radial-gradient(ellipse at 30% 20%, #d0e4ff, transparent 45%), #eaf1fa;
+  background: radial-gradient(ellipse at 30% 20%, #d0e4ff, transparent 45%), var(--bg);
   display: grid;
   place-items: center;
   padding: 20px;
@@ -2410,3 +2411,45 @@ hr.soft {
   gap: 6px;
 }
 
+/* ==========================================================================
+   Classes que substituem style="" (HTML e controllers).
+   Valores calculados em execução entram por custom property (--h no gráfico).
+   Carregado por último: vence regras de mesma especificidade acima.
+   ========================================================================== */
+.svg-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.mt-8 { margin-top: 8px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.ml-8 { margin-left: 8px; }
+.grow { flex: 1; }
+.label-block { display: block; }
+.hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn.btn-compact { padding: 9px; }
+.btn svg.icon-17 { width: 17px; height: 17px; }
+hr.soft.hr-tight { margin: 16px 0; }
+.aero-modal .subhead-caps { margin-bottom: 8px; font-size: 13px; text-transform: uppercase; }
+.aero-modal .subhead-caps.is-flush { margin: 0; }
+.scroll-y-200 { max-height: 200px; overflow-y: auto; }
+.home-mini-row.is-clickable { cursor: pointer; }
+.entry.counter-entry { border-left: 3px solid var(--accent); background: var(--ok-bg); }
+.meta.meta-note { margin-top: 4px; font-style: italic; }
+.history-empty { padding: 16px; text-align: center; }
+
+/* Fechamento de caixa */
+.form-row.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pill.pill-block { display: block; margin-top: 6px; text-align: center; }
+.closing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; padding: 12px; background: var(--tint-soft); border: 1px solid var(--line); border-radius: 8px; }
+.closing-methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; padding: 10px; background: var(--tint-shade); border-radius: 6px; font-size: 0.85rem; }
+.closing-expected { padding: 12px; background: var(--ok-bg); border: 1px solid var(--ok-line); border-radius: 8px; }
+.closing-line { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.closing-line-center { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.closing-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.closing-text { font-size: 0.85rem; }
+.closing-text.closing-text-ink { color: var(--ink); }
+
+/* Painel de turno (Caixa) */
+.shift-idle { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--tint-soft); border-radius: 8px; border: 1px solid var(--line); }
+.shift-idle-title { display: block; font-size: 0.95rem; }
+.shift-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 12px; background: var(--ok-bg-soft); border-radius: 8px; border: 1px solid var(--ok-line-soft); margin-bottom: 12px; }
+.shift-expected { font-size: 1.05rem; }
+.shift-actions { display: flex; gap: 8px; justify-content: flex-end; }

@@ -164,7 +164,7 @@ export class CashController {
       const barH = d.total > 0 ? Math.max(10, Math.round((pct / 100) * MAX_BAR_HEIGHT_PX)) : 6;
       
       const body = this._app._renderer.make('div', 'chart-body');
-      body.style.cssText = `height:${barH}px;flex-shrink:0;min-height:6px;width:100%;max-width:44px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#599af5,#246ee2);transition:height 0.25s ease;`;
+      body.style.setProperty('--h', `${barH}px`);
       body.title = `${d.label}: ${this._app._renderer.money(d.total)}`;
       
       const label = this._app._renderer.make('span', 'chart-label', d.label);
@@ -184,10 +184,7 @@ export class CashController {
     if (countEl) countEl.textContent = `${fechamentos.length} fechamento${fechamentos.length === 1 ? '' : 's'}`;
 
     if (fechamentos.length === 0) {
-      const empty = this._app._renderer.make('div', 'empty-state', 'Nenhum fechamento registrado até o momento.');
-      empty.style.padding = '16px';
-      empty.style.textAlign = 'center';
-      empty.style.color = 'var(--text-muted)';
+      const empty = this._app._renderer.make('div', 'empty-state history-empty', 'Nenhum fechamento registrado até o momento.');
       root.append(empty);
       return;
     }
@@ -202,7 +199,6 @@ export class CashController {
       left.append(title, meta);
 
       const right = this._app._renderer.make('div', 'entry-right');
-      right.style.textAlign = 'right';
       const val = this._app._renderer.make('strong', 'text-good', this._app._renderer.money(f.totalVendas));
       right.append(val);
 
@@ -213,7 +209,7 @@ export class CashController {
           `pill ${isOk ? 'good' : 'warn'}`,
           isOk ? 'Exato' : (f.diferenca > 0 ? `+${this._app._renderer.money(f.diferenca)}` : `${this._app._renderer.money(f.diferenca)}`)
         );
-        diffBadge.style.marginLeft = '8px';
+        diffBadge.classList.add('ml-8');
         right.append(diffBadge);
       }
 
@@ -221,9 +217,7 @@ export class CashController {
       item.append(head);
 
       if (f.observacoes) {
-        const obs = this._app._renderer.make('div', 'meta', `Obs: ${f.observacoes}`);
-        obs.style.marginTop = '4px';
-        obs.style.fontStyle = 'italic';
+        const obs = this._app._renderer.make('div', 'meta meta-note', `Obs: ${f.observacoes}`);
         item.append(obs);
       }
       root.append(item);
@@ -239,10 +233,10 @@ export class CashController {
     if (!active) {
       if (shiftStatus) shiftStatus.textContent = 'Nenhum turno aberto';
       shiftBody.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid var(--line);">
+        <div class="shift-idle">
           <div>
-            <strong style="display:block;font-size:0.95rem;">Caixa livre / Turno fechado</strong>
-            <small style="color:var(--text-muted);">Abra um novo turno com fundo de troco para iniciar a conciliação.</small>
+            <strong class="shift-idle-title">Caixa livre / Turno fechado</strong>
+            <small>Abra um novo turno com fundo de troco para iniciar a conciliação.</small>
           </div>
           <button type="button" class="btn btn-primary" id="v9-btn-novo-turno">Iniciar Turno</button>
         </div>
@@ -252,13 +246,13 @@ export class CashController {
       const totals = this._app._shift.calculateShiftTotals(this._app._data, active);
       if (shiftStatus) shiftStatus.textContent = `Turno ativo • Operador: ${active.operador}`;
       shiftBody.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:12px;background:rgba(111,207,151,0.03);border-radius:8px;border:1px solid rgba(111,207,151,0.2);margin-bottom:12px;">
-          <div><small style="color:var(--text-muted);display:block;">Fundo Inicial</small><strong class="num">${this._app._renderer.money(active.fundoInicial)}</strong></div>
-          <div><small style="color:var(--text-muted);display:block;">Entradas (Dinheiro)</small><strong class="num text-good">+ ${this._app._renderer.money(totals.cashIn)}</strong></div>
-          <div><small style="color:var(--text-muted);display:block;">Retiradas / Sangrias</small><strong class="num text-bad">− ${this._app._renderer.money(totals.cashOut)}</strong></div>
-          <div><small style="color:var(--text-muted);display:block;">Dinheiro Esperado</small><strong class="num text-good" style="font-size:1.05rem;">${this._app._renderer.money(totals.esperado)}</strong></div>
+        <div class="shift-stats">
+          <div><small class="label-block">Fundo Inicial</small><strong class="num">${this._app._renderer.money(active.fundoInicial)}</strong></div>
+          <div><small class="label-block">Entradas (Dinheiro)</small><strong class="num text-good">+ ${this._app._renderer.money(totals.cashIn)}</strong></div>
+          <div><small class="label-block">Retiradas / Sangrias</small><strong class="num text-bad">− ${this._app._renderer.money(totals.cashOut)}</strong></div>
+          <div><small class="label-block">Dinheiro Esperado</small><strong class="num text-good shift-expected">${this._app._renderer.money(totals.esperado)}</strong></div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <div class="shift-actions">
           <button type="button" class="btn ghost minor manager-only" id="v9-btn-sangria">Registrar Retirada</button>
           <button type="button" class="btn minor" id="v9-btn-fechar">Fechar Caixa do Dia</button>
         </div>

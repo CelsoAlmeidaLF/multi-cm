@@ -37,9 +37,6 @@ export class SalesController {
       if (search && !`${name} ${cliente}`.toLowerCase().includes(search)) continue;
 
       const card = this._app._renderer.make('div', `entry mesa-entry ${isCounter ? 'counter-entry' : ''}`);
-      if (isCounter) {
-        card.style.cssText = 'border-left: 3px solid var(--accent); background: rgba(111,207,151,0.04);';
-      }
       const head = this._app._renderer.make('div', 'entry-head');
       const left = this._app._renderer.make('div', 'entry-left');
       const titleSpan = this._app._renderer.make('strong', '', isCounter ? `[Balcão] ${name}` : name);
